@@ -4,11 +4,17 @@ package com.buddycloud.android.buddydroid;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.SmackConfiguration;
+
 import android.app.ListActivity;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,16 +29,23 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.RelativeLayout.LayoutParams;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
+import com.buddycloud.jbuddycloud.BuddycloudClient;
 
 public class RosterActivity extends ListActivity {
 	
 	private Cursor c;
+	private Intent backgroungService;
 	
 	
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
+    	
+    	backgroungService = new Intent(this, BuddycloudService.class);
+		startService(backgroungService );
+    	
+
     
     	c = getContentResolver().query(Roster.CONTENT_URI, Roster.PROJECTION_MAP, null, null, null);
     	
@@ -63,7 +76,18 @@ public class RosterActivity extends ListActivity {
     }
     
     
-    private class RosterAdapter extends BaseAdapter {
+    
+    
+    @Override
+	protected void onPause() {
+		stopService(backgroungService);
+		super.onPause();
+	}
+
+
+
+
+	private class RosterAdapter extends BaseAdapter {
 
     	private List<Boolean> expanded = new ArrayList<Boolean>();
 

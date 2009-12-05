@@ -26,6 +26,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.util.Log;
 
 /**
@@ -209,8 +210,14 @@ public class BuddycloudProvider extends ContentProvider {
 			uri = ContentUris.withAppendedId(ChannelData.CONTENT_URI, rowID);
 			break;
 		case ROSTER:
-			rowID=db.insert(TABLE_ROSTER, Roster.JID, values);
-			uri = ContentUris.withAppendedId(Roster.CONTENT_URI, rowID);
+			// just insert if not already there
+			Cursor c = db.query(TABLE_ROSTER, new String[]{BaseColumns._ID}, Roster.JID+"='"+values.get(Roster.JID)+"'", null, null, null, null);
+			if (c.getCount() < 1) {
+				rowID=db.insert(TABLE_ROSTER, Roster.JID, values);
+				uri = ContentUris.withAppendedId(Roster.CONTENT_URI, rowID);
+				Log.d(TAG, "inserted "+values.getAsString(Roster.JID));
+			}
+			c.close();
 			break;
 		}
 		if (rowID > 0) {
@@ -245,8 +252,8 @@ public class BuddycloudProvider extends ContentProvider {
 			String[] selectionArgs, String sortOrder) {
 
 		final Context context=getContext();
-		Intent intent=new Intent("",null, context, ConnectionService.class);
-		context.startService(intent);
+//		Intent intent=new Intent("",null, context, ConnectionService.class);
+//		context.startService(intent);
 		
 		int what=URI_MATCHER.match(uri);
 		MatrixCursor dummyCursor=null;

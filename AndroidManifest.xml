@@ -21,6 +21,9 @@
 		<provider android:name="com.buddycloud.android.buddydroid.provider.BuddycloudProvider"
 				  android:authorities="com.buddycloud"
 				  android:multiprocess="false" />
+				  
+		<service android:name="BuddycloudService" />
+		
 	</application>
 
 	<uses-sdk android:minSdkVersion="3" />
