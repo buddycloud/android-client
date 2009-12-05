@@ -98,16 +98,19 @@ public class BuddycloudService extends Service {
 
     		@Override
     		public void processPacket(Packet packet) {
-    			Log.d(TAG, "Packet: "+packet.toXML());
+//    			Log.d(TAG, "Packet: "+packet.toXML());
     			if (packet instanceof Message) {
     				LocationEvent loc = (LocationEvent) packet.getExtension(PubSubLocationEventProvider.getNS());
     				if (loc != null) {
     					switch (loc.type) {
     					case LocationEvent.CURRENT:
+    						Log.d(TAG, "Packet: "+packet.toXML());
     						break;
     					case LocationEvent.PREV:
+    						Log.d(TAG, "Packet: "+packet.toXML());
     						break;
     					case LocationEvent.NEXT:
+    						Log.d(TAG, "Packet: "+packet.toXML());
     						break;
     					}
 

@@ -18,6 +18,7 @@ import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
 
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.buddycloud.jbuddycloud.packet.LocationEvent;
 import com.buddycloud.jbuddycloud.provider.PubSubLocationEventProvider;
@@ -26,7 +27,7 @@ import com.buddycloud.jbuddycloud.provider.PubSubLocationEventProvider;
 
 public class BuddycloudClient extends XMPPConnection {
 
-	static final String version = "2.12345";
+	static final String version = "4.12345";
 
 	public BuddycloudClient(ConnectionConfiguration config) {
 		super(config);
@@ -41,11 +42,10 @@ public class BuddycloudClient extends XMPPConnection {
 		super.connect();
 		
 		
-//		ServiceDiscoveryManager dm = ServiceDiscoveryManager.getInstanceFor(this);
-//		ServiceDiscoveryManager.setIdentityType("mobile");
-//		ServiceDiscoveryManager.setIdentityName("client");
-//		
-//		dm.setNodeInformationProvider("http://buddydroid.com/caps#"+version, new jBuddycloudFeatures());
+		ServiceDiscoveryManager dm = new ServiceDiscoveryManager(this);
+		ServiceDiscoveryManager.setIdentityType("mobile");
+		ServiceDiscoveryManager.setIdentityName("client");
+		dm.setNodeInformationProvider("http://buddydroid.com/caps#"+version, new jBuddycloudFeatures());
 	}
 
 
@@ -110,6 +110,7 @@ public class BuddycloudClient extends XMPPConnection {
 	class jBuddycloudFeatures implements NodeInformationProvider {
 		
 		public List<String> getNodeFeatures() {
+			Log.d("ServiceDiscovery", "features are beeing discovered");
 			List<String> features = new ArrayList<String>();
 			features.add("http://jabber.org/protocol/disco#info");
 			features.add("http://jabber.org/protocol/pubsub");
