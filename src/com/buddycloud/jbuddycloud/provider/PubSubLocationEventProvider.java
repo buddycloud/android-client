@@ -6,6 +6,8 @@ import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.provider.PacketExtensionProvider;
 import org.xmlpull.v1.XmlPullParser;
 
+import android.util.Log;
+
 import com.buddycloud.jbuddycloud.packet.LocationEvent;
 
 
@@ -76,7 +78,7 @@ public class PubSubLocationEventProvider implements PacketExtensionProvider  {
 		 if (lng != null)
 			 loc.lng = (int)(Double.parseDouble(lat)*1000000);
 //		 loc.accuracy = Integer.parseInt(tmp.get("accuracy"));
-		 
+		 Log.e("BuddycloudService", "LOC update" + loc.toXML());
 		 return loc;
 	 }
 	
