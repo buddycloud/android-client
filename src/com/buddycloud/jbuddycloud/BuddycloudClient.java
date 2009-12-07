@@ -18,7 +18,9 @@ import android.util.Log;
 
 public class BuddycloudClient extends XMPPConnection {
 
-	static final String version = "5.021";
+	static final String version = "5.023";
+
+	private ServiceDiscoveryManager discoveryManager;
 
 	public BuddycloudClient(ConnectionConfiguration config) {
 		super(config);
@@ -36,6 +38,7 @@ public class BuddycloudClient extends XMPPConnection {
 			}
 			i += 1;
 		}
+		discoveryManager = new ServiceDiscoveryManager(this);
 	}
 
 	class InitialPresence extends Packet {
@@ -60,16 +63,15 @@ public class BuddycloudClient extends XMPPConnection {
 	public synchronized void login(String username, String password)
 			throws XMPPException {
 		super.login(username, password /* , "buddydroid", false */);
-		ServiceDiscoveryManager dm = ServiceDiscoveryManager.getInstanceFor(this);
-		dm.addFeature("http://jabber.org/protocol/disco#info");
-		dm.addFeature("http://jabber.org/protocol/pubsub");
-		dm.addFeature("http://jabber.org/protocol/geoloc");
-		dm.addFeature("http://jabber.org/protocol/geoloc+notify");
-		dm.addFeature("http://jabber.org/protocol/geoloc-prev");
-		dm.addFeature("http://jabber.org/protocol/geoloc-prev+notify");
-		dm.addFeature("http://jabber.org/protocol/geoloc-next");
-		dm.addFeature("http://jabber.org/protocol/geoloc-next+notify");
-		dm.setNodeInformationProvider("http://buddydroid.com/caps#"+version, new jBuddycloudFeatures());
+		discoveryManager.addFeature("http://jabber.org/protocol/disco#info");
+		discoveryManager.addFeature("http://jabber.org/protocol/pubsub");
+		discoveryManager.addFeature("http://jabber.org/protocol/geoloc");
+		discoveryManager.addFeature("http://jabber.org/protocol/geoloc+notify");
+		discoveryManager.addFeature("http://jabber.org/protocol/geoloc-prev");
+		discoveryManager.addFeature("http://jabber.org/protocol/geoloc-prev+notify");
+		discoveryManager.addFeature("http://jabber.org/protocol/geoloc-next");
+		discoveryManager.addFeature("http://jabber.org/protocol/geoloc-next+notify");
+		discoveryManager.setNodeInformationProvider("http://buddydroid.com/caps#"+version, new jBuddycloudFeatures());
 		sendPacket(new InitialPresence());
 	}
 
