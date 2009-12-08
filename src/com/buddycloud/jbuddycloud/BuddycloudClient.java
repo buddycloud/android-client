@@ -22,6 +22,10 @@ public class BuddycloudClient extends XMPPConnection {
 
 	private ServiceDiscoveryManager discoveryManager;
 
+	public BuddycloudClient(String domain) {
+		super(domain);
+	}
+
 	public BuddycloudClient(ConnectionConfiguration config) {
 		super(config);
 	}

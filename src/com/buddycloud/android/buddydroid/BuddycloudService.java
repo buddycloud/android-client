@@ -61,25 +61,18 @@ public class BuddycloudService extends Service {
                 ProviderManager.getInstance().addExtensionProvider("event", PubSubLocationEventProvider.getNS(), new PubSubLocationEventProvider());
 
         SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this);
-                String port = pm.getString("port", "5222");
-                String jid = pm.getString("jid", "orangeman@buddycloud.com");
                 String password = pm.getString("password", "testaccount");
-                String host = jid.split("@")[1];
-                String username = jid.split("@")[0];
+                String username = "orangeman";
                 
                 // Create a connection
-                ConnectionConfiguration connConfig = new ConnectionConfiguration(host, Integer.parseInt(port));
-                connConfig.setDebuggerEnabled(true);
-                connConfig.setSendPresence(false);
-                connConfig.setRosterLoadedAtLogin(false);
 //              connConfig.setReconnectionAllowed(true);
-                mConnection = new BuddycloudClient(connConfig);
+                mConnection = new BuddycloudClient("buddycloud.com");
                 
                 try {
 //                      SmackConfiguration.setPacketReplyTimeout(12000);
                         mConnection.connect();
                         mConnection.login(username, password);
-                        Log.i(TAG, "connected to " + mConnection.getHost());
+                        Log.i(TAG, "connected to " + mConnection.getHost() + ":" + mConnection.getPort());
                 } catch (Exception ex) {
                         ex.printStackTrace();
                         Log.e("XMPPClient", "Failed to connect to " + mConnection.getHost());
