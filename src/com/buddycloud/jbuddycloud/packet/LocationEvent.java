@@ -14,9 +14,9 @@ public class LocationEvent implements PacketExtension {
 	public String locality;
 	public String region;
 	public String country;
-	public int lat;
-	public int lng;
-	public int accuracy;
+	public double lat;
+	public double lng;
+	public double accuracy;
 	public int type;
 
 	public String getElementName() {

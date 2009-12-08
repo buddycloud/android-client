@@ -26,20 +26,13 @@ public class PubSubLocationEventProvider implements PacketExtensionProvider  {
 	
 	 public PacketExtension parseExtension(XmlPullParser parser) throws Exception
 	 {
-//		 PubSubLocationEvent pubSubLocEvent = new PubSubLocationEvent();
-//		 LocationHierarchy locH = null;
-//		 String token = null;
-//		 Location loc = null;
 		 boolean done = false;
-		 boolean insideLocation = false;
 		 LocationEvent loc = new LocationEvent();
 		 HashMap<String, String> tmp = new HashMap<String, String>();
 		 String name = parser.getName();
-		 int eventType;
 		 StringBuffer sb = null;
 		 while(!done) {
 			 switch (parser.next()) {
-			 
 			 case XmlPullParser.START_TAG:
 				 name = parser.getName();
 				 if (name.equals("items")) {
@@ -71,13 +64,14 @@ public class PubSubLocationEventProvider implements PacketExtensionProvider  {
 		 loc.locality = tmp.get("locality");
 		 loc.region = tmp.get("region");
 		 loc.country = tmp.get("country");
+
 		 String lat = tmp.get("lat");
 		 if (lat != null)
-			 loc.lat = (int)(Double.parseDouble(lat)*1000000);
-		 String lng = tmp.get("lng");
+			 loc.lat = Double.parseDouble(lat);
+		 String lng = tmp.get("lon");
 		 if (lng != null)
-			 loc.lng = (int)(Double.parseDouble(lat)*1000000);
-//		 loc.accuracy = Integer.parseInt(tmp.get("accuracy"));
+			 loc.lng = Double.parseDouble(lng);
+		 loc.accuracy = Double.parseDouble(tmp.get("accuracy"));
 		 Log.e("BuddycloudService", "LOC update" + loc.toXML());
 		 return loc;
 	 }
