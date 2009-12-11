@@ -28,7 +28,7 @@ public class PubSubLocationEventProvider implements PacketExtensionProvider  {
 	 {
 		 boolean done = false;
 		 LocationEvent loc = new LocationEvent();
-		 HashMap<String, String> tmp = new HashMap<String, String>();
+		 HashMap<String, String> tmp = new HashMap<String, String>(23);
 		 String name = parser.getName();
 		 StringBuffer sb = null;
 		 while(!done) {
