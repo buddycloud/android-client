@@ -60,7 +60,7 @@ public class BuddycloudProvider extends ContentProvider {
 	// private SQLiteOpenHelper mOpenHelper;
 	private DatabaseHelper mOpenHelper;
 
-	private static final String TAG = "BuddycloudProvider";
+	private static final String TAG = "Provider";
 	private static final String DATABASE_NAME = "buddycloud.db";
 
 	
@@ -167,7 +167,7 @@ public class BuddycloudProvider extends ContentProvider {
 		case CHANNEL_DATA:
 			break;
 		case ROSTER:
-			mOpenHelper.getWritableDatabase().execSQL("DELETE * FROM "+TABLE_ROSTER);
+			mOpenHelper.getWritableDatabase().execSQL("DELETE FROM "+TABLE_ROSTER);
 			Log.d(TAG, "deleted roster");
 			break;
 		}
@@ -221,22 +221,22 @@ public class BuddycloudProvider extends ContentProvider {
 			break;
 		case ROSTER:
 			// for now : just insert if not already there
-			Cursor c = db.query(TABLE_ROSTER, new String[]{BaseColumns._ID}, Roster.JID+"='"+values.get(Roster.JID)+"'", null, null, null, null);
-			if (c.getCount() < 1) {
+//			Cursor c = db.query(TABLE_ROSTER, new String[]{BaseColumns._ID}, Roster.JID+"='"+values.get(Roster.JID)+"'", null, null, null, null);
+//			if (c.getCount() < 1) {
 				rowID=db.insert(TABLE_ROSTER, Roster.JID, values);
 				uri = ContentUris.withAppendedId(Roster.CONTENT_URI, rowID);
 				Log.d(TAG, "inserted "+values.getAsString(Roster.JID));
-			}
-			c.close();
+//			}
+//			c.close();
 			break;
 		}
 		if (rowID > 0) {
 			
-			getContext().getContentResolver().notifyChange(uri, null);
+//			getContext().getContentResolver().notifyChange(uri, null);
 
-			Intent intent = new Intent(ProviderIntents.ACTION_INSERTED);
-			intent.setData(uri);
-			getContext().sendBroadcast(intent);
+//			Intent intent = new Intent(ProviderIntents.ACTION_INSERTED);
+//			intent.setData(uri);
+//			getContext().sendBroadcast(intent);
 
 			db.close();
 			return uri;
@@ -269,8 +269,8 @@ public class BuddycloudProvider extends ContentProvider {
 		MatrixCursor dummyCursor=null;
 		
 		
-		Log.d("provider", "what: " + what);
-		Log.d("provider", "uri: " + uri);
+//		Log.d("provider", "what: " + what);
+//		Log.d("provider", "uri: " + uri);
 		SQLiteQueryBuilder qb= new SQLiteQueryBuilder();
 		
 		switch (what){
@@ -428,11 +428,10 @@ public class BuddycloudProvider extends ContentProvider {
 	 * @see android.content.ContentProvider#update(android.net.Uri, android.content.ContentValues, java.lang.String, java.lang.String[])
 	 */
 	@Override
-	public int update(Uri uri, ContentValues values, String selection,
-			String[] selectionArgs) {
+	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		int count=0;
 		int what=URI_MATCHER.match(uri);
-		values.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,System.currentTimeMillis());
+//		values.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,System.currentTimeMillis());
 		switch (what){
 		
 		case CHANNELS:
@@ -444,15 +443,17 @@ public class BuddycloudProvider extends ContentProvider {
 		case CHANNEL_DATA_ID:
 			
 		case ROSTER:
-			
+			mOpenHelper.getWritableDatabase().update(TABLE_ROSTER, values, selection, selectionArgs);
+			Log.d(TAG, "updated roster");
+			break;
 		case ROSTER_ID:
 		
 		}
 		getContext().getContentResolver().notifyChange(uri, null);
 
-		Intent intent = new Intent(ProviderIntents.ACTION_MODIFIED);
-		intent.setData(uri);
-		getContext().sendBroadcast(intent);
+//		Intent intent = new Intent(ProviderIntents.ACTION_MODIFIED);
+//		intent.setData(uri);
+//		getContext().sendBroadcast(intent);
 
 		return count;
 	}

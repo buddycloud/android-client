@@ -8,11 +8,14 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.NodeInformationProvider;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
+
+import com.buddycloud.jbuddycloud.provider.PubSubLocationEventProvider;
 
 import android.util.Log;
 
@@ -24,6 +27,29 @@ public class BuddycloudClient extends XMPPConnection {
 
 	public BuddycloudClient(String domain) {
 		super(domain);
+		 ProviderManager.getInstance().addIQProvider("query","http://jabber.org/protocol/disco#items",new org.jivesoftware.smackx.provider.DiscoverItemsProvider());
+         ProviderManager.getInstance().addIQProvider("query","http://jabber.org/protocol/disco#info",new org.jivesoftware.smackx.provider.DiscoverInfoProvider());
+         ProviderManager.getInstance().addIQProvider("pubsub","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.PubSubProvider());
+         ProviderManager.getInstance().addExtensionProvider("create","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
+         ProviderManager.getInstance().addExtensionProvider("items","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.ItemsProvider());
+         ProviderManager.getInstance().addExtensionProvider("item","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.ItemProvider());
+         ProviderManager.getInstance().addExtensionProvider("subscriptions","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.SubscriptionsProvider());
+         ProviderManager.getInstance().addExtensionProvider("subscription","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.SubscriptionProvider());
+         ProviderManager.getInstance().addExtensionProvider("affiliations","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.AffiliationsProvider());
+         ProviderManager.getInstance().addExtensionProvider("affiliation","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.AffiliationProvider());
+         ProviderManager.getInstance().addExtensionProvider("options","http://jabber.org/protocol/pubsub",new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
+         ProviderManager.getInstance().addIQProvider("pubsub","http://jabber.org/protocol/pubsub#owner",new org.jivesoftware.smackx.pubsub.provider.PubSubProvider());
+         ProviderManager.getInstance().addExtensionProvider("configure","http://jabber.org/protocol/pubsub#owner",new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
+         ProviderManager.getInstance().addExtensionProvider("default","http://jabber.org/protocol/pubsub#owner",new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
+//         ProviderManager.getInstance().addExtensionProvider("event","http://jabber.org/protocol/pubsub#event",new org.jivesoftware.smackx.pubsub.provider.EventProvider());
+         ProviderManager.getInstance().addExtensionProvider("configuration","http://jabber.org/protocol/pubsub#event",new org.jivesoftware.smackx.pubsub.provider.ConfigEventProvider());
+         ProviderManager.getInstance().addExtensionProvider("delete","http://jabber.org/protocol/pubsub#event",new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
+         ProviderManager.getInstance().addExtensionProvider("options","http://jabber.org/protocol/pubsub#event",new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
+         ProviderManager.getInstance().addExtensionProvider("items","http://jabber.org/protocol/pubsub#event",new org.jivesoftware.smackx.pubsub.provider.ItemsProvider());
+         ProviderManager.getInstance().addExtensionProvider("item","http://jabber.org/protocol/pubsub#event",new org.jivesoftware.smackx.pubsub.provider.ItemProvider());
+         ProviderManager.getInstance().addExtensionProvider("retract","http://jabber.org/protocol/pubsub#event",new org.jivesoftware.smackx.pubsub.provider.RetractEventProvider());
+         ProviderManager.getInstance().addExtensionProvider("purge","http://jabber.org/protocol/pubsub#event",new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
+         ProviderManager.getInstance().addExtensionProvider("event", PubSubLocationEventProvider.getNS(), new PubSubLocationEventProvider());
 	}
 
 	public BuddycloudClient(ConnectionConfiguration config) {
