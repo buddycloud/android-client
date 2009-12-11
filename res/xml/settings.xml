@@ -1,0 +1,39 @@
+<PreferenceScreen  
+	xmlns:android="http://schemas.android.com/apk/res/android">  
+	<PreferenceCategory android:title="Connection Settings">
+		<EditTextPreference  
+		android:key="jid"  
+		android:title="JID"  
+		android:dialogTitle="Jabber ID"  
+		/> 
+		
+		<EditTextPreference  
+		android:key="password"  
+		android:title="password"  
+		android:dialogTitle="password"  
+		/> 
+	</PreferenceCategory>
+	
+	
+	<PreferenceCategory android:title="More Settings">
+		<CheckBoxPreference  
+			android:key="start_on_boot"  
+			android:title="Launch On Boot"
+			android:summary="start background service on device boot"  
+			android:summaryOn="Switch Off"
+			android:summaryOff="Switch On"
+		/>
+		
+	</PreferenceCategory>
+	
+	<PreferenceScreen
+		android:title="Even More Settings.."
+		android:summary="may be some day there could be too many settings to fit on one screen..">
+			
+			<CheckBoxPreference  
+			android:key="foo"  
+			android:title="Foo"  
+			/>
+	</PreferenceScreen>  
+	
+</PreferenceScreen>  
