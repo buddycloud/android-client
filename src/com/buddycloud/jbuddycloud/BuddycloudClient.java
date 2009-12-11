@@ -66,7 +66,7 @@ public class BuddycloudClient extends XMPPConnection {
 	@Override
 	public synchronized void login(String username, String password)
 			throws XMPPException {
-		super.login(username, password /* , "buddydroid", false */);
+		super.login(username, password, "buddydroid");
 		discoveryManager.addFeature("http://jabber.org/protocol/disco#info");
 		discoveryManager.addFeature("http://jabber.org/protocol/pubsub");
 		discoveryManager.addFeature("http://jabber.org/protocol/geoloc");
