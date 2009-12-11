@@ -1,7 +1,5 @@
 package com.buddycloud.android.buddydroid.provider;
 
-import java.net.URI;
-
 import android.net.Uri;
 import android.provider.BaseColumns;
 
