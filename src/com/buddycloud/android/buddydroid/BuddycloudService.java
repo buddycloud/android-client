@@ -71,31 +71,6 @@ public class BuddycloudService extends Service {
                 	}
                 	getContentResolver().notifyChange(Roster.CONTENT_URI, null);
 
-                	mConnection.getRoster().addRosterListener(new RosterListener() {
-
-                		@Override
-                		public void entriesAdded(Collection<String> addresses) {
-                			Log.d(TAG, " entry added event received");
-                		}
-
-                		@Override
-                		public void entriesDeleted(Collection<String> addresses) {
-                			Log.d(TAG, " entry deleted event received");
-                		}
-
-                		@Override
-                		public void entriesUpdated(Collection<String> addresses) {
-                			Log.d(TAG, " entry updated event received");
-                		}
-
-                		@Override
-                		public void presenceChanged(Presence presence) {
-                			Log.d(TAG, "presence changed: "+presence.getFrom()+" -> "+presence.getType().name());
-                		}
-
-
-                	});
-
                 	mConnection.addPacketListener(new PacketListener() {
 
                 		@Override
@@ -104,25 +79,22 @@ public class BuddycloudService extends Service {
                 			if (packet instanceof Message) {
                 				LocationEvent loc = (LocationEvent) packet.getExtension(PubSubLocationEventProvider.getNS());
                 				if (loc != null) {
+                					Log.d(TAG, "GEOLOC received: "+packet.getFrom()+" -> "+loc.text);
                 					ContentValues values = new ContentValues();
                 					switch (loc.type) {
                 					case LocationEvent.CURRENT:
-                						Log.d(TAG, "GEOLOC CURR received: "+packet.getFrom()+" -> "+loc.text);
                                 		values.put(Roster.GEOLOC, loc.text);
                 						break;
                 					case LocationEvent.PREV:
-                						Log.d(TAG, "GEOLOC PREV received: "+packet.getFrom()+" -> "+loc.text);
                 						values.put(Roster.GEOLOC_PREV, loc.text);
                 						break;
                 					case LocationEvent.NEXT:
-                						Log.d(TAG, "GEOLOC NEXT received: "+packet.getFrom()+" -> "+loc.text);
                 						values.put(Roster.GEOLOC_NEXT, loc.text);
                 						break;
                 					}
                 					getContentResolver().update(Roster.CONTENT_URI, values, Roster.JID+"='"+packet.getFrom()+"'", null);
                 				}
                 			}
-
                 		}}, null);
                 } else {
                 	Toast.makeText(this, "Login failed :(", Toast.LENGTH_LONG).show();
