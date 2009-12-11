@@ -57,7 +57,7 @@ public class MainActivity extends TabActivity {
 			break;
 
 		case R.id.settings:
-/*			startActivity(new Intent(this, SettingsActivity.class));*/
+			startActivity(new Intent(this, SettingsActivity.class));
 			break;
 		case R.id.feedback:
 			final PackageManager packageManager = getPackageManager();
