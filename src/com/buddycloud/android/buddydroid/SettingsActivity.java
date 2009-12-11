@@ -33,7 +33,9 @@ public class SettingsActivity extends PreferenceActivity {
 				preference.setSummary((String) newValue);
 				prefs.edit().putString("jid", (String) newValue).commit();
 				// reconnect xmpp
-				startService(new Intent(SettingsActivity.this, BuddycloudService.class));
+				Intent intent = new Intent(SettingsActivity.this, BuddycloudService.class);
+				stopService(intent);
+				startService(intent);
 				return false;
 			}
 		});
@@ -42,7 +44,9 @@ public class SettingsActivity extends PreferenceActivity {
 				preference.setSummary((String) newValue);
 				prefs.edit().putString("password", (String) newValue).commit();
 				// reconnect xmpp
-				startService(new Intent(SettingsActivity.this, BuddycloudService.class));
+				Intent intent = new Intent(SettingsActivity.this, BuddycloudService.class);
+				stopService(intent);
+				startService(intent);
 				return false;
 			}
 		});
