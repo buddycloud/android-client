@@ -159,8 +159,18 @@ public class BuddycloudProvider extends ContentProvider {
 	 * @see android.content.ContentProvider#delete(android.net.Uri, java.lang.String, java.lang.String[])
 	 */
 	@Override
-	public int delete(Uri arg0, String arg1, String[] arg2) {
-		// TODO Auto-generated method stub
+	public int delete(Uri uri, String arg1, String[] arg2) {
+		int what=URI_MATCHER.match(uri);
+		switch (what){
+		case CHANNELS:
+			break;
+		case CHANNEL_DATA:
+			break;
+		case ROSTER:
+			mOpenHelper.getWritableDatabase().execSQL("DELETE * FROM "+TABLE_ROSTER);
+			Log.d(TAG, "deleted roster");
+			break;
+		}
 		return 0;
 	}
 
@@ -210,7 +220,7 @@ public class BuddycloudProvider extends ContentProvider {
 			uri = ContentUris.withAppendedId(ChannelData.CONTENT_URI, rowID);
 			break;
 		case ROSTER:
-			// just insert if not already there
+			// for now : just insert if not already there
 			Cursor c = db.query(TABLE_ROSTER, new String[]{BaseColumns._ID}, Roster.JID+"='"+values.get(Roster.JID)+"'", null, null, null, null);
 			if (c.getCount() < 1) {
 				rowID=db.insert(TABLE_ROSTER, Roster.JID, values);
