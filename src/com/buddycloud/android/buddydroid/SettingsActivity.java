@@ -16,44 +16,49 @@ public class SettingsActivity extends PreferenceActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		
+
 		super.onCreate(savedInstanceState);
-		
+
 		addPreferencesFromResource(R.xml.settings);
-		
+
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
 		// test account to start right away
-		// TODO replace by some random generated test account or google account..
-		findPreference("jid").setSummary(prefs.getString("jid", "orangeman@buddycloud.com"));
-		findPreference("password").setSummary(prefs.getString("password", "xxxxxx"));
+		// TODO replace by some random generated test account or google
+		// account..
+		findPreference("jid").setSummary(prefs.getString("jid", ""));
+		findPreference("password").setSummary("Your password");
 
-		findPreference("jid").setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
-			public boolean onPreferenceChange(Preference preference, Object newValue) {
-				preference.setSummary((String) newValue);
-				prefs.edit().putString("jid", (String) newValue).commit();
-				// reconnect xmpp
-				Intent intent = new Intent(SettingsActivity.this, BuddycloudService.class);
-				stopService(intent);
-				startService(intent);
-				return false;
-			}
-		});
-		findPreference("password").setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
-			public boolean onPreferenceChange(Preference preference, Object newValue) {
-				preference.setSummary((String) newValue);
-				prefs.edit().putString("password", (String) newValue).commit();
-				// reconnect xmpp
-				Intent intent = new Intent(SettingsActivity.this, BuddycloudService.class);
-				stopService(intent);
-				startService(intent);
-				return false;
-			}
-		});
+		findPreference("jid").setOnPreferenceChangeListener(
+				new OnPreferenceChangeListener() {
+					public boolean onPreferenceChange(Preference preference,
+							Object newValue) {
+						preference.setSummary((String) newValue);
+						prefs.edit().putString("jid", (String) newValue)
+								.commit();
+						// reconnect xmpp
+						Intent intent = new Intent(SettingsActivity.this,
+								BuddycloudService.class);
+						stopService(intent);
+						startService(intent);
+						return false;
+					}
+				});
+		findPreference("password").setOnPreferenceChangeListener(
+				new OnPreferenceChangeListener() {
+					public boolean onPreferenceChange(Preference preference,
+							Object newValue) {
+						prefs.edit().putString("password", (String) newValue)
+								.commit();
+						// reconnect xmpp
+						Intent intent = new Intent(SettingsActivity.this,
+								BuddycloudService.class);
+						stopService(intent);
+						startService(intent);
+						return false;
+					}
+				});
 
-		
 	}
-	
-	
-	
+
 }
