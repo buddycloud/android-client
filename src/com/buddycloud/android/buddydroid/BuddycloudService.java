@@ -33,7 +33,7 @@ public class BuddycloudService extends Service {
 
                 SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this);
                 String password = pm.getString("password", "");
-                String jid = pm.getString("jid", "");
+                String jid = pm.getString("jid", "initial@place.holder");
 
                 // Create a connection
 //              connConfig.setReconnectionAllowed(true);
