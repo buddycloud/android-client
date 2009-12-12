@@ -54,7 +54,8 @@ public class BuddycloudService extends Service {
                 	mConnection.login(jid, password);
                 } catch (Exception ex) {
                     try {
-                    	mConnection.login(jid.split("@")[0], password);
+                    	String usr = jid.substring(0, jid.lastIndexOf('@'));
+                    	mConnection.login(usr, password);
                     } catch (Exception ex2) {
                     	Log.e("XMPPClient", "Login as " + jid + " failed");
                     	Log.e("XMPPClient", ex.toString());
