@@ -1,16 +1,11 @@
 package com.buddycloud.android.buddydroid;
 
-import java.util.Collection;
 import java.util.Iterator;
 
-import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.provider.ProviderManager;
 
 import android.app.Service;
 import android.content.ContentValues;
@@ -21,7 +16,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.buddycloud.android.buddydroid.provider.BuddyCloud;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.LocationEvent;
@@ -38,24 +32,37 @@ public class BuddycloudService extends Service {
                 Log.d(TAG, " onCreate");
 
                 SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this);
-                String password = pm.getString("password", "testaccount");
-                String username = pm.getString("username", "orangeman");
-                String host = pm.getString("host", "buddycloud.com");
-                
+                String password = pm.getString("password", "");
+                String jid = pm.getString("jid", "");
+
                 // Create a connection
 //              connConfig.setReconnectionAllowed(true);
-                mConnection = new BuddycloudClient(host);
-                
+                mConnection = new BuddycloudClient(jid.split("@")[1]);
+
+                // Step 1, try to connect
                 try {
                 	//                      SmackConfiguration.setPacketReplyTimeout(12000);
                 	mConnection.connect();
-                	mConnection.login(username, password);
                 	Log.i(TAG, "connected to " + mConnection.getHost() + ":" + mConnection.getPort());
                 } catch (Exception ex) {
                 	Log.e("XMPPClient", "Failed to connect to " + mConnection.getHost());
                 	Log.e("XMPPClient", ex.toString());
                 }
-                
+
+                // Step 2, try to Authanticate
+                try {
+                	mConnection.login(jid, password);
+                } catch (Exception ex) {
+                    try {
+                    	mConnection.login(jid.split("@")[0], password);
+                    } catch (Exception ex2) {
+                    	Log.e("XMPPClient", "Login as " + jid + " failed");
+                    	Log.e("XMPPClient", ex.toString());
+                    	Log.e("XMPPClient", "Login as " + jid + " failed");
+                    	Log.e("XMPPClient", ex2.toString());
+                    }
+                }
+
                 if (mConnection.isAuthenticated()) {
                 	Toast.makeText(this, "Login successful :)", Toast.LENGTH_SHORT).show();
                 	
