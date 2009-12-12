@@ -4,8 +4,11 @@ import java.util.Iterator;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.SASLAuthentication;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.sasl.SASLDigestMD5Mechanism;
 
 import android.app.Service;
 import android.content.ContentValues;
@@ -28,8 +31,9 @@ public class BuddycloudService extends Service {
 
     @Override
     public void onCreate() {
-        Log.d(TAG, " onCreate");
         super.onCreate();
+        Log.d(TAG, " onCreate");
+        System.setProperty("smack.debugEnabled", "true");
     }
 
     public void createConnection() {
@@ -98,6 +102,9 @@ public class BuddycloudService extends Service {
         String password = pm.getString("password", "");
         jid = jid + "@";
 
+        SASLAuthentication.registerSASLMechanism("DIGEST-MD5", SASLDigestMD5Mechanism.class);
+        SASLAuthentication.supportSASLMechanism("DIGEST-MD5");
+
         // We try to login with every '@'-seperated prefix
         // e.g. user@gmail.com@googlemail.com
         // will be tried as
@@ -111,8 +118,39 @@ public class BuddycloudService extends Service {
             } catch (Exception ex) {
                 Log.e("XMPPClient", "Login as " + jid + " failed");
                 Log.e("XMPPClient", ex.toString());
+                try {
+                    mConnection.disconnect();
+                    mConnection.connect();
+                } catch (XMPPException e) {
+                    Log.e("XMPPClient", e.toString());
+                }
             }
         } while (!mConnection.isAuthenticated() && jid.indexOf('@') != -1);
+
+        if (!mConnection.isAuthenticated() && mConnection.isSecureConnection()) {
+            // Retry with PLAIN enforced
+            SASLAuthentication.unsupportSASLMechanism("DIGEST-MD5");
+            SASLAuthentication.unregisterSASLMechanism("DIGEST-MD5");
+
+            jid = pm.getString("jid", "") + "@";
+
+            do {
+                jid = jid.substring(0, jid.lastIndexOf('@'));
+                try {
+                    mConnection.login(jid, password);
+                } catch (Exception ex) {
+                    Log.e("XMPPClient", "PLAN login as " + jid + " failed");
+                    Log.e("XMPPClient", ex.toString());
+                    try {
+                        mConnection.disconnect();
+                        mConnection.connect();
+                    } catch (XMPPException e) {
+                        Log.e("XMPPClient", e.toString());
+                    }
+                }
+            } while (!mConnection.isAuthenticated() && jid.indexOf('@') != -1);
+
+        }
 
         if (mConnection.isAuthenticated()) {
             Toast.makeText(this, "You are online!", Toast.LENGTH_LONG).show();
