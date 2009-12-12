@@ -58,7 +58,7 @@ public class BuddycloudService extends Service {
                     } catch (Exception ex2) {
                     	Log.e("XMPPClient", "Login as " + jid + " failed");
                     	Log.e("XMPPClient", ex.toString());
-                    	Log.e("XMPPClient", "Login as " + jid + " failed");
+                    	Log.e("XMPPClient", "Login as " + jid.split("@")[0] + " failed");
                     	Log.e("XMPPClient", ex2.toString());
                     }
                 }
