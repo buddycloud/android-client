@@ -194,13 +194,16 @@ public class BuddycloudService extends Service {
             }
         }
 
-        @Override
-        public void onDestroy() {
-                Log.d(TAG, " onDestroy");
-                mConnection.disconnect();
-                Log.i(TAG, "disonnected.");
-                super.onDestroy();
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, " onDestroy");
+        super.onDestroy();
+        if (mConnection == null || !mConnection.isConnected()) {
+            return;
         }
+        mConnection.disconnect();
+        Log.i(TAG, "disonnected.");
+    }
 
         @Override
         public IBinder onBind(Intent intent) {
