@@ -1,10 +1,7 @@
 package com.buddycloud.android.buddydroid;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.jivesoftware.smack.PacketListener;
@@ -20,7 +17,6 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.telephony.CellLocation;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -169,8 +165,15 @@ public class BuddycloudService extends Service {
     }
 
     private long beaconLogTimer;
+    private int internalPriority;
 
-    public void sendBeaconLog(final boolean force) {
+    /**
+     * Send a beacon log. Priority is 0..10, with 0 meaning instant and
+     * 10 meaning "if 3 min. have passed".
+     * @param prio
+     */
+    public void sendBeaconLog(final int prio) {
+        final int priority = Math.min(internalPriority, prio);
         taskQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -181,9 +184,14 @@ public class BuddycloudService extends Service {
                 }
                 long now = System.currentTimeMillis();
                 long delta = now - beaconLogTimer;
-                if (delta < 180000 && !force) {
+                if (delta < 18000 * priority) {
                     return;
                 }
+                if (delta < 10000) {
+                    internalPriority = priority;
+                    return;
+                }
+                internalPriority = 10;
                 beaconLogTimer = now;
                 BeaconLog log = new BeaconLog();
                 log.setTo("butler.buddycloud.com");
@@ -231,7 +239,7 @@ public class BuddycloudService extends Service {
                             toastHandler.sendMessage(msg);
                             return;
                         }
-                        sendBeaconLog(true);
+                        sendBeaconLog(0);
                         configureConnection();
                         updateRoaster();
                     }

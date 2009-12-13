@@ -1,13 +1,12 @@
 package com.buddycloud.android.buddydroid;
 
-import com.buddycloud.jbuddycloud.packet.BeaconLog;
-
 import android.content.Context;
 import android.telephony.CellLocation;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.telephony.gsm.GsmCellLocation;
-import android.util.Log;
+
+import com.buddycloud.jbuddycloud.packet.BeaconLog;
 
 public class CellListener extends PhoneStateListener {
 
@@ -16,10 +15,9 @@ public class CellListener extends PhoneStateListener {
     private String cell;
     private String newCell;
     private int power = -1;
-    private long time;
+    private long lastFullScan;
 
     public CellListener(BuddycloudService service) {
-        time = System.currentTimeMillis();
         this.service = service;
         telephonyManager = (TelephonyManager) service.getSystemService(
             Context.TELEPHONY_SERVICE
@@ -40,15 +38,25 @@ public class CellListener extends PhoneStateListener {
         if (cell == null) {
             cell = newCell;
         }
-        service.sendBeaconLog(true);
+        service.sendBeaconLog(3);
+        long now = System.currentTimeMillis();
+        long delta = now - lastFullScan;
+        if (delta > 300000) {
+            lastFullScan = now;
+            new Thread() {
+                public void run() {
+                    // TODO full neighbour scan
+                }
+            }.start();
+        }
     }
 
     @Override
     public void onSignalStrengthChanged(int asu) {
         boolean force = cell == null;
         cell = newCell;
-        power = asu;
-        service.sendBeaconLog(force);
+        power = 113 - 2*asu;
+        service.sendBeaconLog(10);
     }
 
     public void appendTo(BeaconLog log) {
