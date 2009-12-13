@@ -18,6 +18,9 @@
 			</intent-filter>
 		</activity>
 		
+		<activity android:name=".ChannelActivity" />
+		<activity android:name=".NearbyActivity" />
+		
 		<activity android:name=".SettingsActivity" />
 	
 		<provider android:name="com.buddycloud.android.buddydroid.provider.BuddycloudProvider"

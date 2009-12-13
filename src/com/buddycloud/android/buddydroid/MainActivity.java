@@ -5,6 +5,7 @@ import java.util.List;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,6 +15,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.LinearLayout;
 import android.widget.TabHost;
 
 
@@ -25,21 +27,18 @@ public class MainActivity extends TabActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.main);
-
 		setTitle(getString(R.string.app_name));
+		
 		mTabHost = getTabHost();
-
-		mTabHost.addTab(mTabHost.newTabSpec("tab_test1").setIndicator("TAB 1")
-				.setContent(R.id.textview1));
-		mTabHost.addTab(mTabHost.newTabSpec("tab_test2").setIndicator("TAB 2")
-				.setContent(R.id.textview2));
-		mTabHost.addTab(mTabHost.newTabSpec("tab_test3").setIndicator("TAB 3")
-				.setContent(R.id.textview3));
-		mTabHost.addTab(mTabHost.newTabSpec("tab_test4").setIndicator("TAB 4")
-				.setContent(R.id.textview1));
+		mTabHost.addTab(mTabHost.newTabSpec("roster").setIndicator("Roster")
+				.setContent(new Intent(this, RosterActivity.class)));
+		mTabHost.addTab(mTabHost.newTabSpec("channels").setIndicator("Channels")
+		        .setContent(new Intent(this, ChannelActivity.class)));
+		mTabHost.addTab(mTabHost.newTabSpec("nearby").setIndicator("NearBy")
+		        .setContent(new Intent(this, NearbyActivity.class)));
 
 	}
+
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
