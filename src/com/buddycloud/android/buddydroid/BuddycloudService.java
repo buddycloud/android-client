@@ -1,6 +1,9 @@
 package com.buddycloud.android.buddydroid;
 
 import java.util.Iterator;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
@@ -11,6 +14,7 @@ import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -25,12 +29,30 @@ public class BuddycloudService extends Service {
 
     private static final String TAG = "Service";
     private BuddycloudClient mConnection;
+    private ThreadPoolExecutor backgroundExecutor;
+    private BuddycloudService service = this;
+
+    private Handler toastHandler = new Handler() {
+
+        @Override
+        public void handleMessage(android.os.Message msg) {
+            super.handleMessage(msg);
+            Toast.makeText(
+                service,
+                msg.getData().get("msg").toString(),
+                Toast.LENGTH_LONG
+            ).show();
+        }
+
+    };
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, " onCreate");
         System.setProperty("smack.debugEnabled", "true");
+        backgroundExecutor = new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<Runnable>(1));
     }
 
     public void createConnection() {
@@ -106,35 +128,56 @@ public class BuddycloudService extends Service {
         getContentResolver().notifyChange(Roster.CONTENT_URI, null);
     }
 
-        @Override
-        public void onStart(Intent intent, int startId) {
-            Log.d(TAG, " onStart");
-            super.onStart(intent, startId);
+    @Override
+    public void onStart(Intent intent, int startId) {
+        Log.d(TAG, " onStart");
+        super.onStart(intent, startId);
 
-            if (mConnection == null ||
-                !mConnection.isConnected() ||
-                !mConnection.isAuthenticated()
-            ) {
-                createConnection();
-                if (mConnection != null && mConnection.isAuthenticated()) {
-                    Toast.makeText(this, "You are online!", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(this, "Login failed :(", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                configureConnection();
-                updateRoaster();
+        backgroundExecutor.execute(new Runnable() {
+
+            @Override
+            public void run() {
+                if (mConnection == null ||
+                        !mConnection.isConnected() ||
+                        !mConnection.isAuthenticated()
+                    ) {
+                        createConnection();
+                        android.os.Message msg = new android.os.Message();
+                        if (mConnection != null && mConnection.isAuthenticated()) {
+                            msg.getData().putString("msg", "You are online!");
+                            toastHandler.sendMessage(msg);
+                        } else {
+                            msg.getData().putString("msg", "Login failed :-(");
+                            toastHandler.sendMessage(msg);
+                            return;
+                        }
+                        configureConnection();
+                        updateRoaster();
+                    }
             }
-        }
+        });
+    }
 
     @Override
     public void onDestroy() {
         Log.d(TAG, " onDestroy");
         super.onDestroy();
-        if (mConnection == null || !mConnection.isConnected()) {
-            return;
+
+        backgroundExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (mConnection == null || !mConnection.isConnected()) {
+                    return;
+                }
+                mConnection.disconnect();
+            }
+        });
+
+        backgroundExecutor.shutdown();
+        try {
+            backgroundExecutor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
         }
-        mConnection.disconnect();
         Log.i(TAG, "disonnected.");
     }
 
