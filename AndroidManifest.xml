@@ -10,26 +10,21 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		
-		<activity android:name=".RosterActivity">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
-		
+
+		<activity android:name=".RosterActivity" />
 		<activity android:name=".ChannelActivity" />
 		<activity android:name=".NearbyActivity" />
 		
 		<activity android:name=".SettingsActivity" />
-	
+
 		<provider android:name="com.buddycloud.android.buddydroid.provider.BuddycloudProvider"
 				  android:authorities="com.buddycloud"
 				  android:multiprocess="false" />
-				  
+
 		<service android:name="BuddycloudService" />
-		
-	</application>
+
+	<activity android:name=".SettingsActivity"></activity>
+</application>
 
 	<uses-sdk android:minSdkVersion="3" />
 
