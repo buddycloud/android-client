@@ -126,6 +126,7 @@ public class BuddycloudService extends Service {
             getContentResolver().insert(Roster.CONTENT_URI, values);
         }
         getContentResolver().notifyChange(Roster.CONTENT_URI, null);
+        Log.d(TAG, "inserted roster");
     }
 
     @Override
