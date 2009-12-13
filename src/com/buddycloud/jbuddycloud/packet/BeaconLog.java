@@ -9,12 +9,13 @@ public class BeaconLog extends IQ {
 	public LocationEvent location;
 	
 	public ArrayList<Beacon> beacons = new ArrayList<Beacon>();
+
 	public static class Beacon {
 		
 		public String id;
 		public String type;
 		public int signal;
-		
+
 		public Object toXML() {
 			StringBuffer sb = new StringBuffer();
 			sb.append("<reference>")
@@ -26,6 +27,14 @@ public class BeaconLog extends IQ {
 		}
 	}
 	
+
+    public void add(String type, String id, int signal) {
+        Beacon beacon = new Beacon();
+        beacon.type = type;
+        beacon.id = id;
+        beacon.signal = signal;
+        beacons.add(beacon);
+    }
 
 	@Override
 	public String getChildElementXML() {
