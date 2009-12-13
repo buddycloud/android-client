@@ -133,7 +133,7 @@ public class BuddycloudClient extends XMPPConnection {
         ArrayList<ConnectionConfiguration> configs =
             new ArrayList<ConnectionConfiguration>(3);
 
-        if (jid.length() == 0) {
+        if (jid != null && jid.length() == 0) {
             jid = null;
         }
 

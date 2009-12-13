@@ -42,7 +42,8 @@ public class BuddycloudService extends Service {
             PreferenceManager.getDefaultSharedPreferences(this);
 
         String jid = pm.getString("jid", null);
-        if (jid.indexOf('@') == -1) {
+
+        if (jid != null && jid.indexOf('@') == -1) {
             return;
         }
         String password = pm.getString("password", null);
