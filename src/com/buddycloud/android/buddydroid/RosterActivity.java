@@ -59,8 +59,8 @@ public class RosterActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
     
-//    	Cursor buddies = managedQuery(Roster.CONTENT_URI, Roster.PROJECTION_MAP, null, null, null);
-    	Cursor buddies = getContentResolver().query(Roster.CONTENT_URI, Roster.PROJECTION_MAP, null, null, null);
+    	Cursor buddies = managedQuery(Roster.CONTENT_URI, Roster.PROJECTION_MAP, null, null, "isMe ASC");
+//    	Cursor buddies = getContentResolver().query(Roster.CONTENT_URI, Roster.PROJECTION_MAP, null, null, null);
     	Log.d("provider", "cursor is: " + buddies);
     	setListAdapter(new RosterAdapter(this, buddies));
 

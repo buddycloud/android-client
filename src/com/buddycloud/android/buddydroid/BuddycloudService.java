@@ -37,11 +37,8 @@ public class BuddycloudService extends Service {
         @Override
         public void handleMessage(android.os.Message msg) {
             super.handleMessage(msg);
-            Toast.makeText(
-                service,
-                msg.getData().get("msg").toString(),
-                Toast.LENGTH_LONG
-            ).show();
+            Toast.makeText(service, msg.getData().get("msg").toString(),
+                    Toast.LENGTH_LONG).show();
         }
 
     };
@@ -57,11 +54,11 @@ public class BuddycloudService extends Service {
 
     public void createConnection() {
         if (mConnection != null && mConnection.isConnected()) {
-           return;
+            return;
         }
 
-        SharedPreferences pm =
-            PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences pm = PreferenceManager
+                .getDefaultSharedPreferences(this);
 
         String jid = pm.getString("jid", null);
 
@@ -70,11 +67,8 @@ public class BuddycloudService extends Service {
         }
         String password = pm.getString("password", null);
 
-        mConnection = BuddycloudClient.createBuddycloudClient(
-            jid,
-            password,
-            null, null, null
-        );
+        mConnection = BuddycloudClient.createBuddycloudClient(jid, password,
+                null, null, null);
 
     }
 
@@ -87,9 +81,11 @@ public class BuddycloudService extends Service {
             @Override
             public void processPacket(Packet packet) {
                 if (packet instanceof Message) {
-                    LocationEvent loc = (LocationEvent) packet.getExtension(PubSubLocationEventProvider.getNS());
+                    LocationEvent loc = (LocationEvent) packet
+                            .getExtension(PubSubLocationEventProvider.getNS());
                     if (loc != null) {
-                        Log.d(TAG, "GEOLOC received: "+packet.getFrom()+" -> "+loc.text);
+                        Log.d(TAG, "GEOLOC received: " + packet.getFrom()
+                                + " -> " + loc.text);
                         ContentValues values = new ContentValues();
                         switch (loc.type) {
                         case LocationEvent.CURRENT:
@@ -102,25 +98,34 @@ public class BuddycloudService extends Service {
                             values.put(Roster.GEOLOC_NEXT, loc.text);
                             break;
                         }
-                        getContentResolver().update(Roster.CONTENT_URI, values, Roster.JID+"='"+packet.getFrom()+"'", null);
+                        getContentResolver().update(Roster.CONTENT_URI, values,
+                                Roster.JID + "='" + packet.getFrom() + "'",
+                                null);
                     }
                 }
-            }}, null);
+            }
+        }, null);
     }
 
     public void updateRoaster() {
-        if (mConnection == null ||
-           !mConnection.isConnected() ||
-           !mConnection.isAuthenticated()
-        ) {
+        if (mConnection == null || !mConnection.isConnected()
+                || !mConnection.isAuthenticated()) {
             return;
         }
 
         getContentResolver().delete(Roster.CONTENT_URI, null, null);
+        // insert yourself into roster ;) dirty ugly stupid for now :P
+        ContentValues values = new ContentValues();
+        String jid = PreferenceManager.getDefaultSharedPreferences(this)
+                     .getString("jid", "");
+        values.put(Roster.JID, jid);
+        values.put(Roster.NAME, jid.substring(0, jid.indexOf('@')));
+        getContentResolver().insert(Roster.CONTENT_URI, values);
+
         Iterator iterator = mConnection.getRoster().getEntries().iterator();
         while (iterator.hasNext()) {
             RosterEntry buddy = ((RosterEntry) iterator.next());
-            ContentValues values = new ContentValues();
+            values.clear();
             values.put(Roster.JID, buddy.getUser());
             values.put(Roster.NAME, buddy.getUser().split("\\@")[0]);
             getContentResolver().insert(Roster.CONTENT_URI, values);
@@ -138,23 +143,21 @@ public class BuddycloudService extends Service {
 
             @Override
             public void run() {
-                if (mConnection == null ||
-                        !mConnection.isConnected() ||
-                        !mConnection.isAuthenticated()
-                    ) {
-                        createConnection();
-                        android.os.Message msg = new android.os.Message();
-                        if (mConnection != null && mConnection.isAuthenticated()) {
-                            msg.getData().putString("msg", "You are online!");
-                            toastHandler.sendMessage(msg);
-                        } else {
-                            msg.getData().putString("msg", "Login failed :-(");
-                            toastHandler.sendMessage(msg);
-                            return;
-                        }
-                        configureConnection();
-                        updateRoaster();
+                if (mConnection == null || !mConnection.isConnected()
+                        || !mConnection.isAuthenticated()) {
+                    createConnection();
+                    android.os.Message msg = new android.os.Message();
+                    if (mConnection != null && mConnection.isAuthenticated()) {
+                        msg.getData().putString("msg", "You are online!");
+                        toastHandler.sendMessage(msg);
+                    } else {
+                        msg.getData().putString("msg", "Login failed :-(");
+                        toastHandler.sendMessage(msg);
+                        return;
                     }
+                    configureConnection();
+                    updateRoaster();
+                }
             }
         });
     }
@@ -182,10 +185,10 @@ public class BuddycloudService extends Service {
         Log.i(TAG, "disonnected.");
     }
 
-        @Override
-        public IBinder onBind(Intent intent) {
-                // TODO Auto-generated method stub
-                return null;
-        }
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

@@ -26,6 +26,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.util.Log;
 
@@ -234,7 +235,7 @@ public class BuddycloudProvider extends ContentProvider {
 
         case CHANNELS:
             qb.setTables(TABLE_CHANNELS);
-            qb.setProjectionMap(CHANNELS_PROJECTION_MAP);
+//            qb.setProjectionMap(CHANNELS_PROJECTION_MAP);
 
             dummyCursor = new MatrixCursor(BuddyCloud.Channels.PROJECTION_MAP);
 
@@ -290,24 +291,16 @@ public class BuddycloudProvider extends ContentProvider {
 
             break;
         case ROSTER:
-            qb.setTables(TABLE_ROSTER);
-            qb.setProjectionMap(ROSTER_PROJECTION_MAP);
-
-            dummyCursor = new MatrixCursor(BuddyCloud.Roster.PROJECTION_MAP);
-            dummyCursor
-                    .addRow(new String[] {
-                            "1",
-                            "dummy@buddycloud.com",
-                            "DUMMY",
-                            "Way too long a status comment to be still legible on a single line. Thus we're breaking to as many lines as necessary.",
-                            "HERE", "There", "Nowhere" });
-            dummyCursor.addRow(new String[] { "2", "bebroll@buddycloud.com",
-                    "Ben", "Getting up to speed with Android",
-                    "Buddycloud Towers", "Somewhere with beer", "Home" });
-            dummyCursor.addRow(new String[] { "3", "simon@buddycloud.com",
-                    "Simon", "So many people to cater for!",
-                    "Buddycloud Towers", null, "Home" });
-            break;
+//            qb.setTables(TABLE_ROSTER);
+//            qb.setProjectionMap(ROSTER_PROJECTION_MAP);
+            Cursor c = mOpenHelper.getReadableDatabase().rawQuery("SELECT " +
+            	"_id, jid, name, status, geoloc_prev, geoloc, geoloc_next, " +
+            	"jid='"+PreferenceManager.getDefaultSharedPreferences(
+            	        getContext()).getString("jid","")+"' AS itsMe " +
+            	"FROM roster ORDER BY itsMe DESC, cache_update_timestamp DESC"
+            	, null);
+            c.setNotificationUri(getContext().getContentResolver(), uri);
+            return c;
         case ROSTER_ID:
             qb.setTables(TABLE_ROSTER);
             qb.appendWhere("_id=" + uri.getPathSegments().get(1));
@@ -358,7 +351,7 @@ public class BuddycloudProvider extends ContentProvider {
             String[] selectionArgs) {
         int count = 0;
         int what = URI_MATCHER.match(uri);
-        // values.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,System.currentTimeMillis());
+         values.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,System.currentTimeMillis());
         switch (what) {
 
         case CHANNELS:
@@ -479,6 +472,7 @@ public class BuddycloudProvider extends ContentProvider {
         ROSTER_PROJECTION_MAP.put(Roster.GEOLOC_PREV, Roster.GEOLOC_PREV);
         ROSTER_PROJECTION_MAP.put(Roster.CACHE_UPDATE_TIMESTAMP,
                 Roster.CACHE_UPDATE_TIMESTAMP);
+        
 
         PLACES_PROJECTION_MAP.put(Places._ID, Places._ID);
         PLACES_PROJECTION_MAP.put(Places._COUNT, Places._COUNT);
