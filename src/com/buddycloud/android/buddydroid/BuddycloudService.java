@@ -4,11 +4,8 @@ import java.util.Iterator;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.SASLAuthentication;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.sasl.SASLDigestMD5Mechanism;
 
 import android.app.Service;
 import android.content.ContentValues;
@@ -44,96 +41,24 @@ public class BuddycloudService extends Service {
         SharedPreferences pm =
             PreferenceManager.getDefaultSharedPreferences(this);
 
-        String jid = pm.getString("jid", "");
+        String jid = pm.getString("jid", null);
         if (jid.indexOf('@') == -1) {
             return;
         }
+        String password = pm.getString("password", null);
 
-        String domain = jid.substring(jid.lastIndexOf('@') + 1);
-        mConnection = new BuddycloudClient(domain);
-        try {
-            mConnection.connect();
-            Log.i(TAG, "connected to " + mConnection.getHost() + ":" + mConnection.getPort());
-        } catch (Exception ex) {
-            Log.e("XMPPClient", "Failed to connect to " + mConnection.getHost());
-            Log.e("XMPPClient", ex.toString());
-        }
+        mConnection = BuddycloudClient.createBuddycloudClient(
+            jid,
+            password,
+            null, null, null
+        );
 
-    }
-
-    public void login() {
-        if (mConnection == null || !mConnection.isConnected()) {
-            return;
-        }
-
-        SharedPreferences pm =
-            PreferenceManager.getDefaultSharedPreferences(this);
-
-        String jid = pm.getString("jid", "");
-        if (jid.indexOf('@') == -1) {
-            return;
-        }
-        String password = pm.getString("password", "");
-        jid = jid + "@";
-
-        SASLAuthentication.registerSASLMechanism("DIGEST-MD5", SASLDigestMD5Mechanism.class);
-        SASLAuthentication.supportSASLMechanism("DIGEST-MD5");
-
-        // We try to login with every '@'-seperated prefix
-        // e.g. user@gmail.com@googlemail.com
-        // will be tried as
-        // user@gmail.com@googlemail.com
-        // user@gmail.com
-        // user
-        do {
-            jid = jid.substring(0, jid.lastIndexOf('@'));
-            try {
-                mConnection.login(jid, password);
-            } catch (Exception ex) {
-                Log.e("XMPPClient", "Login as " + jid + " failed");
-                Log.e("XMPPClient", ex.toString());
-                try {
-                    mConnection.disconnect();
-                    mConnection.connect();
-                } catch (XMPPException e) {
-                    Log.e("XMPPClient", e.toString());
-                }
-            }
-        } while (!mConnection.isAuthenticated() && jid.indexOf('@') != -1);
-
-        if (!mConnection.isAuthenticated() && mConnection.isSecureConnection()) {
-            // Retry with PLAIN enforced
-            SASLAuthentication.unsupportSASLMechanism("DIGEST-MD5");
-            SASLAuthentication.unregisterSASLMechanism("DIGEST-MD5");
-
-            jid = pm.getString("jid", "") + "@";
-
-            do {
-                jid = jid.substring(0, jid.lastIndexOf('@'));
-                try {
-                    mConnection.login(jid, password);
-                } catch (Exception ex) {
-                    Log.e("XMPPClient", "PLAN login as " + jid + " failed");
-                    Log.e("XMPPClient", ex.toString());
-                    try {
-                        mConnection.disconnect();
-                        mConnection.connect();
-                    } catch (XMPPException e) {
-                        Log.e("XMPPClient", e.toString());
-                    }
-                }
-            } while (!mConnection.isAuthenticated() && jid.indexOf('@') != -1);
-
-        }
-
-        if (mConnection.isAuthenticated()) {
-            Toast.makeText(this, "You are online!", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "Login failed :(", Toast.LENGTH_LONG).show();
-        }
     }
 
     public void configureConnection() {
+        if (mConnection == null || !mConnection.isAuthenticated()) {
+            return;
+        }
         mConnection.addPacketListener(new PacketListener() {
 
             @Override
@@ -190,7 +115,12 @@ public class BuddycloudService extends Service {
                 !mConnection.isAuthenticated()
             ) {
                 createConnection();
-                login();
+                if (mConnection != null && mConnection.isAuthenticated()) {
+                    Toast.makeText(this, "You are online!", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, "Login failed :(", Toast.LENGTH_LONG).show();
+                    return;
+                }
                 configureConnection();
                 updateRoaster();
             }
