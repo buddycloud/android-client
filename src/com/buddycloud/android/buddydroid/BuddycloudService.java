@@ -59,32 +59,6 @@ public class BuddycloudService extends Service {
             Log.e("XMPPClient", ex.toString());
         }
 
-        if (mConnection.isConnected()) {
-            mConnection.addPacketListener(new PacketListener() {
-
-                @Override
-                public void processPacket(Packet packet) {
-                    if (packet instanceof Message) {
-                        LocationEvent loc = (LocationEvent) packet.getExtension(PubSubLocationEventProvider.getNS());
-                        if (loc != null) {
-                            Log.d(TAG, "GEOLOC received: "+packet.getFrom()+" -> "+loc.text);
-                            ContentValues values = new ContentValues();
-                            switch (loc.type) {
-                            case LocationEvent.CURRENT:
-                                values.put(Roster.GEOLOC, loc.text);
-                                break;
-                            case LocationEvent.PREV:
-                                values.put(Roster.GEOLOC_PREV, loc.text);
-                                break;
-                            case LocationEvent.NEXT:
-                                values.put(Roster.GEOLOC_NEXT, loc.text);
-                                break;
-                            }
-                            getContentResolver().update(Roster.CONTENT_URI, values, Roster.JID+"='"+packet.getFrom()+"'", null);
-                        }
-                    }
-                }}, null);
-        }
     }
 
     public void login() {
@@ -159,6 +133,33 @@ public class BuddycloudService extends Service {
         }
     }
 
+    public void configureConnection() {
+        mConnection.addPacketListener(new PacketListener() {
+
+            @Override
+            public void processPacket(Packet packet) {
+                if (packet instanceof Message) {
+                    LocationEvent loc = (LocationEvent) packet.getExtension(PubSubLocationEventProvider.getNS());
+                    if (loc != null) {
+                        Log.d(TAG, "GEOLOC received: "+packet.getFrom()+" -> "+loc.text);
+                        ContentValues values = new ContentValues();
+                        switch (loc.type) {
+                        case LocationEvent.CURRENT:
+                            values.put(Roster.GEOLOC, loc.text);
+                            break;
+                        case LocationEvent.PREV:
+                            values.put(Roster.GEOLOC_PREV, loc.text);
+                            break;
+                        case LocationEvent.NEXT:
+                            values.put(Roster.GEOLOC_NEXT, loc.text);
+                            break;
+                        }
+                        getContentResolver().update(Roster.CONTENT_URI, values, Roster.JID+"='"+packet.getFrom()+"'", null);
+                    }
+                }
+            }}, null);
+    }
+
     public void updateRoaster() {
         if (mConnection == null ||
            !mConnection.isConnected() ||
@@ -190,6 +191,7 @@ public class BuddycloudService extends Service {
             ) {
                 createConnection();
                 login();
+                configureConnection();
                 updateRoaster();
             }
         }
