@@ -1,4 +1,4 @@
-package com.buddycloud.android.buddydroid;
+package com.buddycloud.android.buddydroid.collector;
 
 import android.content.Context;
 import android.telephony.CellLocation;
@@ -6,6 +6,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.telephony.gsm.GsmCellLocation;
 
+import com.buddycloud.android.buddydroid.BuddycloudService;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 
 public class CellListener extends PhoneStateListener {
