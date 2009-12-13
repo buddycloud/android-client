@@ -31,6 +31,7 @@ import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.LocationEvent;
+import com.buddycloud.jbuddycloud.packet.LocationQueryResponse;
 import com.buddycloud.jbuddycloud.provider.PubSubLocationEventProvider;
 
 public class BuddycloudService extends Service {
@@ -136,6 +137,15 @@ public class BuddycloudService extends Service {
                                 Roster.JID + "='" + packet.getFrom() + "'",
                                 null);
                     }
+                } else if (packet instanceof LocationQueryResponse) {
+                    LocationQueryResponse loc = (LocationQueryResponse) packet;
+                    Log.d(TAG, "LocationQuery RESPONSE received: " + loc.label+" "+loc.quality);
+                    ContentValues values = new ContentValues();
+                    values.put(Roster.GEOLOC, loc.label);
+                    String jid = PreferenceManager.getDefaultSharedPreferences(
+                            BuddycloudService.this).getString("jid", "");
+                    getContentResolver().update(Roster.CONTENT_URI, values,
+                            Roster.JID + "='" + jid + "'", null);
                 }
             }}, null);
     }

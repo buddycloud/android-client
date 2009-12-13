@@ -16,6 +16,7 @@ import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
 
+import com.buddycloud.jbuddycloud.provider.LocationQueryResponseProvider;
 import com.buddycloud.jbuddycloud.provider.PubSubLocationEventProvider;
 
 public class BuddycloudClient extends XMPPConnection {
@@ -118,9 +119,13 @@ public class BuddycloudClient extends XMPPConnection {
                         "purge",
                         "http://jabber.org/protocol/pubsub#event",
                         new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
+        
         ProviderManager.getInstance().addExtensionProvider("event",
                 PubSubLocationEventProvider.getNS(),
                 new PubSubLocationEventProvider());
+        ProviderManager.getInstance().addIQProvider("location",
+                LocationQueryResponseProvider.getNS(),
+                new LocationQueryResponseProvider());
     }
 
     public static BuddycloudClient createBuddycloudClient(

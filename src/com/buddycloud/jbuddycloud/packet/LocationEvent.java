@@ -1,8 +1,9 @@
 package com.buddycloud.jbuddycloud.packet;
 
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.PacketExtension;
 
-public class LocationEvent implements PacketExtension {
+public class LocationEvent extends IQ implements PacketExtension {
 	
 	public static final int PREV = 1;
 	public static final int CURRENT = 2;
@@ -33,5 +34,11 @@ public class LocationEvent implements PacketExtension {
 		.append("<lon>").append(lng).append("</lon>");
 		return sb.toString();
 	}
+
+    @Override
+    public String getChildElementXML() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }
