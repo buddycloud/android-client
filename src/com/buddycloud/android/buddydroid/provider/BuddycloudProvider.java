@@ -293,12 +293,14 @@ public class BuddycloudProvider extends ContentProvider {
         case ROSTER:
 //            qb.setTables(TABLE_ROSTER);
 //            qb.setProjectionMap(ROSTER_PROJECTION_MAP);
+            String jid = PreferenceManager
+                .getDefaultSharedPreferences(getContext()).getString("jid","");
             Cursor c = mOpenHelper.getReadableDatabase().rawQuery("SELECT " +
-            	"_id, jid, name, status, geoloc_prev, geoloc, geoloc_next, " +
-            	"jid='"+PreferenceManager.getDefaultSharedPreferences(
-            	        getContext()).getString("jid","")+"' AS itsMe " +
-            	"FROM roster ORDER BY itsMe DESC, cache_update_timestamp DESC"
-            	, null);
+                    "_id, jid, name, status, geoloc_prev, geoloc, geoloc_next, " +
+                    "jid='" + jid + "' AS itsMe " +
+                    "FROM roster ORDER BY itsMe DESC, cache_update_timestamp DESC",
+                    new String[]{}
+            );
             c.setNotificationUri(getContext().getContentResolver(), uri);
             return c;
         case ROSTER_ID:
@@ -394,9 +396,7 @@ public class BuddycloudProvider extends ContentProvider {
         case CHANNEL_DATA:
             break;
         case ROSTER:
-            mOpenHelper.getWritableDatabase().execSQL(
-                    "DELETE FROM " + TABLE_ROSTER);
-            Log.d(TAG, "deleted roster");
+            mOpenHelper.getWritableDatabase().delete(TABLE_ROSTER, arg1, arg2);
             break;
         }
         return 0;

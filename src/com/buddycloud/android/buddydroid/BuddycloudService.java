@@ -1,5 +1,9 @@
 package com.buddycloud.android.buddydroid;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +18,7 @@ import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -143,25 +148,96 @@ public class BuddycloudService extends Service {
             return;
         }
 
-        getContentResolver().delete(Roster.CONTENT_URI, null, null);
-        // insert yourself into roster ;) dirty ugly stupid for now :P
-        ContentValues values = new ContentValues();
+        Log.d("Roster", "read roaster");
+        long time = -System.currentTimeMillis();
+
+        ArrayList<ContentValues> newEntries = new ArrayList<ContentValues>();
+
+        HashMap<String, String> oldRoster = new HashMap<String, String>();
+        Cursor query = getContentResolver().query(
+            Roster.CONTENT_URI,
+            new String[]{Roster.JID, Roster.NAME},
+            null, null, null
+        );
+        if (query.getCount() > 0) {
+            if (query.isBeforeFirst()) {
+                query.moveToNext();
+            }
+            while (!query.isAfterLast()) {
+                oldRoster.put(query.getString(1), query.getString(2));
+                query.moveToNext();
+            }
+        }
+        query.close();
+
         String jid = PreferenceManager.getDefaultSharedPreferences(this)
                      .getString("jid", "");
-        values.put(Roster.JID, jid);
-        values.put(Roster.NAME, jid.substring(0, jid.indexOf('@')));
-        getContentResolver().insert(Roster.CONTENT_URI, values);
+        ContentValues values = new ContentValues();
+        if (oldRoster.containsKey(jid)) {
+            oldRoster.remove(jid);
+        } else {
+            values.put(Roster.JID, jid);
+            values.put(Roster.NAME, jid.substring(0, jid.lastIndexOf('@')));
+            newEntries.add(values);
+        }
+
+        Log.d("Roster", "fetch new roster");
 
         Iterator iterator = mConnection.getRoster().getEntries().iterator();
         while (iterator.hasNext()) {
             RosterEntry buddy = ((RosterEntry) iterator.next());
-            values.clear();
-            values.put(Roster.JID, buddy.getUser());
-            values.put(Roster.NAME, buddy.getUser().split("\\@")[0]);
-            getContentResolver().insert(Roster.CONTENT_URI, values);
+            String newName = buddy.getName();
+            String newUser = buddy.getUser();
+            if (newName == null) {
+                if (newUser.indexOf('@') != -1) {
+                    newName = newUser.substring(0, newUser.lastIndexOf('@'));
+                } else {
+                    newName = newUser;
+                }
+            }
+            if (oldRoster.containsKey(buddy.getUser())) {
+                String name = oldRoster.get(newUser);
+                if (!name.equals(newName)) {
+                    // Update name
+                    Log.d("Roaster", "update " + buddy.getUser());
+                    values = new ContentValues();
+                    values.put(Roster.JID, newUser);
+                    values.put(Roster.NAME, newName);
+                    getContentResolver().update(
+                        Roster.CONTENT_URI,
+                        values,
+                        Roster.JID + " = ? AND " + Roster.NAME + " = ?",
+                        new String[]{newUser, name}
+                    );
+                }
+                oldRoster.remove(newUser);
+                continue;
+            }
+            Log.d("Roster", "add " + newUser);
+            values = new ContentValues();
+            values.put(Roster.JID, newUser);
+            values.put(Roster.NAME, newName);
+            newEntries.add(values);
         }
+        getContentResolver().bulkInsert(
+            Roster.CONTENT_URI,
+            newEntries.toArray(new ContentValues[newEntries.size()])
+        );
+        if (oldRoster.size() > 0) {
+            StringBuilder where = new StringBuilder(Roster.JID);
+            where.append(" IN (");
+            for (int i = 1, l = oldRoster.size(); i < l; i++) {
+                where.append("?,");
+            }
+            where.append("?)");
+            getContentResolver().delete(Roster.CONTENT_URI, where.toString(),
+                    oldRoster.keySet().toArray(new String[oldRoster.size()]));
+        }
+
+        time += System.currentTimeMillis();
+
         getContentResolver().notifyChange(Roster.CONTENT_URI, null);
-        Log.d(TAG, "inserted roster");
+        Log.d(TAG, "updated roster in " + time + "ms");
     }
 
     private long beaconLogTimer;
@@ -266,8 +342,8 @@ public class BuddycloudService extends Service {
             }
         });
 
-        taskQueue = null;
         taskQueue.clear();
+        taskQueue = null;
 
         Log.i(TAG, "disonnected.");
     }
