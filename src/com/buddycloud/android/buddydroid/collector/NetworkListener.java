@@ -30,7 +30,7 @@ public class NetworkListener {
             }
             WifiInfo info = wifiManager.getConnectionInfo();
             if (info != null) {
-                log.add("wifi", info.getBSSID(), 113 - 2 * info.getRssi());
+                log.add("wifi", info.getBSSID(), info.getRssi());
             }
         }
     }
