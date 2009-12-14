@@ -3,8 +3,6 @@ package com.buddycloud.android.buddydroid;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
@@ -20,8 +18,6 @@ import android.database.Cursor;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.telephony.PhoneStateListener;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -292,35 +288,45 @@ public class BuddycloudService extends Service {
             taskQueue.start();
         }
 
-        taskQueue.add(new Runnable() {
+        try {
+            if (!taskQueue.add(new Runnable() {
 
-            @Override
-            public void run() {
-                if (mConnection == null ||
-                        !mConnection.isConnected() ||
-                        !mConnection.isAuthenticated()
-                    ) {
-                        cellListener.start();
-                        createConnection();
-                        android.os.Message msg = new android.os.Message();
-                        if (mConnection != null && mConnection.isAuthenticated()) {
-                            msg.getData().putString("msg", "You are online!");
-                            toastHandler.sendMessage(msg);
-                        } else {
-                            msg.getData().putString("msg", "Login failed :-(");
-                            toastHandler.sendMessage(msg);
-                            return;
+                @Override
+                public void run() {
+                    if (mConnection == null ||
+                            !mConnection.isConnected() ||
+                            !mConnection.isAuthenticated()
+                        ) {
+                            cellListener.start();
+                            createConnection();
+                            android.os.Message msg = new android.os.Message();
+                            if (mConnection != null && mConnection.isAuthenticated()) {
+                                msg.getData().putString("msg", "You are online!");
+                                toastHandler.sendMessage(msg);
+                                try {
+                                    sendBeaconLog(0);
+                                } catch (InterruptedException e) {
+                                }
+                            } else {
+                                msg.getData().putString("msg", "Login failed :-(");
+                                toastHandler.sendMessage(msg);
+                                return;
+                            }
+                            try {
+                                sendBeaconLog(0);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            configureConnection();
+                            updateRoaster();
                         }
-                        try {
-                            sendBeaconLog(0);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        configureConnection();
-                        updateRoaster();
-                    }
+                }
+            })) {
+                Log.d(TAG, "Failed to start service");
             }
-        });
+        } catch (InterruptedException e) {
+            Log.d(TAG, e.getLocalizedMessage(), e);
+        }
     }
 
     @Override
