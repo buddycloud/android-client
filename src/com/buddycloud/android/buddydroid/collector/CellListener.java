@@ -71,11 +71,14 @@ public class CellListener extends PhoneStateListener {
         }
         Log.d("CellListener", "Neighbour update");
         for (NeighboringCellInfo info : neighboringCellInfo) {
-            log.add(
-                "cell",
-                cell.substring(0, cell.lastIndexOf(':') + 1) + info.getCid(),
-                113 - 2*info.getRssi()
-            );
+            if (info.getCid() != -1) {
+                log.add(
+                    "cell",
+                    cell.substring(0, cell.lastIndexOf(':') + 1)
+                    + info.getCid(),
+                    113 - 2*info.getRssi()
+                );
+            }
         }
     }
 
