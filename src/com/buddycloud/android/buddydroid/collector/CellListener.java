@@ -1,5 +1,6 @@
 package com.buddycloud.android.buddydroid.collector;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
@@ -25,6 +26,9 @@ public class CellListener extends PhoneStateListener {
     private int power = -1;
     private BroadcastReceiver receiver;
 
+    private ArrayList<NeighboringCellInfo> neighbours;
+    private String catchedAt = null;
+
     public CellListener(final BuddycloudService service) {
         this.service = service;
     }
@@ -45,11 +49,8 @@ public class CellListener extends PhoneStateListener {
         };
         service.registerReceiver(receiver, new IntentFilter(
                 "android.intent.action.TIME_TICK"));
-        telephonyManager.listen(
-            this,
-            PhoneStateListener.LISTEN_CELL_LOCATION |
-            PhoneStateListener.LISTEN_SIGNAL_STRENGTH
-        );
+        telephonyManager.listen(this, PhoneStateListener.LISTEN_CELL_LOCATION
+                | PhoneStateListener.LISTEN_SIGNAL_STRENGTH);
     }
 
     public void stop() {
@@ -83,6 +84,21 @@ public class CellListener extends PhoneStateListener {
         boolean force = cell == null;
         cell = newCell;
         power = 113 - 2 * asu;
+        List<NeighboringCellInfo> neighboringCellInfo = telephonyManager
+                .getNeighboringCellInfo();
+        if (neighboringCellInfo != null) {
+            ArrayList<NeighboringCellInfo> n = new ArrayList<NeighboringCellInfo>(
+                    neighboringCellInfo.size() + 2);
+            for (NeighboringCellInfo info : neighboringCellInfo) {
+                if (info.getCid() != -1) {
+                    n.add(info);
+                }
+            }
+            if (n.size() > 0) {
+                neighbours = n;
+                catchedAt = cell;
+            }
+        }
         try {
             service.sendBeaconLog(force ? 2 : 10);
         } catch (InterruptedException e) {
@@ -91,14 +107,9 @@ public class CellListener extends PhoneStateListener {
 
     public void appendTo(BeaconLog log) {
         log.add("cell", cell, power);
-        List<NeighboringCellInfo> neighboringCellInfo = telephonyManager
-                .getNeighboringCellInfo();
-        if (neighboringCellInfo == null) {
-            return;
-        }
-        Log.d("CellListener", "Neighbour update");
-        for (NeighboringCellInfo info : neighboringCellInfo) {
-            if (info.getCid() != -1) {
+        if (catchedAt.equals(cell)) {
+            Log.d("CellListener", "Neighbour update");
+            for (NeighboringCellInfo info : neighbours) {
                 log.add("cell", cell.substring(0, cell.lastIndexOf(':') + 1)
                         + info.getCid(), 113 - 2 * info.getRssi());
             }

@@ -39,6 +39,7 @@ public class BuddycloudService extends Service {
     private static final String TAG = "Service";
     private BuddycloudClient mConnection;
     private BuddycloudService service = this;
+
     private CellListener cellListener = null;
     private NetworkListener networkListener = null;
 
@@ -84,8 +85,6 @@ public class BuddycloudService extends Service {
         Log.d(TAG, " onCreate");
         taskQueue = new ArrayBlockingQueue<Runnable>(5);
         bgExecutor.start();
-        TelephonyManager telephonyManager =
-            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         cellListener = new CellListener(this);
         networkListener = new NetworkListener(this);
     }
