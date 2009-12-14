@@ -298,7 +298,9 @@ public class BuddycloudService extends Service {
                             !mConnection.isAuthenticated()
                         ) {
                             cellListener.start();
+
                             createConnection();
+
                             android.os.Message msg = new android.os.Message();
                             if (mConnection != null && mConnection.isAuthenticated()) {
                                 msg.getData().putString("msg", "You are online!");
@@ -306,6 +308,7 @@ public class BuddycloudService extends Service {
                                 try {
                                     sendBeaconLog(0);
                                 } catch (InterruptedException e) {
+                                    Log.d(TAG, e.toString(), e);
                                 }
                             } else {
                                 msg.getData().putString("msg", "Login failed :-(");
@@ -315,7 +318,7 @@ public class BuddycloudService extends Service {
                             try {
                                 sendBeaconLog(0);
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Log.d(TAG, e.toString(), e);
                             }
                             configureConnection();
                             updateRoaster();
@@ -325,7 +328,7 @@ public class BuddycloudService extends Service {
                 Log.d(TAG, "Failed to start service");
             }
         } catch (InterruptedException e) {
-            Log.d(TAG, e.getLocalizedMessage(), e);
+            Log.d(TAG, e.getMessage(), e);
         }
     }
 
@@ -336,8 +339,31 @@ public class BuddycloudService extends Service {
 
         cellListener.stop();
 
+        try {
+            taskQueue.add(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (TAG) {
+                        if (mConnection != null && mConnection.isConnected()) {
+                            mConnection.disconnect();
+                            mConnection = null;
+                        }
+                    }
+                }
+            });
+        } catch (InterruptedException e) {
+            // Doesn't matter
+        }
+
         taskQueue.stopQueue();
         taskQueue = null;
+
+        synchronized (TAG) {
+            if (mConnection != null && mConnection.isConnected()) {
+                mConnection.disconnect();
+                mConnection = null;
+            }
+        }
 
         Log.i(TAG, "disonnected.");
     }
