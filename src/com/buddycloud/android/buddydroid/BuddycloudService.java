@@ -6,9 +6,12 @@ import java.util.Iterator;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smackx.pubsub.LeafNode;
+import org.jivesoftware.smackx.pubsub.PublishItem;
 
 import android.app.Service;
 import android.content.ContentValues;
@@ -28,6 +31,7 @@ import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.LocationEvent;
 import com.buddycloud.jbuddycloud.packet.LocationQueryResponse;
+import com.buddycloud.jbuddycloud.packet.TextLocation;
 import com.buddycloud.jbuddycloud.provider.PubSubLocationEventProvider;
 
 public class BuddycloudService extends Service {
@@ -120,6 +124,13 @@ public class BuddycloudService extends Service {
                             BuddycloudService.this).getString("jid", "");
                     getContentResolver().update(Roster.CONTENT_URI, values,
                             Roster.JID + "='" + jid + "'", null);
+                    TextLocation location = new TextLocation(loc.label);
+                    location.setFrom(mConnection.getUser());
+                    try {
+                        send(location);
+                    } catch (InterruptedException e) {
+                        Log.d(TAG, e.getMessage(), e);
+                    }
                 }
             }}, null);
     }
