@@ -15,6 +15,7 @@ import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
+import org.jivesoftware.smackx.pubsub.PubSubManager;
 
 import com.buddycloud.jbuddycloud.provider.LocationQueryResponseProvider;
 import com.buddycloud.jbuddycloud.provider.PubSubLocationEventProvider;
@@ -256,6 +257,11 @@ public class BuddycloudClient extends XMPPConnection {
     }
 
     private ServiceDiscoveryManager discoveryManager;
+    private PubSubManager pubSubManager;
+
+    public PubSubManager getPubSubManager() {
+        return pubSubManager;
+    }
 
     public BuddycloudClient(ConnectionConfiguration config) {
         super(config);
@@ -274,6 +280,7 @@ public class BuddycloudClient extends XMPPConnection {
             i += 1;
         }
         discoveryManager = new ServiceDiscoveryManager(this);
+        pubSubManager = new PubSubManager(this);
     }
 
     private static class InitialPresence extends Packet {
