@@ -3,6 +3,8 @@ package com.buddycloud.android.buddydroid;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import android.util.Log;
+
 public class TaskQueueThread extends Thread {
 
     private ArrayBlockingQueue<Runnable> taskQueue
@@ -16,6 +18,7 @@ public class TaskQueueThread extends Thread {
                     runnable.run();
                 }
             } catch (Exception e) {
+                Log.d("Service", e.toString(), e);
             }
         }
     }
@@ -24,10 +27,7 @@ public class TaskQueueThread extends Thread {
         taskQueue = null;
     }
 
-    public boolean add(Runnable run) {
-        try {
-            return taskQueue.offer(run, 10, TimeUnit.SECONDS);
-        } catch (Exception e) {}
-        return false;
+    public boolean add(Runnable run) throws InterruptedException {
+        return taskQueue.offer(run, 10, TimeUnit.SECONDS);
     }
 }
