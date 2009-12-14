@@ -14,15 +14,17 @@ public class BeaconLog extends IQ {
 		
 		public String id;
 		public String type;
-		public int signal;
+		public int signal = Integer.MIN_VALUE;
 
 		public Object toXML() {
 			StringBuffer sb = new StringBuffer();
 			sb.append("<reference>")
 			.append("<id>").append(id).append("</id>")
-			.append("<type>").append(type).append("</type>")
-			.append("<signalstrength>").append(signal).append("</signalstrength>")
-			.append("</reference>");
+			.append("<type>").append(type).append("</type>");
+			if (signal != Integer.MIN_VALUE) {
+			    sb.append("<signalstrength>").append(signal).append("</signalstrength>");
+			}
+			sb.append("</reference>");
 			return sb.toString();
 		}
 	}
@@ -33,6 +35,13 @@ public class BeaconLog extends IQ {
         beacon.type = type;
         beacon.id = id;
         beacon.signal = signal;
+        beacons.add(beacon);
+    }
+
+    public void add(String type, String id) {
+        Beacon beacon = new Beacon();
+        beacon.type = type;
+        beacon.id = id;
         beacons.add(beacon);
     }
 
