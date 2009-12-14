@@ -205,7 +205,6 @@ public class BuddycloudClient extends XMPPConnection {
                                 // Unimportant
                             }
                             try {
-                                connection.disconnect();
                                 connection = new BuddycloudClient(conf);
                                 connection.connect();
                             } catch (Exception e) {
