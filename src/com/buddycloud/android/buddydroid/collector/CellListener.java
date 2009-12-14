@@ -33,6 +33,9 @@ public class CellListener extends PhoneStateListener {
         }
         GsmCellLocation gsmCell = (GsmCellLocation) location;
         String operator = telephonyManager.getNetworkOperator();
+        if (operator == null || operator.length() < 4) {
+            return;
+        }
         newCell = operator.substring(0, 3) + ':'
                     + operator.substring(3) + ':'
                     + gsmCell.getLac() + ':' + gsmCell.getCid();
