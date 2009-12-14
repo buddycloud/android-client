@@ -43,30 +43,7 @@ public class BuddycloudService extends Service {
     private CellListener cellListener = null;
     private NetworkListener networkListener = null;
 
-    private ArrayBlockingQueue<Runnable> taskQueue;
-
-    private Thread bgExecutor = new Thread() {
-        public void run() {
-            while (taskQueue != null) {
-                try {
-                    Runnable runnable = taskQueue.poll(60, TimeUnit.SECONDS);
-                    if (runnable != null) {
-                        runnable.run();
-                    }
-                } catch (Exception e) {
-                    Log.d(TAG, e.toString());
-                }
-            }
-        }
-    };
-
-    private boolean addToQueue(Runnable run) throws InterruptedException {
-        if (taskQueue == null) { return false; }
-        try {
-            return taskQueue.offer(run, 10, TimeUnit.SECONDS);
-        } catch (NullPointerException npe) {}
-        return false;
-    }
+    private TaskQueueThread taskQueue;
 
     private Handler toastHandler = new Handler() {
 
@@ -83,8 +60,6 @@ public class BuddycloudService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, " onCreate");
-        taskQueue = new ArrayBlockingQueue<Runnable>(5);
-        bgExecutor.start();
         cellListener = new CellListener(this);
         networkListener = new NetworkListener(this);
     }
@@ -264,7 +239,7 @@ public class BuddycloudService extends Service {
      */
     public boolean sendBeaconLog(final int prio) throws InterruptedException {
         final int priority = Math.min(internalPriority, prio);
-        return addToQueue(new Runnable() {
+        return taskQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (mConnection == null ||
@@ -294,7 +269,7 @@ public class BuddycloudService extends Service {
     }
 
     public boolean send(final IQ iq) throws InterruptedException {
-        return addToQueue(new Runnable() {
+        return taskQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (mConnection == null ||
@@ -312,11 +287,11 @@ public class BuddycloudService extends Service {
         Log.d(TAG, " onStart");
         super.onStart(intent, startId);
 
-        cellListener.start();
-
         if (taskQueue == null) {
-            taskQueue = new ArrayBlockingQueue<Runnable>(5);
+            taskQueue = new TaskQueueThread();
+            taskQueue.start();
         }
+
         taskQueue.add(new Runnable() {
 
             @Override
@@ -325,6 +300,7 @@ public class BuddycloudService extends Service {
                         !mConnection.isConnected() ||
                         !mConnection.isAuthenticated()
                     ) {
+                        cellListener.start();
                         createConnection();
                         android.os.Message msg = new android.os.Message();
                         if (mConnection != null && mConnection.isAuthenticated()) {
@@ -354,24 +330,7 @@ public class BuddycloudService extends Service {
 
         cellListener.stop();
 
-        try {
-            if (!addToQueue(new Runnable() {
-                @Override
-                public void run() {
-                    if (mConnection == null || !mConnection.isConnected()) {
-                        return;
-                    }
-                    mConnection.disconnect();
-                }
-            })) {
-                if (mConnection != null && mConnection.isConnected()) {
-                    mConnection.disconnect();
-                }
-            }
-        } catch (Exception e) {
-        }
-
-        taskQueue.clear();
+        taskQueue.stopQueue();
         taskQueue = null;
 
         Log.i(TAG, "disonnected.");

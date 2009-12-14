@@ -73,6 +73,7 @@ public class CellListener extends PhoneStateListener {
         if (cell == null) {
             cell = newCell;
         }
+        updateNeighbours();
         try {
             service.sendBeaconLog(3);
         } catch (InterruptedException e) {
@@ -84,11 +85,21 @@ public class CellListener extends PhoneStateListener {
         boolean force = cell == null;
         cell = newCell;
         power = 113 - 2 * asu;
+        updateNeighbours();
+        try {
+            service.sendBeaconLog(force ? 2 : 10);
+        } catch (InterruptedException e) {
+        }
+    }
+
+    private void updateNeighbours() {
         List<NeighboringCellInfo> neighboringCellInfo = telephonyManager
-                .getNeighboringCellInfo();
+        .getNeighboringCellInfo();
         if (neighboringCellInfo != null) {
-            ArrayList<NeighboringCellInfo> n = new ArrayList<NeighboringCellInfo>(
-                    neighboringCellInfo.size() + 2);
+            ArrayList<NeighboringCellInfo> n =
+                new ArrayList<NeighboringCellInfo>(
+                    neighboringCellInfo.size() + 2
+                );
             for (NeighboringCellInfo info : neighboringCellInfo) {
                 if (info.getCid() != -1) {
                     n.add(info);
@@ -99,10 +110,6 @@ public class CellListener extends PhoneStateListener {
                 catchedAt = cell;
             }
         }
-        try {
-            service.sendBeaconLog(force ? 2 : 10);
-        } catch (InterruptedException e) {
-        }
     }
 
     public void appendTo(BeaconLog log) {
@@ -110,8 +117,13 @@ public class CellListener extends PhoneStateListener {
         if (catchedAt.equals(cell)) {
             Log.d("CellListener", "Neighbour update");
             for (NeighboringCellInfo info : neighbours) {
-                log.add("cell", cell.substring(0, cell.lastIndexOf(':') + 1)
-                        + info.getCid(), 113 - 2 * info.getRssi());
+                if (info.getRssi() == NeighboringCellInfo.UNKNOWN_RSSI) {
+                    log.add("cell", cell.substring(0, cell.lastIndexOf(':') + 1)
+                        + info.getCid());
+                } else {
+                    log.add("cell", cell.substring(0, cell.lastIndexOf(':') + 1)
+                        + info.getCid(), info.getRssi());
+                }
             }
         }
     }
