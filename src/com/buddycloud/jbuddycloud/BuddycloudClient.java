@@ -27,6 +27,8 @@ public class BuddycloudClient extends XMPPConnection {
         Pattern.compile("..*@[^.].*\\.[^.][^.][^.]*");
 
     static {
+        System.setProperty("smack.debugEnabled", "true");
+
         ProviderManager.getInstance().addIQProvider("query",
                 "http://jabber.org/protocol/disco#items",
                 new org.jivesoftware.smackx.provider.DiscoverItemsProvider());
