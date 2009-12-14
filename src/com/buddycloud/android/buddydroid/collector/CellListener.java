@@ -1,10 +1,14 @@
 package com.buddycloud.android.buddydroid.collector;
 
+import java.util.List;
+
 import android.content.Context;
 import android.telephony.CellLocation;
+import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.telephony.gsm.GsmCellLocation;
+import android.util.Log;
 
 import com.buddycloud.android.buddydroid.BuddycloudService;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
@@ -16,7 +20,6 @@ public class CellListener extends PhoneStateListener {
     private String cell;
     private String newCell;
     private int power = -1;
-    private long lastFullScan;
 
     public CellListener(BuddycloudService service) {
         this.service = service;
@@ -42,16 +45,9 @@ public class CellListener extends PhoneStateListener {
         if (cell == null) {
             cell = newCell;
         }
-        service.sendBeaconLog(3);
-        long now = System.currentTimeMillis();
-        long delta = now - lastFullScan;
-        if (delta > 300000) {
-            lastFullScan = now;
-            new Thread() {
-                public void run() {
-                    // TODO full neighbour scan
-                }
-            }.start();
+        try {
+            service.sendBeaconLog(3);
+        } catch (InterruptedException e) {
         }
     }
 
@@ -60,11 +56,27 @@ public class CellListener extends PhoneStateListener {
         boolean force = cell == null;
         cell = newCell;
         power = 113 - 2*asu;
-        service.sendBeaconLog(10);
+        try {
+            service.sendBeaconLog(force ? 2 : 10);
+        } catch (InterruptedException e) {
+        }
     }
 
     public void appendTo(BeaconLog log) {
         log.add("cell", cell, power);
+        List<NeighboringCellInfo> neighboringCellInfo =
+            telephonyManager.getNeighboringCellInfo();
+        if (neighboringCellInfo == null) {
+            return;
+        }
+        Log.d("CellListener", "Neighbour update");
+        for (NeighboringCellInfo info : neighboringCellInfo) {
+            log.add(
+                "cell",
+                cell.substring(0, cell.lastIndexOf(':') + 1) + info.getCid(),
+                113 - 2*info.getRssi()
+            );
+        }
     }
 
 }

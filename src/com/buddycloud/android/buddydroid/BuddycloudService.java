@@ -59,6 +59,14 @@ public class BuddycloudService extends Service {
         }
     };
 
+    private boolean addToQueue(Runnable run) throws InterruptedException {
+        if (taskQueue == null) { return false; }
+        try {
+            return taskQueue.offer(run, 10, TimeUnit.SECONDS);
+        } catch (NullPointerException npe) {}
+        return false;
+    }
+
     private Handler toastHandler = new Handler() {
 
         @Override
@@ -74,7 +82,6 @@ public class BuddycloudService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, " onCreate");
-        System.setProperty("smack.debugEnabled", "true");
         taskQueue = new ArrayBlockingQueue<Runnable>(5);
         bgExecutor.start();
         TelephonyManager telephonyManager =
@@ -258,10 +265,11 @@ public class BuddycloudService extends Service {
      * Send a beacon log. Priority is 0..10, with 0 meaning instant and
      * 10 meaning "if 3 min. have passed".
      * @param prio
+     * @throws InterruptedException 
      */
-    public void sendBeaconLog(final int prio) {
+    public boolean sendBeaconLog(final int prio) throws InterruptedException {
         final int priority = Math.min(internalPriority, prio);
-        taskQueue.add(new Runnable() {
+        return addToQueue(new Runnable() {
             @Override
             public void run() {
                 if (mConnection == null ||
@@ -289,8 +297,8 @@ public class BuddycloudService extends Service {
         });
     }
 
-    public void send(final IQ iq) {
-        taskQueue.add(new Runnable() {
+    public boolean send(final IQ iq) throws InterruptedException {
+        return addToQueue(new Runnable() {
             @Override
             public void run() {
                 if (mConnection == null ||
@@ -308,6 +316,9 @@ public class BuddycloudService extends Service {
         Log.d(TAG, " onStart");
         super.onStart(intent, startId);
 
+        if (taskQueue == null) {
+            taskQueue = new ArrayBlockingQueue<Runnable>(5);
+        }
         taskQueue.add(new Runnable() {
 
             @Override
@@ -326,7 +337,11 @@ public class BuddycloudService extends Service {
                             toastHandler.sendMessage(msg);
                             return;
                         }
-                        sendBeaconLog(0);
+                        try {
+                            sendBeaconLog(0);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         configureConnection();
                         updateRoaster();
                     }
