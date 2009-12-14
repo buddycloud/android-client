@@ -1,26 +1,23 @@
 package com.buddycloud.android.buddydroid;
 
-import java.util.List;
+import org.jivesoftware.smack.XMPPConnection;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.TabActivity;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.LinearLayout;
 import android.widget.TabHost;
 
 public class MainActivity extends TabActivity {
     private TabHost mTabHost;
     private Intent backgroungService;
+
+    static {
+        System.setProperty("smack.debugEnabled", "true");
+        XMPPConnection.DEBUG_ENABLED = true;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
