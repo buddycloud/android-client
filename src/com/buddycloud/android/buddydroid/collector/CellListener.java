@@ -27,7 +27,7 @@ public class CellListener extends PhoneStateListener {
     private BroadcastReceiver receiver;
 
     private ArrayList<NeighboringCellInfo> neighbours;
-    private String catchedAt = null;
+    private String catchedAt;
 
     public CellListener(final BuddycloudService service) {
         this.service = service;
@@ -84,7 +84,7 @@ public class CellListener extends PhoneStateListener {
     public void onSignalStrengthChanged(int asu) {
         boolean force = cell == null;
         cell = newCell;
-        power = 113 - 2 * asu;
+        power = -113 + 2 * asu;
         updateNeighbours();
         try {
             service.sendBeaconLog(force ? 2 : 10);
@@ -113,8 +113,11 @@ public class CellListener extends PhoneStateListener {
     }
 
     public void appendTo(BeaconLog log) {
+        if (cell == null) {
+            return;
+        }
         log.add("cell", cell, power);
-        if (catchedAt.equals(cell)) {
+        if (cell.equals(catchedAt) && neighbours != null) {
             Log.d("CellListener", "Neighbour update");
             for (NeighboringCellInfo info : neighbours) {
                 if (info.getRssi() == NeighboringCellInfo.UNKNOWN_RSSI) {
