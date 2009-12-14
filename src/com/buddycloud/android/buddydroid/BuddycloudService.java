@@ -2,8 +2,6 @@ package com.buddycloud.android.buddydroid;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +26,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.buddycloud.android.buddydroid.collector.CellListener;
+import com.buddycloud.android.buddydroid.collector.NetworkListener;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
@@ -41,6 +40,7 @@ public class BuddycloudService extends Service {
     private BuddycloudClient mConnection;
     private BuddycloudService service = this;
     private CellListener cellListener = null;
+    private NetworkListener networkListener = null;
 
     private ArrayBlockingQueue<Runnable> taskQueue;
 
@@ -87,11 +87,7 @@ public class BuddycloudService extends Service {
         TelephonyManager telephonyManager =
             (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         cellListener = new CellListener(this);
-        telephonyManager.listen(
-            cellListener,
-            PhoneStateListener.LISTEN_CELL_LOCATION |
-            PhoneStateListener.LISTEN_SIGNAL_STRENGTH
-        );
+        networkListener = new NetworkListener(this);
     }
 
     public void createConnection() {
@@ -292,6 +288,7 @@ public class BuddycloudService extends Service {
                 log.setTo("butler.buddycloud.com");
                 log.setFrom(mConnection.getUser());
                 cellListener.appendTo(log);
+                networkListener.appendTo(log);
                 mConnection.sendPacket(log);
             }
         });
@@ -315,6 +312,8 @@ public class BuddycloudService extends Service {
     public void onStart(Intent intent, int startId) {
         Log.d(TAG, " onStart");
         super.onStart(intent, startId);
+
+        cellListener.start();
 
         if (taskQueue == null) {
             taskQueue = new ArrayBlockingQueue<Runnable>(5);
@@ -354,19 +353,24 @@ public class BuddycloudService extends Service {
         Log.d(TAG, " onDestroy");
         super.onDestroy();
 
-        TelephonyManager telephonyManager =
-            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        telephonyManager.listen(cellListener, 0);
+        cellListener.stop();
 
-        taskQueue.add(new Runnable() {
-            @Override
-            public void run() {
-                if (mConnection == null || !mConnection.isConnected()) {
-                    return;
+        try {
+            if (!addToQueue(new Runnable() {
+                @Override
+                public void run() {
+                    if (mConnection == null || !mConnection.isConnected()) {
+                        return;
+                    }
+                    mConnection.disconnect();
                 }
-                mConnection.disconnect();
+            })) {
+                if (mConnection != null && mConnection.isConnected()) {
+                    mConnection.disconnect();
+                }
             }
-        });
+        } catch (Exception e) {
+        }
 
         taskQueue.clear();
         taskQueue = null;

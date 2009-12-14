@@ -2,7 +2,10 @@ package com.buddycloud.android.buddydroid.collector;
 
 import java.util.List;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.telephony.CellLocation;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
@@ -20,13 +23,38 @@ public class CellListener extends PhoneStateListener {
     private String cell;
     private String newCell;
     private int power = -1;
+    private BroadcastReceiver receiver;
 
-    public CellListener(BuddycloudService service) {
+    public CellListener(final BuddycloudService service) {
         this.service = service;
-        telephonyManager = (TelephonyManager) service.getSystemService(
-            Context.TELEPHONY_SERVICE
-        );
+    }
+
+    public void start() {
+        telephonyManager = (TelephonyManager) service
+                .getSystemService(Context.TELEPHONY_SERVICE);
         CellLocation.requestLocationUpdate();
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                try {
+                    service.sendBeaconLog(10);
+                } catch (InterruptedException e) {
+                    // not important
+                }
+            }
+        };
+        service.registerReceiver(receiver, new IntentFilter(
+                "android.intent.action.TIME_TICK"));
+        telephonyManager.listen(
+            this,
+            PhoneStateListener.LISTEN_CELL_LOCATION |
+            PhoneStateListener.LISTEN_SIGNAL_STRENGTH
+        );
+    }
+
+    public void stop() {
+        telephonyManager.listen(this, PhoneStateListener.LISTEN_NONE);
+        service.unregisterReceiver(receiver);
     }
 
     @Override
@@ -39,9 +67,8 @@ public class CellListener extends PhoneStateListener {
         if (operator == null || operator.length() < 4) {
             return;
         }
-        newCell = operator.substring(0, 3) + ':'
-                    + operator.substring(3) + ':'
-                    + gsmCell.getLac() + ':' + gsmCell.getCid();
+        newCell = operator.substring(0, 3) + ':' + operator.substring(3) + ':'
+                + gsmCell.getLac() + ':' + gsmCell.getCid();
         if (cell == null) {
             cell = newCell;
         }
@@ -55,7 +82,7 @@ public class CellListener extends PhoneStateListener {
     public void onSignalStrengthChanged(int asu) {
         boolean force = cell == null;
         cell = newCell;
-        power = 113 - 2*asu;
+        power = 113 - 2 * asu;
         try {
             service.sendBeaconLog(force ? 2 : 10);
         } catch (InterruptedException e) {
@@ -64,20 +91,16 @@ public class CellListener extends PhoneStateListener {
 
     public void appendTo(BeaconLog log) {
         log.add("cell", cell, power);
-        List<NeighboringCellInfo> neighboringCellInfo =
-            telephonyManager.getNeighboringCellInfo();
+        List<NeighboringCellInfo> neighboringCellInfo = telephonyManager
+                .getNeighboringCellInfo();
         if (neighboringCellInfo == null) {
             return;
         }
         Log.d("CellListener", "Neighbour update");
         for (NeighboringCellInfo info : neighboringCellInfo) {
             if (info.getCid() != -1) {
-                log.add(
-                    "cell",
-                    cell.substring(0, cell.lastIndexOf(':') + 1)
-                    + info.getCid(),
-                    113 - 2*info.getRssi()
-                );
+                log.add("cell", cell.substring(0, cell.lastIndexOf(':') + 1)
+                        + info.getCid(), 113 - 2 * info.getRssi());
             }
         }
     }
