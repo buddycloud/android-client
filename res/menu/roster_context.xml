@@ -1,0 +1,17 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <item android:id="@+id/foo" /> 
+
+        <item android:id="@+id/hau"
+        android:title="Hau" /> 
+
+        <item android:id="@+id/di"
+        android:title="Di" /> 
+
+        <item android:id="@+id/zua"
+        android:title="Zua" /> 
+
+        <item android:id="@+id/zua"
+        android:title="Bazi!" /> 
+
+</menu>

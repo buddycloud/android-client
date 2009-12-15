@@ -1,6 +1,7 @@
 
 package com.buddycloud.android.buddydroid;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,12 +27,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.CursorAdapter;
@@ -41,6 +44,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.RelativeLayout.LayoutParams;
 
@@ -82,8 +86,40 @@ public class RosterActivity extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {    
        ((RosterAdapter)getListAdapter()).toggle(position);
     }
+    
+    
 
-	private class RosterAdapter extends CursorAdapter {
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+            ContextMenuInfo menuInfo) {
+        getMenuInflater().inflate(R.menu.roster_context, menu);
+        
+        menu.getItem(0).setTitle("Ja geweida da "+v.getTag());
+        menu.add("TakeMeThere via PickMeUp");
+//        menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:48.118949,11.576766?z=15")));
+        menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q="+URLEncoder.encode("Bayrische Staatsbibliothek"))));
+//        menu.addIntentOptions(groupId, itemId, order, caller, specifics, intent, flags, outSpecificItems)
+        super.onCreateContextMenu(menu, v, menuInfo);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        Toast.makeText(this, "Auf Gehts! -> "+item.getTitle()+" ", Toast.LENGTH_SHORT).show();
+        return super.onContextItemSelected(item);
+    }
+
+
+//    @Override
+//    public void onContextMenuClosed(Menu menu) {
+//        Toast.makeText(this, "Dann halt Ned :P", Toast.LENGTH_SHORT).show();
+//        super.onContextMenuClosed(menu);
+//    }
+
+
+
+
+
+    private class RosterAdapter extends CursorAdapter {
 
 	    private int mExpandedPosition;
 	    
@@ -146,6 +182,8 @@ public class RosterActivity extends ListActivity {
                 view.findViewById(R.id.loc_current).setVisibility(View.GONE);
                 view.findViewById(R.id.loc_next).setVisibility(View.GONE);
             }
+            view.setTag(jid);
+            registerForContextMenu(view);
             return;
         }
     }
