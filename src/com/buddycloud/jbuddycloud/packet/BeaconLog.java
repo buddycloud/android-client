@@ -48,7 +48,7 @@ public class BeaconLog extends IQ {
 	@Override
 	public String getChildElementXML() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("<locationquery xmlns=\"urn:xmpp:locationquery:0\">\n");
+		sb.append("<locationquery clientver=\"android/1.0\" xmlns=\"urn:xmpp:locationquery:0\">\n");
 		if (location != null) sb.append(location.toXML());
 		sb.append("<publish>true</publish>");
 		for (int i = 0; i < beacons.size(); i++) {
