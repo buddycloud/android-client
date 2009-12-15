@@ -31,7 +31,8 @@ public class MainActivity extends TabActivity {
         mTabHost.addTab(mTabHost.newTabSpec("channels")
                 .setIndicator("Channels").setContent(
                         new Intent(this, ChannelActivity.class)));
-        mTabHost.addTab(mTabHost.newTabSpec("nearby").setIndicator("NearBy")
+        mTabHost.addTab(mTabHost.newTabSpec("nearby").setIndicator("NearBy", 
+                 getResources().getDrawable(android.R.drawable.ic_menu_myplaces))
                 .setContent(new Intent(this, NearbyActivity.class)));
 
         backgroungService = new Intent(this, BuddycloudService.class);
