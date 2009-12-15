@@ -3,15 +3,9 @@
         <item android:id="@+id/foo" /> 
 
         <item android:id="@+id/hau"
-        android:title="Hau" /> 
+        android:title="Hau Di Zua!" /> 
 
-        <item android:id="@+id/di"
-        android:title="Di" /> 
-
-        <item android:id="@+id/zua"
-        android:title="Zua" /> 
-
-        <item android:id="@+id/zua"
-        android:title="Bazi!" /> 
+        <item android:id="@+id/bazi"
+        android:title="Bazi :P" /> 
 
 </menu>

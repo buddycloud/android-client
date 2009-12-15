@@ -81,7 +81,7 @@ public class RosterActivity extends ListActivity {
 		});
     	// getListView().setTextFilterEnabled(true);
 
-//    	registerForContextMenu(getListView());
+    	registerForContextMenu(getListView());
     }
     
 
@@ -95,21 +95,27 @@ public class RosterActivity extends ListActivity {
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
             ContextMenuInfo menuInfo) {
+
         getMenuInflater().inflate(R.menu.roster_context, menu);
         
-        menu.getItem(0).setTitle("Ja geweida da "+v.getTag());
-        menu.add("TakeMeThere via PickMeUp");
-        menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q="+URLEncoder.encode("Bayrische Staatsbibliothek"))));
-//        menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:48.118949,11.576766?z=15")));
+        Cursor buddy = (Cursor)getListAdapter().getItem(
+                       ((AdapterContextMenuInfo)menuInfo).position);
+        menu.getItem(0).setTitle("Ja geweida da "+buddy.getString(2)); //name
+
+        String geoloc = buddy.getString(buddy.getColumnIndex(Roster.GEOLOC));
+        menu.add("TakeMeThere: " + geoloc);
+        //TODO contentprovider lookup place address etc..
+        menu.getItem(3).setIntent(new Intent(Intent.ACTION_VIEW, 
+                        Uri.parse("geo:0,0?q="+URLEncoder.encode(geoloc))));
+//        menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, 
+//                      Uri.parse("geo:48.118949,11.576766?z=15")));
 //        menu.addIntentOptions(groupId, itemId, order, caller, specifics, intent, flags, outSpecificItems)
         super.onCreateContextMenu(menu, v, menuInfo);
     }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-//        eigtl reichts einmal die gesammte ListView zu 'kontextualisieren' oben in onCreate
-//        AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-//        der cursoradapter gibt db primary key -> info.id
+//        AdapterContextMenuInfo menuInfo = (AdapterContextMenuInfo) item.getMenuInfo();
         Toast.makeText(this, " Auf Gehts! -> "+item.getTitle(), Toast.LENGTH_SHORT).show();
         return super.onContextItemSelected(item);
     }
@@ -188,8 +194,7 @@ public class RosterActivity extends ListActivity {
                 view.findViewById(R.id.loc_current).setVisibility(View.GONE);
                 view.findViewById(R.id.loc_next).setVisibility(View.GONE);
             }
-            view.setTag(jid);
-            registerForContextMenu(view);
+//            view.setTag(jid);
             return;
         }
     }
