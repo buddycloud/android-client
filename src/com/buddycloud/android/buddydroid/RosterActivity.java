@@ -45,6 +45,7 @@ import android.widget.RelativeLayout;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.RelativeLayout.LayoutParams;
 
@@ -79,6 +80,8 @@ public class RosterActivity extends ListActivity {
 			public void onNothingSelected(AdapterView<?> arg0) {} 
 		});
     	// getListView().setTextFilterEnabled(true);
+
+//    	registerForContextMenu(getListView());
     }
     
 
@@ -96,15 +99,18 @@ public class RosterActivity extends ListActivity {
         
         menu.getItem(0).setTitle("Ja geweida da "+v.getTag());
         menu.add("TakeMeThere via PickMeUp");
-//        menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:48.118949,11.576766?z=15")));
         menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q="+URLEncoder.encode("Bayrische Staatsbibliothek"))));
+//        menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:48.118949,11.576766?z=15")));
 //        menu.addIntentOptions(groupId, itemId, order, caller, specifics, intent, flags, outSpecificItems)
         super.onCreateContextMenu(menu, v, menuInfo);
     }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        Toast.makeText(this, "Auf Gehts! -> "+item.getTitle()+" ", Toast.LENGTH_SHORT).show();
+//        eigtl reichts einmal die gesammte ListView zu 'kontextualisieren' oben in onCreate
+//        AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+//        der cursoradapter gibt db primary key -> info.id
+        Toast.makeText(this, " Auf Gehts! -> "+item.getTitle(), Toast.LENGTH_SHORT).show();
         return super.onContextItemSelected(item);
     }
 
