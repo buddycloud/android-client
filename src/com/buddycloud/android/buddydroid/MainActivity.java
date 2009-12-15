@@ -26,13 +26,14 @@ public class MainActivity extends TabActivity {
         setTitle(getString(R.string.app_name));
 
         mTabHost = getTabHost();
-        mTabHost.addTab(mTabHost.newTabSpec("roster").setIndicator("Roster")
+        mTabHost.addTab(mTabHost.newTabSpec("roster").setIndicator("Roster", 
+                getResources().getDrawable(R.drawable.ic_menu_allfriends))
                 .setContent(new Intent(this, RosterActivity.class)));
-        mTabHost.addTab(mTabHost.newTabSpec("channels")
-                .setIndicator("Channels").setContent(
-                        new Intent(this, ChannelActivity.class)));
+        mTabHost.addTab(mTabHost.newTabSpec("chnls").setIndicator("Channels",
+                getResources().getDrawable(R.drawable.ic_menu_friendslist))
+                .setContent(new Intent(this, ChannelActivity.class)));
         mTabHost.addTab(mTabHost.newTabSpec("nearby").setIndicator("NearBy", 
-                 getResources().getDrawable(android.R.drawable.ic_menu_myplaces))
+               getResources().getDrawable(android.R.drawable.ic_menu_myplaces))
                 .setContent(new Intent(this, NearbyActivity.class)));
 
         backgroungService = new Intent(this, BuddycloudService.class);
