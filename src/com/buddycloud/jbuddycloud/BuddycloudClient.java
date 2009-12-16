@@ -15,12 +15,13 @@ import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
+import org.jivesoftware.smackx.pubsub.ItemPublishEvent;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
+import org.jivesoftware.smackx.pubsub.listener.ItemEventListener;
 
 import com.buddycloud.jbuddycloud.provider.LocationQueryResponseProvider;
-import com.buddycloud.jbuddycloud.provider.PubSubLocationEventProvider;
 
-public class BuddycloudClient extends XMPPConnection {
+public class BuddycloudClient extends XMPPConnection implements ItemEventListener {
 
     public static final String VERSION = "0.0.1";
 
@@ -87,8 +88,9 @@ public class BuddycloudClient extends XMPPConnection {
         ProviderManager.getInstance().addExtensionProvider("default",
                 "http://jabber.org/protocol/pubsub#owner",
                 new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
-        // ProviderManager.getInstance().addExtensionProvider("event","http://jabber.org/protocol/pubsub#event",new
-        // org.jivesoftware.smackx.pubsub.provider.EventProvider());
+        ProviderManager.getInstance().addExtensionProvider("event",
+                "http://jabber.org/protocol/pubsub#event",
+                new org.jivesoftware.smackx.pubsub.provider.EventProvider());
         ProviderManager
                 .getInstance()
                 .addExtensionProvider(
@@ -122,10 +124,11 @@ public class BuddycloudClient extends XMPPConnection {
                         "purge",
                         "http://jabber.org/protocol/pubsub#event",
                         new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
-        
+        /*
         ProviderManager.getInstance().addExtensionProvider("event",
                 PubSubLocationEventProvider.getNS(),
                 new PubSubLocationEventProvider());
+        */
         ProviderManager.getInstance().addIQProvider("location",
                 LocationQueryResponseProvider.getNS(),
                 new LocationQueryResponseProvider());
@@ -271,7 +274,7 @@ public class BuddycloudClient extends XMPPConnection {
     public void connect() throws XMPPException {
         super.connect();
         int i = 0;
-        while (!isConnected() && i < 600) {
+        while (!isConnected() && i < 100) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -279,8 +282,11 @@ public class BuddycloudClient extends XMPPConnection {
             }
             i += 1;
         }
+        if (!isConnected()) {
+            return;
+        }
         discoveryManager = new ServiceDiscoveryManager(this);
-        pubSubManager = new PubSubManager(this);
+        pubSubManager = new PubSubManager(this, "broadcaster.buddycloud.com");
     }
 
     private static class InitialPresence extends Packet {
@@ -303,6 +309,24 @@ public class BuddycloudClient extends XMPPConnection {
     public synchronized void login(String username, String password)
             throws XMPPException {
         super.login(username, password, "buddydroid");
+        String jid = getUser();
+        if (jid.lastIndexOf('/') != -1) {
+            jid = jid.substring(0, jid.lastIndexOf('/'));
+        }
+        for (String channel : new String[]{
+            "/geo/current",
+            "/geo/future",
+            "/geo/previous",
+            "/mood",
+            "/channel"
+        }) {
+            try {
+                pubSubManager.getNode("/user/" + jid + "/geo/current")
+                    .addItemEventListener(this);
+            } catch (Throwable t) {
+                // TODO how do I subscibe?
+            }
+        }
     }
 
     private static class JBuddycloudFeatures
@@ -335,5 +359,10 @@ public class BuddycloudClient extends XMPPConnection {
             return null;
         }
 
+    }
+
+    @Override
+    public void handlePublishedItems(ItemPublishEvent items) {
+        // TODO location updates arrive here
     }
 }
