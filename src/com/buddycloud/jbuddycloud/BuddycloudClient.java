@@ -244,6 +244,7 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
                     new JBuddycloudFeatures()
                 );
                 connection.sendPacket(new InitialPresence());
+                connection.sendPacket(new BroadcasterPresence());
                 return connection;
             } else {
                 if (connection.isConnected()) {
@@ -301,6 +302,20 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
             return "<presence><priority>10</priority><status>available</status>"
                     + "<c xmlns=\"http://jabber.org/protocol/caps\" node=\"http://buddydroid.com/caps\" "
                     + "ver=\"" + VERSION + "\"/></presence>";
+        }
+
+    }
+
+    private static class BroadcasterPresence extends Packet {
+
+        @Override
+        public void setError(XMPPError error) {
+            super.setError(error);
+        }
+
+        @Override
+        public String toXML() {
+            return "<presence to='broadcaster.buddycloud.com' type='subscribe' xmlns='jabber:client'/>";
         }
 
     }
