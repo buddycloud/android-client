@@ -126,11 +126,6 @@ public class BuddycloudService extends Service {
                             Roster.JID + "='" + jid + "'", null);
                     TextLocation location = new TextLocation(loc.label);
                     location.setFrom(mConnection.getUser());
-                    try {
-                        send(location);
-                    } catch (InterruptedException e) {
-                        Log.d(TAG, e.getMessage(), e);
-                    }
                 }
             }}, null);
     }
@@ -256,7 +251,7 @@ public class BuddycloudService extends Service {
                 }
                 long now = System.currentTimeMillis();
                 long delta = now - beaconLogTimer;
-                if (delta < 18000 * priority) {
+                if (delta < 30000 * priority) {
                     return;
                 }
                 if (delta < 10000) {
