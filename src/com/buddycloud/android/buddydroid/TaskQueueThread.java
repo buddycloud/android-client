@@ -8,12 +8,12 @@ import android.util.Log;
 public class TaskQueueThread extends Thread {
 
     private ArrayBlockingQueue<Runnable> taskQueue
-                = new ArrayBlockingQueue<Runnable>(5);
+                = new ArrayBlockingQueue<Runnable>(20);
 
     public void run() {
         while (taskQueue != null) {
             try {
-                Runnable runnable = taskQueue.poll(60, TimeUnit.SECONDS);
+                Runnable runnable = taskQueue.poll(2, TimeUnit.SECONDS);
                 if (runnable != null) {
                     runnable.run();
                 }
