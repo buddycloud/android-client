@@ -5,9 +5,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.Roster.SubscriptionMode;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.PacketExtension;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.NodeInformationProvider;
@@ -16,12 +20,16 @@ import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
 import org.jivesoftware.smackx.pubsub.ItemPublishEvent;
+import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
 import org.jivesoftware.smackx.pubsub.listener.ItemEventListener;
 
+import android.util.Log;
+
+import com.buddycloud.jbuddycloud.packet.GeoLoc;
 import com.buddycloud.jbuddycloud.provider.LocationQueryResponseProvider;
 
-public class BuddycloudClient extends XMPPConnection implements ItemEventListener {
+public class BuddycloudClient extends XMPPConnection implements ItemEventListener, PacketListener {
 
     public static final String VERSION = "0.0.1";
 
@@ -31,105 +39,95 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
     static {
         System.setProperty("smack.debugEnabled", "true");
 
-        ProviderManager.getInstance().addIQProvider("query",
-                "http://jabber.org/protocol/disco#items",
-                new org.jivesoftware.smackx.provider.DiscoverItemsProvider());
-        ProviderManager.getInstance().addIQProvider("query",
+        ProviderManager pm = ProviderManager.getInstance();
+        pm.addIQProvider(
+            "query", "http://jabber.org/protocol/disco#items",
+             new org.jivesoftware.smackx.provider.DiscoverItemsProvider()
+        );
+        pm.addIQProvider("query",
                 "http://jabber.org/protocol/disco#info",
                 new org.jivesoftware.smackx.provider.DiscoverInfoProvider());
-        ProviderManager.getInstance().addIQProvider("pubsub",
+        pm.addIQProvider("pubsub",
                 "http://jabber.org/protocol/pubsub",
                 new org.jivesoftware.smackx.pubsub.provider.PubSubProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "create",
                         "http://jabber.org/protocol/pubsub",
                         new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
-        ProviderManager.getInstance().addExtensionProvider("items",
+        pm.addExtensionProvider("items",
                 "http://jabber.org/protocol/pubsub",
                 new org.jivesoftware.smackx.pubsub.provider.ItemsProvider());
-        ProviderManager.getInstance().addExtensionProvider("item",
+        pm.addExtensionProvider("item",
                 "http://jabber.org/protocol/pubsub",
                 new org.jivesoftware.smackx.pubsub.provider.ItemProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "subscriptions",
                         "http://jabber.org/protocol/pubsub",
                         new org.jivesoftware.smackx.pubsub.provider.SubscriptionsProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "subscription",
                         "http://jabber.org/protocol/pubsub",
                         new org.jivesoftware.smackx.pubsub.provider.SubscriptionProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "affiliations",
                         "http://jabber.org/protocol/pubsub",
                         new org.jivesoftware.smackx.pubsub.provider.AffiliationsProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "affiliation",
                         "http://jabber.org/protocol/pubsub",
                         new org.jivesoftware.smackx.pubsub.provider.AffiliationProvider());
-        ProviderManager.getInstance().addExtensionProvider("options",
+        pm.addExtensionProvider("options",
                 "http://jabber.org/protocol/pubsub",
                 new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
-        ProviderManager.getInstance().addIQProvider("pubsub",
+        pm.addIQProvider("pubsub",
                 "http://jabber.org/protocol/pubsub#owner",
                 new org.jivesoftware.smackx.pubsub.provider.PubSubProvider());
-        ProviderManager.getInstance().addExtensionProvider("configure",
+        pm.addExtensionProvider("configure",
                 "http://jabber.org/protocol/pubsub#owner",
                 new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
-        ProviderManager.getInstance().addExtensionProvider("default",
+        pm.addExtensionProvider("default",
                 "http://jabber.org/protocol/pubsub#owner",
                 new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
-        ProviderManager.getInstance().addExtensionProvider("event",
+        pm.addExtensionProvider("event",
                 "http://jabber.org/protocol/pubsub#event",
                 new org.jivesoftware.smackx.pubsub.provider.EventProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "configuration",
                         "http://jabber.org/protocol/pubsub#event",
                         new org.jivesoftware.smackx.pubsub.provider.ConfigEventProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "delete",
                         "http://jabber.org/protocol/pubsub#event",
                         new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
-        ProviderManager.getInstance().addExtensionProvider("options",
+        pm.addExtensionProvider("options",
                 "http://jabber.org/protocol/pubsub#event",
                 new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
-        ProviderManager.getInstance().addExtensionProvider("items",
+        pm.addExtensionProvider("items",
                 "http://jabber.org/protocol/pubsub#event",
                 new org.jivesoftware.smackx.pubsub.provider.ItemsProvider());
-        ProviderManager.getInstance().addExtensionProvider("item",
+        pm.addExtensionProvider("item",
                 "http://jabber.org/protocol/pubsub#event",
                 new org.jivesoftware.smackx.pubsub.provider.ItemProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "retract",
                         "http://jabber.org/protocol/pubsub#event",
                         new org.jivesoftware.smackx.pubsub.provider.RetractEventProvider());
-        ProviderManager
-                .getInstance()
-                .addExtensionProvider(
+        pm.addExtensionProvider(
                         "purge",
                         "http://jabber.org/protocol/pubsub#event",
                         new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
         /*
-        ProviderManager.getInstance().addExtensionProvider("event",
+        pm.addExtensionProvider("event",
                 PubSubLocationEventProvider.getNS(),
-                new PubSubLocationEventProvider());
+                new PubSubLocationEventProvider()
+        );
         */
-        ProviderManager.getInstance().addIQProvider("location",
+        pm.addExtensionProvider(
+                "geoloc",
+                "http://jabber.org/protocol/geoloc",
+                new GeoLoc()
+        );
+        pm.addIQProvider("location",
                 LocationQueryResponseProvider.getNS(),
                 new LocationQueryResponseProvider());
     }
@@ -244,7 +242,6 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
                     new JBuddycloudFeatures()
                 );
                 connection.sendPacket(new InitialPresence());
-                connection.sendPacket(new BroadcasterPresence());
                 return connection;
             } else {
                 if (connection.isConnected()) {
@@ -286,6 +283,7 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
         if (!isConnected()) {
             return;
         }
+        addPacketListener(this, null);
         discoveryManager = new ServiceDiscoveryManager(this);
         pubSubManager = new PubSubManager(this, "broadcaster.buddycloud.com");
     }
@@ -313,6 +311,7 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
             super.setError(error);
         }
 
+        
         @Override
         public String toXML() {
             return "<presence to='broadcaster.buddycloud.com' type='subscribe' xmlns='jabber:client'/>";
@@ -328,18 +327,40 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
         if (jid.lastIndexOf('/') != -1) {
             jid = jid.substring(0, jid.lastIndexOf('/'));
         }
+
+        getRoster().setSubscriptionMode(SubscriptionMode.manual);
+
+        Presence broadcaster =
+            getRoster().getPresence("broadcaster.buddycloud.com");
+        if (broadcaster == null) {
+            getRoster().createEntry("broadcaster.buddycloud.com",
+                "broadcaster.buddycloud.com", null);
+        }
+
+        BroadcasterPresence presence = new BroadcasterPresence();
+        sendPacket(presence);
+
+        pubSubManager.getSupportedFeatures();
+        pubSubManager.getSubscriptions();
         for (String channel : new String[]{
-            "/geo/current",
-            "/geo/future",
-            "/geo/previous",
-            "/mood",
-            "/channel"
+            "/user/" + jid + "/mood",
+            "/user/" + jid + "/channel",
+            "/user/" + jid + "/geo/current",
+            "/user/" + jid + "/geo/future",
+            "/user/" + jid + "/geo/previous"
         }) {
             try {
-                pubSubManager.getNode("/user/" + jid + "/geo/current")
+                pubSubManager.getNode(channel)
                     .addItemEventListener(this);
             } catch (Throwable t) {
-                // TODO how do I subscibe?
+                try {
+                    pubSubManager.getNode(channel).subscribe(jid);
+                    pubSubManager.getNode(channel)
+                    .addItemEventListener(this);
+                } catch (Throwable t2) {
+                    Log.e("SMACK", t.getMessage(), t);
+                    Log.e("SMACK", t2.getMessage(), t2);
+                }
             }
         }
     }
@@ -378,6 +399,25 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
 
     @Override
     public void handlePublishedItems(ItemPublishEvent items) {
-        // TODO location updates arrive here
+        for (Object item : items.getItems()) {
+            Log.d("SMACK", item.getClass().toString());
+            Log.d("SMACK", item.toString());
+            if (item instanceof PayloadItem) {
+                PayloadItem payload = (PayloadItem) item;
+                Log.d("SMACK", payload.getClass().toString());
+                Log.d("SMACK", payload.toString());
+                PacketExtension p = payload.getPayload();
+                Log.d("SMACK", p.getClass().toString());
+                Log.d("SMACK", p.toString());
+                if (p instanceof GeoLoc) {
+                    Log.d("SMACK", " ::::::::::::: JACKPOT !");
+                }
+            }
+        }
+    }
+
+    @Override
+    public void processPacket(Packet packet) {
+        Log.d("SMACK", packet.getClass().toString());
     }
 }
