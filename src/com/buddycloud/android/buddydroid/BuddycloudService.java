@@ -1,14 +1,19 @@
 package com.buddycloud.android.buddydroid;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smackx.pubsub.Subscription;
 
 import android.app.Service;
 import android.content.ContentValues;
@@ -171,9 +176,10 @@ public class BuddycloudService extends Service {
 
         Log.d("Roster", "fetch new roster");
 
-        Iterator iterator = mConnection.getRoster().getEntries().iterator();
+        Iterator<RosterEntry> iterator =
+            mConnection.getRoster().getEntries().iterator();
         while (iterator.hasNext()) {
-            RosterEntry buddy = ((RosterEntry) iterator.next());
+            RosterEntry buddy = iterator.next();
             String newName = buddy.getName();
             String newUser = buddy.getUser();
             if (newName == null) {
