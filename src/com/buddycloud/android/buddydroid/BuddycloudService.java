@@ -6,12 +6,9 @@ import java.util.Iterator;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smackx.pubsub.LeafNode;
-import org.jivesoftware.smackx.pubsub.PublishItem;
 
 import android.app.Service;
 import android.content.ContentValues;
@@ -75,6 +72,7 @@ public class BuddycloudService extends Service {
         String jid = pm.getString("jid", null);
 
         if (jid != null && jid.indexOf('@') == -1) {
+            Log.d("SMACK", "Invalid jid!!");
             return;
         }
         String password = pm.getString("password", null);
