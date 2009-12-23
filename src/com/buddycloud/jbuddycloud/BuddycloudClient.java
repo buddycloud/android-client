@@ -1,16 +1,18 @@
 package com.buddycloud.jbuddycloud;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.provider.ProviderManager;
@@ -19,17 +21,20 @@ import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
-import org.jivesoftware.smackx.pubsub.ItemPublishEvent;
-import org.jivesoftware.smackx.pubsub.PayloadItem;
+import org.jivesoftware.smackx.pubsub.Node;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
-import org.jivesoftware.smackx.pubsub.listener.ItemEventListener;
+import org.jivesoftware.smackx.pubsub.Subscription;
 
 import android.util.Log;
 
+import com.buddycloud.jbuddycloud.packet.Affiliation;
+import com.buddycloud.jbuddycloud.packet.Affiliations;
+import com.buddycloud.jbuddycloud.packet.BCSubscription;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
+import com.buddycloud.jbuddycloud.provider.BCSubscriptionProvider;
 import com.buddycloud.jbuddycloud.provider.LocationQueryResponseProvider;
 
-public class BuddycloudClient extends XMPPConnection implements ItemEventListener, PacketListener {
+public class BuddycloudClient extends XMPPConnection implements PacketListener {
 
     public static final String VERSION = "0.0.1";
 
@@ -67,7 +72,7 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
         pm.addExtensionProvider(
                         "subscription",
                         "http://jabber.org/protocol/pubsub",
-                        new org.jivesoftware.smackx.pubsub.provider.SubscriptionProvider());
+                        new BCSubscriptionProvider());
         pm.addExtensionProvider(
                         "affiliations",
                         "http://jabber.org/protocol/pubsub",
@@ -260,6 +265,12 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
     private ServiceDiscoveryManager discoveryManager;
     private PubSubManager pubSubManager;
 
+    private Node personalNode;
+
+    public Node getPersonalNode() {
+        return personalNode;
+    }
+
     public PubSubManager getPubSubManager() {
         return pubSubManager;
     }
@@ -304,64 +315,70 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
 
     }
 
-    private static class BroadcasterPresence extends Packet {
-
-        @Override
-        public void setError(XMPPError error) {
-            super.setError(error);
-        }
-
-        
-        @Override
-        public String toXML() {
-            return "<presence to='broadcaster.buddycloud.com' type='subscribe' xmlns='jabber:client'/>";
-        }
-
-    }
-
     @Override
     public synchronized void login(String username, String password)
             throws XMPPException {
         super.login(username, password, "buddydroid");
-        String jid = getUser();
-        if (jid.lastIndexOf('/') != -1) {
-            jid = jid.substring(0, jid.lastIndexOf('/'));
+        String myJid = getUser();
+        if (myJid.lastIndexOf('/') != -1) {
+            myJid = myJid.substring(0, myJid.lastIndexOf('/'));
         }
 
         getRoster().setSubscriptionMode(SubscriptionMode.manual);
 
-        Presence broadcaster =
-            getRoster().getPresence("broadcaster.buddycloud.com");
-        if (broadcaster == null) {
+        if (!getRoster().contains("broadcaster.buddycloud.com")) {
             getRoster().createEntry("broadcaster.buddycloud.com",
                 "broadcaster.buddycloud.com", null);
         }
 
-        BroadcasterPresence presence = new BroadcasterPresence();
+        Presence presence = new Presence(Presence.Type.subscribe);
+        presence.setTo("broadcaster.buddycloud.com");
         sendPacket(presence);
 
         pubSubManager.getSupportedFeatures();
         pubSubManager.getSubscriptions();
-        for (String channel : new String[]{
-            "/user/" + jid + "/mood",
-            "/user/" + jid + "/channel",
-            "/user/" + jid + "/geo/current",
-            "/user/" + jid + "/geo/future",
-            "/user/" + jid + "/geo/previous"
-        }) {
-            try {
-                pubSubManager.getNode(channel)
-                    .addItemEventListener(this);
-            } catch (Throwable t) {
-                try {
-                    pubSubManager.getNode(channel).subscribe(jid);
-                    pubSubManager.getNode(channel)
-                    .addItemEventListener(this);
-                } catch (Throwable t2) {
-                    Log.e("SMACK", t.getMessage(), t);
-                    Log.e("SMACK", t2.getMessage(), t2);
+        final BuddycloudClient connection = this;
+        final String mJid = myJid;
+        try {
+            personalNode = pubSubManager.getNode("/user/" + myJid + "/channel");
+            new Thread() {
+                public void run() {
+                    Affiliations affs = new Affiliations(
+                        "/user/" + mJid + "/channel"
+                    );
+                    affs.setTo("broadcaster.buddycloud.com");
+                    try {
+                        List<Subscription> subscriptions =
+                            getPersonalNode().getSubscriptions();
+                        HashSet<String> rosterJids = new HashSet<String>();
+                        Iterator<RosterEntry> iter =
+                            connection.getRoster().getEntries().iterator();
+                        while (iter.hasNext()) {
+                            rosterJids.add(iter.next().getUser());
+                        }
+                        for (Subscription subscription : subscriptions) {
+                            if (subscription instanceof BCSubscription) {
+                                String jid = subscription.getJid();
+                                if (rosterJids.contains(jid)) {
+                                    rosterJids.remove(jid);
+                                } else if (!mJid.equals(jid)) {
+                                    affs.add(new Affiliation(jid, "none"));
+                                }
+                            }
+                        }
+                        for (String jid: rosterJids) {
+                            if (jid.contains("@")) {
+                                affs.add(new Affiliation(jid, "publisher"));
+                            }
+                        }
+                        sendPacket(affs);
+                    } catch (XMPPException e) {
+                        e.printStackTrace(System.err);
+                    }
                 }
-            }
+            }.start();
+        } catch (Throwable t) {
+            t.printStackTrace(System.err);
         }
     }
 
@@ -395,25 +412,6 @@ public class BuddycloudClient extends XMPPConnection implements ItemEventListene
             return null;
         }
 
-    }
-
-    @Override
-    public void handlePublishedItems(ItemPublishEvent items) {
-        for (Object item : items.getItems()) {
-            Log.d("SMACK", item.getClass().toString());
-            Log.d("SMACK", item.toString());
-            if (item instanceof PayloadItem) {
-                PayloadItem payload = (PayloadItem) item;
-                Log.d("SMACK", payload.getClass().toString());
-                Log.d("SMACK", payload.toString());
-                PacketExtension p = payload.getPayload();
-                Log.d("SMACK", p.getClass().toString());
-                Log.d("SMACK", p.toString());
-                if (p instanceof GeoLoc) {
-                    Log.d("SMACK", " ::::::::::::: JACKPOT !");
-                }
-            }
-        }
     }
 
     @Override
