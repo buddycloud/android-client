@@ -9,6 +9,10 @@ import android.util.Log;
 
 public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtension {
 
+    public static enum Type {
+        CURRENT, NEXT, PREV
+    };
+
     /* <geoloc xmlns='http://jabber.org/protocol/geoloc' xml:lang='en'>
      *   <text>Friedenheim</text>
      *   <area>Friedenheim</area>
@@ -28,6 +32,16 @@ public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtensi
     private String country;
     private String postalcode;
     private String uri;
+    private Type locType;
+
+    public Type getLocType() {
+        return locType;
+    }
+
+    public void setLocType(Type type) {
+        this.locType = type;
+    }
+
     public String getUri() {
         return uri;
     }
@@ -126,6 +140,18 @@ public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtensi
             throws Exception {
         GeoLoc loc = new GeoLoc();
 
+        String namespace = parser.getNamespace();
+
+        if (namespace.equals("http://jabber.org/protocol/geoloc")) {
+            loc.locType = Type.CURRENT;
+        } else
+        if (namespace.equals("http://jabber.org/protocol/geoloc-prev")) {
+            loc.locType = Type.PREV;
+        } else
+        if (namespace.equals("http://jabber.org/protocol/geoloc-next")) {
+            loc.locType = Type.NEXT;
+        }
+
         for(;;) {
             switch (parser.next()) {
             case XmlPullParser.START_TAG:
@@ -184,6 +210,7 @@ public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtensi
                 break;
             case XmlPullParser.END_TAG:
                 if (parser.getName().equals("geoloc")) {
+                    Log.d("GEO", "parsed geoloc");
                     return loc;
                 }
             }

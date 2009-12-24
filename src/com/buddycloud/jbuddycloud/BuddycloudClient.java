@@ -12,7 +12,9 @@ import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.provider.ProviderManager;
@@ -21,14 +23,14 @@ import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
-import org.jivesoftware.smackx.pubsub.Node;
-import org.jivesoftware.smackx.pubsub.PubSubManager;
+import org.jivesoftware.smackx.pubsub.EventElement;
+import org.jivesoftware.smackx.pubsub.ItemsExtension;
+import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.Subscription;
-
-import android.util.Log;
 
 import com.buddycloud.jbuddycloud.packet.Affiliation;
 import com.buddycloud.jbuddycloud.packet.Affiliations;
+import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.BCSubscription;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
 import com.buddycloud.jbuddycloud.provider.BCLeafNode;
@@ -66,6 +68,8 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                 new org.jivesoftware.smackx.pubsub.provider.ItemsProvider());
         pm.addExtensionProvider("item",
                 "http://jabber.org/protocol/pubsub",
+                new org.jivesoftware.smackx.pubsub.provider.ItemProvider());
+        pm.addExtensionProvider("item", "",
                 new org.jivesoftware.smackx.pubsub.provider.ItemProvider());
         pm.addExtensionProvider(
                         "subscriptions",
@@ -123,6 +127,10 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                         "purge",
                         "http://jabber.org/protocol/pubsub#event",
                         new org.jivesoftware.smackx.pubsub.provider.SimpleNodeProvider());
+        pm.addExtensionProvider(
+                "entry",
+                "http://www.w3.org/2005/Atom",
+                new BCAtom());
         /*
         pm.addExtensionProvider("event",
                 PubSubLocationEventProvider.getNS(),
@@ -266,6 +274,12 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
 
     private ServiceDiscoveryManager discoveryManager;
     private BCPubSubManager pubSubManager;
+
+    private ArrayList<BCGeoLocListener> geoListener =
+        new ArrayList<BCGeoLocListener>();
+
+    private ArrayList<BCAtomListener> atomListener =
+        new ArrayList<BCAtomListener>();
 
     private BCLeafNode personalNode;
 
@@ -416,8 +430,85 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void processPacket(Packet packet) {
-        Log.d("SMACK", packet.getClass().toString());
+        if (packet instanceof Message) {
+            Message message = (Message) packet;
+            for (PacketExtension packetExtension : message.getExtensions()) {
+                if (!(packetExtension instanceof EventElement)) {
+                    continue;
+                }
+                EventElement event = (EventElement) packetExtension;
+                for (PacketExtension eventExtension : event.getExtensions()) {
+                    if (!(eventExtension instanceof ItemsExtension)) {
+                        continue;
+                    }
+                    ItemsExtension items = (ItemsExtension) eventExtension;
+                    String node = items.getNode();
+                    for (PacketExtension itemsExtension : items.getExtensions()) {
+                        if (!(itemsExtension instanceof PayloadItem)) {
+                            continue;
+                        }
+                        PayloadItem payload = (PayloadItem) itemsExtension;
+                        if (payload.getPayload() instanceof BCAtom) {
+                            BCAtom atom = (BCAtom) payload.getPayload();
+                            atom.setId(Long.parseLong(payload.getId()));
+                            fireAtom(node, atom);
+                        } else
+                        if (payload .getPayload() instanceof GeoLoc) {
+                            GeoLoc geoLoc = (GeoLoc) payload.getPayload();
+                            fireGeoLoc(message.getFrom(), geoLoc);
+                        } else {
+                            System.err.println("Unknown item payload " +
+                                    payload.getPayload().getClass().toString());
+                        }
+                    }
+                }
+            }
+        }
     }
+
+    private void fireGeoLoc(String from, GeoLoc geoLoc) {
+        if (from.equals("broadcaster.buddycloud.com")) {
+            from = getUser();
+            if (from.indexOf('/') != -1) {
+                from = from.substring(0, from.lastIndexOf('/'));
+            }
+        }
+        for (BCGeoLocListener listener : geoListener) {
+            listener.receive(from, geoLoc);
+        }
+    }
+
+    private void fireAtom(String node, BCAtom atom) {
+        for (BCAtomListener listener : atomListener) {
+            listener.receive(node, atom);
+        }
+    }
+
+    public void addGeoLocListener(BCGeoLocListener listener) {
+        synchronized (geoListener) {
+            geoListener.add(listener);
+        }
+    }
+
+    public void removeGeoLocListener(BCGeoLocListener listener) {
+        synchronized (geoListener) {
+            geoListener.remove(listener);
+        }
+    }
+
+    public void addAtomListener(BCAtomListener listener) {
+        synchronized (atomListener) {
+            atomListener.add(listener);
+        }
+    }
+
+    public void removeGeoLocListener(BCAtomListener listener) {
+        synchronized (atomListener) {
+            atomListener.remove(listener);
+        }
+    }
+
 }

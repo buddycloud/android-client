@@ -1,19 +1,14 @@
 package com.buddycloud.android.buddydroid;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smackx.pubsub.Subscription;
 
 import android.app.Service;
 import android.content.ContentValues;
@@ -29,8 +24,10 @@ import android.widget.Toast;
 import com.buddycloud.android.buddydroid.collector.CellListener;
 import com.buddycloud.android.buddydroid.collector.NetworkListener;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
+import com.buddycloud.jbuddycloud.BCGeoLocListener;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
+import com.buddycloud.jbuddycloud.packet.GeoLoc;
 import com.buddycloud.jbuddycloud.packet.LocationEvent;
 import com.buddycloud.jbuddycloud.packet.LocationQueryResponse;
 import com.buddycloud.jbuddycloud.packet.TextLocation;
@@ -94,43 +91,24 @@ public class BuddycloudService extends Service {
         if (mConnection == null || !mConnection.isAuthenticated()) {
             return;
         }
-        mConnection.addPacketListener(new PacketListener() {
-
+        mConnection.addGeoLocListener(new BCGeoLocListener() {
             @Override
-            public void processPacket(Packet packet) {
-                if (packet instanceof Message) {
-                    LocationEvent loc = (LocationEvent) packet.getExtension(PubSubLocationEventProvider.getNS());
-                    if (loc != null) {
-                        Log.d(TAG, "GEOLOC received: "+packet.getFrom()+" -> "+loc.text);
-                        ContentValues values = new ContentValues();
-                        switch (loc.type) {
-                        case LocationEvent.CURRENT:
-                            values.put(Roster.GEOLOC, loc.text);
-                            break;
-                        case LocationEvent.PREV:
-                            values.put(Roster.GEOLOC_PREV, loc.text);
-                            break;
-                        case LocationEvent.NEXT:
-                            values.put(Roster.GEOLOC_NEXT, loc.text);
-                            break;
-                        }
-                        getContentResolver().update(Roster.CONTENT_URI, values,
-                                Roster.JID + "='" + packet.getFrom() + "'",
-                                null);
-                    }
-                } else if (packet instanceof LocationQueryResponse) {
-                    LocationQueryResponse loc = (LocationQueryResponse) packet;
-                    Log.d(TAG, "LocationQuery RESPONSE received: " + loc.label+" "+loc.quality);
-                    ContentValues values = new ContentValues();
-                    values.put(Roster.GEOLOC, loc.label);
-                    String jid = PreferenceManager.getDefaultSharedPreferences(
-                            BuddycloudService.this).getString("jid", "");
-                    getContentResolver().update(Roster.CONTENT_URI, values,
-                            Roster.JID + "='" + jid + "'", null);
-                    TextLocation location = new TextLocation(loc.label);
-                    location.setFrom(mConnection.getUser());
+            public void receive(String from, GeoLoc loc) {
+                ContentValues values = new ContentValues();
+                if (loc.getLocType().equals(GeoLoc.Type.CURRENT)) {
+                    values.put(Roster.GEOLOC, loc.getText());
+                } else
+                if (loc.getLocType().equals(GeoLoc.Type.NEXT)) {
+                    values.put(Roster.GEOLOC, loc.getText());
+                } else
+                if (loc.getLocType().equals(GeoLoc.Type.PREV)) {
+                    values.put(Roster.GEOLOC, loc.getText());
                 }
-            }}, null);
+                getContentResolver().update(Roster.CONTENT_URI, values,
+                        Roster.JID + "='" + from + "'",
+                        null);
+            }
+        });
     }
 
     public void updateRoaster() {
