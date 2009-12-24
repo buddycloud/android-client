@@ -31,6 +31,8 @@ import com.buddycloud.jbuddycloud.packet.Affiliation;
 import com.buddycloud.jbuddycloud.packet.Affiliations;
 import com.buddycloud.jbuddycloud.packet.BCSubscription;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
+import com.buddycloud.jbuddycloud.provider.BCLeafNode;
+import com.buddycloud.jbuddycloud.provider.BCPubSubManager;
 import com.buddycloud.jbuddycloud.provider.BCSubscriptionProvider;
 import com.buddycloud.jbuddycloud.provider.LocationQueryResponseProvider;
 
@@ -263,15 +265,15 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
     }
 
     private ServiceDiscoveryManager discoveryManager;
-    private PubSubManager pubSubManager;
+    private BCPubSubManager pubSubManager;
 
-    private Node personalNode;
+    private BCLeafNode personalNode;
 
-    public Node getPersonalNode() {
+    public BCLeafNode getPersonalNode() {
         return personalNode;
     }
 
-    public PubSubManager getPubSubManager() {
+    public BCPubSubManager getPubSubManager() {
         return pubSubManager;
     }
 
@@ -296,7 +298,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
         }
         addPacketListener(this, null);
         discoveryManager = new ServiceDiscoveryManager(this);
-        pubSubManager = new PubSubManager(this, "broadcaster.buddycloud.com");
+        pubSubManager = new BCPubSubManager(this, "broadcaster.buddycloud.com");
     }
 
     private static class InitialPresence extends Packet {
@@ -340,7 +342,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
         final BuddycloudClient connection = this;
         final String mJid = myJid;
         try {
-            personalNode = pubSubManager.getNode("/user/" + myJid + "/channel");
+            personalNode = (BCLeafNode) pubSubManager.getNode("/user/" + myJid + "/channel");
             new Thread() {
                 public void run() {
                     Affiliations affs = new Affiliations(
@@ -349,7 +351,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                     affs.setTo("broadcaster.buddycloud.com");
                     try {
                         List<Subscription> subscriptions =
-                            getPersonalNode().getSubscriptions();
+                            getPersonalNode().getBCSubscriptions();
                         HashSet<String> rosterJids = new HashSet<String>();
                         Iterator<RosterEntry> iter =
                             connection.getRoster().getEntries().iterator();
