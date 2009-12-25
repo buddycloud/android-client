@@ -22,7 +22,6 @@ import android.util.Log;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.CacheColumns;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.Channels;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Places;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 
@@ -35,8 +34,6 @@ public class BuddycloudProvider extends ContentProvider {
 
     private static UriMatcher URI_MATCHER;
 
-    private static final int CHANNELS = 101;
-    private static final int CHANNELS_ID = 102;
     private static final int CHANNEL_DATA = 103;
     private static final int CHANNEL_DATA_ID = 104;
 
@@ -46,7 +43,6 @@ public class BuddycloudProvider extends ContentProvider {
     private static final int PLACES = 301;
     private static final int PLACES_ID = 302;
 
-    private static final String TABLE_CHANNELS = "channels";
     private static final String TABLE_CHANNEL_DATA = "channeldata";
 
     private static final String TABLE_ROSTER = "roster";
@@ -76,16 +72,6 @@ public class BuddycloudProvider extends ContentProvider {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL("CREATE TABLE " + TABLE_CHANNELS
-                    + " (_id INTEGER PRIMARY KEY,"
-                    + Channels.NODE_NAME + " VARCHAR UNIQUE,"
-                    + Channels.TITLE + " VARCHAR,"
-                    + Channels.DESCRIPTION + " VARCHAR,"
-                    + Channels.CACHE_UPDATE_TIMESTAMP + " LONG,"
-                    + ChannelData._COUNT + " LONG"
-                    + ");"
-            );
-
             db.execSQL("CREATE TABLE " + TABLE_CHANNEL_DATA + " ( "
 
                     + ChannelData._ID + " INTEGER PRIMARY KEY,"
@@ -132,12 +118,16 @@ public class BuddycloudProvider extends ContentProvider {
             );
 
             db.execSQL("CREATE TABLE " + TABLE_ROSTER
-                    + " (_id INTEGER PRIMARY KEY," + Roster.JID + " VARCHAR,"
-                    + Roster.NAME + " VARCHAR," + Roster.STATUS + " VARCHAR,"
-                    + Roster.GEOLOC + " VARCHAR," + Roster.GEOLOC_NEXT
-                    + " VARCHAR," + Roster.GEOLOC_PREV + " VARCHAR,"
-                    + Roster._COUNT + " LONG," + Roster.CACHE_UPDATE_TIMESTAMP
-                    + " LONG" + ");");
+                    + " (_id INTEGER PRIMARY KEY,"
+                    + Roster.JID + " VARCHAR,"
+                    + Roster.NAME + " VARCHAR,"
+                    + Roster.STATUS + " VARCHAR,"
+                    + Roster.GEOLOC + " VARCHAR,"
+                    + Roster.GEOLOC_NEXT + " VARCHAR,"
+                    + Roster.GEOLOC_PREV + " VARCHAR,"
+                    + Roster._COUNT + " LONG,"
+                    + Roster.CACHE_UPDATE_TIMESTAMP + " LONG"
+                    + ");");
 
             db.execSQL("CREATE TABLE " + TABLE_PLACES
                     + " (_id INTEGER PRIMARY KEY," + Places.PLACE_ID
@@ -182,10 +172,6 @@ public class BuddycloudProvider extends ContentProvider {
 
         switch (what) {
 
-        case CHANNELS:
-
-        case CHANNELS_ID:
-
         case CHANNEL_DATA:
 
         case CHANNEL_DATA_ID:
@@ -212,11 +198,6 @@ public class BuddycloudProvider extends ContentProvider {
                 .currentTimeMillis());
         SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         switch (what) {
-
-        case CHANNELS:
-            rowID = db.insert(TABLE_CHANNELS, Channels.NODE_NAME, values);
-            uri = ContentUris.withAppendedId(Channels.CONTENT_URI, rowID);
-            break;
 
         case CHANNEL_DATA:
             rowID = db.insert(TABLE_CHANNEL_DATA, ChannelData._ID, values);
@@ -258,24 +239,6 @@ public class BuddycloudProvider extends ContentProvider {
 
         switch (what) {
 
-        case CHANNELS:
-            qb.setTables(TABLE_CHANNELS);
-//            qb.setProjectionMap(CHANNELS_PROJECTION_MAP);
-
-            dummyCursor = new MatrixCursor(BuddyCloud.Channels.PROJECTION_MAP);
-
-            dummyCursor.addRow(new String[] { "DUMMYCHANNEL", "DUMMY TITLE",
-                    "SOME DESCRIPTION", "1" });
-            break;
-        case CHANNELS_ID:
-            qb.setTables(TABLE_CHANNELS);
-            qb.appendWhere("_id=" + uri.getPathSegments().get(1));
-
-            dummyCursor = new MatrixCursor(BuddyCloud.Channels.PROJECTION_MAP);
-
-            dummyCursor.addRow(new String[] { "DUMMYCHANNEL", "DUMMY TITLE",
-                    "SOME DESCRIPTION", "1" });
-            break;
         case CHANNEL_DATA:
             qb.setTables(TABLE_CHANNEL_DATA);
             qb.setProjectionMap(CHANNELS_DATA_PROJECTION_MAP);
@@ -318,8 +281,9 @@ public class BuddycloudProvider extends ContentProvider {
         case ROSTER:
 //            qb.setTables(TABLE_ROSTER);
 //            qb.setProjectionMap(ROSTER_PROJECTION_MAP);
-            String jid = PreferenceManager
-                .getDefaultSharedPreferences(getContext()).getString("jid","");
+            String jid = "/user/" + PreferenceManager
+                .getDefaultSharedPreferences(getContext()).getString("jid","")
+                + "/channel";
             Cursor c = mOpenHelper.getReadableDatabase().rawQuery("SELECT " +
                     "_id, jid, name, status, geoloc_prev, geoloc, geoloc_next, " +
                     "jid='" + jid + "' AS itsMe " +
@@ -381,10 +345,6 @@ public class BuddycloudProvider extends ContentProvider {
          values.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,System.currentTimeMillis());
         switch (what) {
 
-        case CHANNELS:
-
-        case CHANNELS_ID:
-
         case CHANNEL_DATA:
 
         case CHANNEL_DATA_ID:
@@ -416,8 +376,6 @@ public class BuddycloudProvider extends ContentProvider {
     public int delete(Uri uri, String arg1, String[] arg2) {
         int what = URI_MATCHER.match(uri);
         switch (what) {
-        case CHANNELS:
-            break;
         case CHANNEL_DATA:
             break;
         case ROSTER:
@@ -434,8 +392,6 @@ public class BuddycloudProvider extends ContentProvider {
     static {
 
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-        URI_MATCHER.addURI("com.buddycloud", "channels", CHANNELS);
-        URI_MATCHER.addURI("com.buddycloud", "channels/#", CHANNELS_ID);
         URI_MATCHER.addURI("com.buddycloud", "channeldata", CHANNEL_DATA);
         URI_MATCHER.addURI("com.buddycloud", "channeldata/#", CHANNEL_DATA_ID);
 
@@ -444,14 +400,6 @@ public class BuddycloudProvider extends ContentProvider {
 
         URI_MATCHER.addURI("com.buddycloud", "places", PLACES);
         URI_MATCHER.addURI("com.buddycloud", "places/#", PLACES_ID);
-
-        CHANNELS_PROJECTION_MAP.put(Channels._ID, Channels._ID);
-        CHANNELS_PROJECTION_MAP.put(Channels._COUNT, Channels._COUNT);
-        CHANNELS_PROJECTION_MAP.put(Channels.NODE_NAME, Channels.NODE_NAME);
-        CHANNELS_PROJECTION_MAP.put(Channels.TITLE, Channels.TITLE);
-        CHANNELS_PROJECTION_MAP.put(Channels.DESCRIPTION, Channels.DESCRIPTION);
-        CHANNELS_PROJECTION_MAP.put(Channels.CACHE_UPDATE_TIMESTAMP,
-                Channels.CACHE_UPDATE_TIMESTAMP);
 
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData._ID, ChannelData._ID);
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.NODE_NAME,

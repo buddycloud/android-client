@@ -54,6 +54,8 @@ public class BuddyCloud {
 		
 		public static final String  NAME="name";
 		
+        public static final String ENTRYTYPE = "type";
+
 		public static final String  STATUS="status";
 		
 		public static final String  GEOLOC_PREV="geoloc_prev";
@@ -71,22 +73,6 @@ public class BuddyCloud {
 			Roster.GEOLOC_PREV
 			
 		};
-		
-	}
-	
-	public static class Channels implements CacheColumns{
-	
-		public static final Uri CONTENT_URI=Uri.parse("content://com.buddycloud/channels"); 
-		public static final String  TITLE="title";
-		public static final String  DESCRIPTION="description";
-		public static final String  NODE_NAME="node_name";
-		public static final String[] PROJECTION_MAP ={
-			Channels.NODE_NAME,
-			Channels.TITLE,
-			Channels.DESCRIPTION,
-			Channels._ID
-		};
-		
 	}
 	
 	private static class Item implements CacheColumns{
@@ -116,13 +102,12 @@ public class BuddyCloud {
 
 		public static final String  GEOLOC_TYPE="geoloc_type";
 	}
-	
-	
+
 	public static class ChannelData extends Item{
 		
 		public static final Uri CONTENT_URI=Uri.parse("content://com.buddycloud/channeldata");
 		
-		public static final String  NODE_NAME=Channels.NODE_NAME;
+		public static final String  NODE_NAME = "node_name";
 		
 		public static final String[] PROJECTION_MAP={
 			ChannelData.NODE_NAME,

@@ -13,6 +13,7 @@ import android.util.Log;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
+import com.buddycloud.jbuddycloud.packet.ChannelFetch;
 
 public class RoasterSync extends Thread {
 
@@ -44,7 +45,11 @@ public class RoasterSync extends Thread {
                     query.moveToNext();
                 }
                 while (!query.isAfterLast()) {
-                    oldRoster.put(query.getString(1), query.getString(2));
+                    String jid = query.getString(1);
+                    String name = query.getString(2);
+                    if (jid.startsWith("/user/") && jid.endsWith("/channel")) {
+                        oldRoster.put(jid, name);
+                    }
                     query.moveToNext();
                 }
             }
@@ -59,7 +64,7 @@ public class RoasterSync extends Thread {
             if (oldRoster.containsKey(jid)) {
                 oldRoster.remove(jid);
             } else {
-                values.put(Roster.JID, jid);
+                values.put(Roster.JID, "/user/" + jid + "/channel");
                 values.put(Roster.NAME, jid.substring(0, jid.lastIndexOf('@')));
                 newEntries.add(values);
             }
@@ -79,7 +84,8 @@ public class RoasterSync extends Thread {
                         newName = newUser;
                     }
                 }
-                if (oldRoster.containsKey(buddy.getUser())) {
+                newUser = "/user/" + newUser + "/channel";
+                if (oldRoster.containsKey(newUser)) {
                     String name = oldRoster.get(newUser);
                     if (!name.equals(newName)) {
                         // Update name
@@ -122,6 +128,14 @@ public class RoasterSync extends Thread {
 
             resolver.notifyChange(Roster.CONTENT_URI, null);
             Log.d("BC", "updated roster in " + time + "ms");
+
+            for (ContentValues v : newEntries) {
+                client.sendPacket(new ChannelFetch(
+                    v.getAsString(Roster.JID),
+                    0l
+                )); // Trigger a full fetch for every new user
+            }
+
         } catch (Throwable t) {
             Log.e("BC", "Error during Roster sync", t);
         }

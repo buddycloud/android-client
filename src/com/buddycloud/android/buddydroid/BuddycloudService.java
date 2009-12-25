@@ -86,6 +86,9 @@ public class BuddycloudService extends Service {
         mConnection.addGeoLocListener(new BCGeoLocListener() {
             @Override
             public void receive(String from, GeoLoc loc) {
+                if (loc.getType() == null) {
+                    return;
+                }
                 ContentValues values = new ContentValues();
                 if (loc.getLocType().equals(GeoLoc.Type.CURRENT)) {
                     values.put(Roster.GEOLOC, loc.getText());
@@ -96,8 +99,9 @@ public class BuddycloudService extends Service {
                 if (loc.getLocType().equals(GeoLoc.Type.PREV)) {
                     values.put(Roster.GEOLOC_PREV, loc.getText());
                 }
+                Log.d(TAG, "Update '/user/" + from + "/channel'");
                 getContentResolver().update(Roster.CONTENT_URI, values,
-                        Roster.JID + "='" + from + "'",
+                        Roster.JID + "='/user/" + from + "/channel'",
                         null);
             }
         });
@@ -129,7 +133,7 @@ public class BuddycloudService extends Service {
                         // /user/jid/mood ?
                         return;
                     }
-                    node = "/user/" + jid + "/channel";
+                    node = "/user/" + jid + "/" + node;
                 }
                 // Channel !
                 ContentValues values = new ContentValues();

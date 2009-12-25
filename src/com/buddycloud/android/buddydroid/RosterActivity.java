@@ -134,12 +134,24 @@ public class RosterActivity extends ListActivity {
                     && !cursor.getString(cursor.getColumnIndex(Roster.GEOLOC_NEXT)).equals("null"));
 
             String jid = cursor.getString(cursor.getColumnIndex(Roster.JID));
-            jid = jid.split("[@]")[0];
+
+            boolean isChannel = false;
+
+            if (jid.startsWith("/user/")) {
+                jid = jid.substring(6);
+                if (jid.endsWith("/channel")) {
+                    jid = jid.substring(0, jid.length() - 8);
+                }
+            } else
+            if (jid.startsWith("/channel/")) {
+                jid = jid.substring(9);
+                isChannel = true;
+            }
 
             TextView tv = (TextView) view.findViewById(R.id.title);
             tv.setText(cursor.getString(cursor.getColumnIndex(Roster.NAME)) + " (" + jid + ")");
 
-            if (cursor.getPosition() == mExpandedPosition) {
+            if (cursor.getPosition() == mExpandedPosition && !isChannel) {
                 tv = (TextView) view.findViewById(R.id.desc);
                 tv.setText(cursor.getString(cursor.getColumnIndex(Roster.STATUS)));
 
@@ -160,6 +172,10 @@ public class RosterActivity extends ListActivity {
                 view.findViewById(R.id.loc_prev).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.loc_current).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.loc_next).setVisibility(hasNextLocation ? View.VISIBLE : View.GONE);
+
+                ((ImageView)view.findViewById(R.id.icon)).setImageResource(
+                        R.drawable.contact
+                );
             } else {
                 tv = (TextView) view.findViewById(R.id.desc);
                 tv.setText(cursor.getString(cursor.getColumnIndex(Roster.GEOLOC)));
@@ -168,6 +184,16 @@ public class RosterActivity extends ListActivity {
                 view.findViewById(R.id.loc_prev).setVisibility(View.GONE);
                 view.findViewById(R.id.loc_current).setVisibility(View.GONE);
                 view.findViewById(R.id.loc_next).setVisibility(View.GONE);
+
+                if (isChannel) {
+                    ((ImageView)view.findViewById(R.id.icon)).setImageResource(
+                            R.drawable.channel
+                    );
+                } else {
+                    ((ImageView)view.findViewById(R.id.icon)).setImageResource(
+                            R.drawable.contact
+                    );
+                }
             }
 //            view.setTag(jid);
             return;
