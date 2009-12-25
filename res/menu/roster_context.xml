@@ -1,11 +1,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-        <item android:id="@+id/foo" /> 
-
-        <item android:id="@+id/hau"
-        android:title="Hau Di Zua!" /> 
-
-        <item android:id="@+id/bazi"
-        android:title="Bazi :P" /> 
+        <item
+            android:id="@+id/open_channel"
+            android:title="Channel"
+        />
 
 </menu>

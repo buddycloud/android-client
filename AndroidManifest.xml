@@ -14,6 +14,8 @@
 			</intent-filter>
 		</activity>
 
+        <activity android:name=".ChannelMessageActivity" />
+
 		<activity android:name=".RosterActivity" />
 		<activity android:name=".ChannelActivity" />
 		<activity android:name=".NearbyActivity" />

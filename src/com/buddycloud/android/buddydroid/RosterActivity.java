@@ -1,8 +1,6 @@
 
 package com.buddycloud.android.buddydroid;
 
-import java.net.URLEncoder;
-
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +10,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -21,7 +18,6 @@ import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 
@@ -72,38 +68,23 @@ public class RosterActivity extends ListActivity {
             ContextMenuInfo menuInfo) {
 
         getMenuInflater().inflate(R.menu.roster_context, menu);
-        
-        Cursor buddy = (Cursor)getListAdapter().getItem(
-                       ((AdapterContextMenuInfo)menuInfo).position);
-        menu.getItem(0).setTitle("Ja geweida da "+buddy.getString(2)); //name
 
-        String geoloc = buddy.getString(buddy.getColumnIndex(Roster.GEOLOC));
-        menu.add("TakeMeThere: " + geoloc);
-        //TODO contentprovider lookup place address etc..
-        menu.getItem(3).setIntent(new Intent(Intent.ACTION_VIEW, 
-                        Uri.parse("geo:0,0?q="+URLEncoder.encode(geoloc))));
-//        menu.getItem(5).setIntent(new Intent(Intent.ACTION_VIEW, 
-//                      Uri.parse("geo:48.118949,11.576766?z=15")));
-//        menu.addIntentOptions(groupId, itemId, order, caller, specifics, intent, flags, outSpecificItems)
+        Intent openChannel = new Intent();
+        openChannel.setClassName(
+            "com.buddycloud.android.buddydroid",
+            ChannelMessageActivity.class.getCanonicalName()
+        );
+
+        Cursor buddy = (Cursor)getListAdapter().getItem(
+                ((AdapterContextMenuInfo)menuInfo).position);
+        String jid = buddy.getString(buddy.getColumnIndex(Roster.JID));
+
+        openChannel.setData(Uri.parse("channel:" + jid));
+
+        menu.findItem(R.id.open_channel).setIntent(openChannel);
+
         super.onCreateContextMenu(menu, v, menuInfo);
     }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-//        AdapterContextMenuInfo menuInfo = (AdapterContextMenuInfo) item.getMenuInfo();
-        Toast.makeText(this, " Auf Gehts! -> "+item.getTitle(), Toast.LENGTH_SHORT).show();
-        return super.onContextItemSelected(item);
-    }
-
-
-//    @Override
-//    public void onContextMenuClosed(Menu menu) {
-//        Toast.makeText(this, "Dann halt Ned :P", Toast.LENGTH_SHORT).show();
-//        super.onContextMenuClosed(menu);
-//    }
-
-
-
 
 
     private class RosterAdapter extends CursorAdapter {

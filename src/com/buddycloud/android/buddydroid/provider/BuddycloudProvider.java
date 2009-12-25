@@ -216,6 +216,9 @@ public class BuddycloudProvider extends ContentProvider {
             // getContext().sendBroadcast(intent);
             return uri;
         }
+
+        getContext().getContentResolver().notifyChange(uri, null);
+
         return null;
     }
 
@@ -240,51 +243,82 @@ public class BuddycloudProvider extends ContentProvider {
         switch (what) {
 
         case CHANNEL_DATA:
-            qb.setTables(TABLE_CHANNEL_DATA);
-            qb.setProjectionMap(CHANNELS_DATA_PROJECTION_MAP);
+            String sql = "SELECT " + ChannelData._ID + ","
+                                   + ChannelData.ITEM_ID + ","
+                                   + ChannelData.PARENT + ","
+                                   + ChannelData.LAST_UPDATED + ","
+                                   + ChannelData.PUBLISHED + ","
+                                   + ChannelData.AUTHOR + ","
+                                   + ChannelData.AUTHOR_JID + ","
+                                   + ChannelData.AUTHOR_AFFILIATION + ","
+                                   + ChannelData.CONTENT + ","
+                                   + ChannelData.CONTENT_TYPE + ","
+                                   + ChannelData.NODE_NAME + ","
+                                   + ChannelData.GEOLOC_LAT + ","
+                                   + ChannelData.GEOLOC_LON + ","
+                                   + ChannelData.GEOLOC_ACCURACY + ","
+                                   + ChannelData.GEOLOC_AREA + ","
+                                   + ChannelData.GEOLOC_COUNTRY + ","
+                                   + ChannelData.GEOLOC_REGION + ","
+                                   + ChannelData.GEOLOC_LOCALITY + ","
+                                   + ChannelData.GEOLOC_TEXT + ","
+                                   + ChannelData.GEOLOC_TYPE + ","
+                                   + ChannelData.CACHE_UPDATE_TIMESTAMP
+                      + " FROM "   + TABLE_CHANNEL_DATA;
+            if (selection != null) {
+                sql  += " WHERE "  + selection;
+            }
+            if (sortOrder != null) {
+                sql += " ORDER BY " + sortOrder;
+            }
 
-            dummyCursor = new MatrixCursor(
-                    BuddyCloud.ChannelData.PROJECTION_MAP);
-
-            dummyCursor.addRow(new String[] { "ChannelData.NODE_NAME",
-                    "ChannelData._ID", "ChannelData.CACHE_UPDATE_TIMESTAMP",
-                    "ChannelData.CONTENT", "ChannelData.CONTENT_TYPE",
-                    "ChannelData.GEOLOC_ACCURACY", "ChannelData.GEOLOC_AREA",
-                    "ChannelData.GEOLOC_COUNTRY", "ChannelData.GEOLOC_LAT",
-                    "ChannelData.GEOLOC_LON", "ChannelData.GEOLOC_LOCALITY",
-                    "ChannelData.GEOLOC_REGION", "ChannelData.GEOLOC_TEXT",
-                    "ChannelData.GEOLOC_TIMESTAMP", "ChannelData.ITEM_AUTHOR",
-                    "ChannelData.ITEM_ID", "ChannelData.PUBLISHED"
-
-            });
-            break;
+            Cursor c = mOpenHelper.getReadableDatabase().rawQuery(
+                    sql, selectionArgs
+            );
+            c.setNotificationUri(getContext().getContentResolver(), uri);
+            return c;
         case CHANNEL_DATA_ID:
-            qb.setTables(TABLE_CHANNEL_DATA);
-            qb.appendWhere("_id=" + uri.getPathSegments().get(1));
+            sql = "SELECT " + ChannelData._ID + ","
+                            + ChannelData.ITEM_ID + ","
+                            + ChannelData.PARENT + ","
+                            + ChannelData.LAST_UPDATED + ","
+                            + ChannelData.PUBLISHED + ","
+                            + ChannelData.AUTHOR + ","
+                            + ChannelData.AUTHOR_JID + ","
+                            + ChannelData.AUTHOR_AFFILIATION + ","
+                            + ChannelData.CONTENT + ","
+                            + ChannelData.CONTENT_TYPE + ","
+                            + ChannelData.NODE_NAME + ","
+                            + ChannelData.GEOLOC_LAT + ","
+                            + ChannelData.GEOLOC_LON + ","
+                            + ChannelData.GEOLOC_ACCURACY + ","
+                            + ChannelData.GEOLOC_AREA + ","
+                            + ChannelData.GEOLOC_COUNTRY + ","
+                            + ChannelData.GEOLOC_REGION + ","
+                            + ChannelData.GEOLOC_LOCALITY + ","
+                            + ChannelData.GEOLOC_TEXT + ","
+                            + ChannelData.GEOLOC_TYPE + ","
+                            + ChannelData.CACHE_UPDATE_TIMESTAMP
+                      + " FROM "  + TABLE_CHANNEL_DATA;
+            if (selection != null) {
+                sql += " WHERE " + selection;
+            }
+            if (sortOrder != null) {
+                sql += " ORDER BY " + sortOrder;
+            }
 
-            dummyCursor = new MatrixCursor(
-                    BuddyCloud.ChannelData.PROJECTION_MAP);
-
-            dummyCursor.addRow(new String[] { "ChannelData.NODE_NAME",
-                    "ChannelData._ID", "ChannelData.CACHE_UPDATE_TIMESTAMP",
-                    "ChannelData.CONTENT", "ChannelData.CONTENT_TYPE",
-                    "ChannelData.GEOLOC_ACCURACY", "ChannelData.GEOLOC_AREA",
-                    "ChannelData.GEOLOC_COUNTRY", "ChannelData.GEOLOC_LAT",
-                    "ChannelData.GEOLOC_LON", "ChannelData.GEOLOC_LOCALITY",
-                    "ChannelData.GEOLOC_REGION", "ChannelData.GEOLOC_TEXT",
-                    "ChannelData.GEOLOC_TIMESTAMP", "ChannelData.ITEM_AUTHOR",
-                    "ChannelData.ITEM_ID", "ChannelData.PUBLISHED"
-
-            });
-
-            break;
+            c = mOpenHelper.getReadableDatabase().rawQuery(
+                    sql, selectionArgs
+            );
+            c.setNotificationUri(getContext().getContentResolver(), uri);
+            return c;
         case ROSTER:
 //            qb.setTables(TABLE_ROSTER);
 //            qb.setProjectionMap(ROSTER_PROJECTION_MAP);
             String jid = "/user/" + PreferenceManager
                 .getDefaultSharedPreferences(getContext()).getString("jid","")
                 + "/channel";
-            Cursor c = mOpenHelper.getReadableDatabase().rawQuery("SELECT " +
+            c = mOpenHelper.getReadableDatabase().rawQuery("SELECT " +
                     "_id, jid, name, status, geoloc_prev, geoloc, geoloc_next, " +
                     "jid='" + jid + "' AS itsMe " +
                     "FROM roster ORDER BY itsMe DESC, cache_update_timestamp DESC",
