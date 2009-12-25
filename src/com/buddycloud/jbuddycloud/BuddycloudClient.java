@@ -495,20 +495,32 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
     }
 
     private void fireGeoLoc(String from, GeoLoc geoLoc) {
-        if (from.equals("broadcaster.buddycloud.com")) {
-            from = getUser();
-            if (from.indexOf('/') != -1) {
-                from = from.substring(0, from.lastIndexOf('/'));
+        synchronized (geoListener) {
+            if (from.equals("broadcaster.buddycloud.com")) {
+                from = getUser();
+                if (from.indexOf('/') != -1) {
+                    from = from.substring(0, from.lastIndexOf('/'));
+                }
             }
-        }
-        for (BCGeoLocListener listener : geoListener) {
-            listener.receive(from, geoLoc);
+            for (BCGeoLocListener listener : geoListener) {
+                try {
+                    listener.receive(from, geoLoc);
+                } catch (Throwable t) {
+                    t.printStackTrace(System.err);
+                }
+            }
         }
     }
 
     private void fireAtom(String node, BCAtom atom) {
-        for (BCAtomListener listener : atomListener) {
-            listener.receive(node, atom);
+        synchronized (atomListener) {
+            for (BCAtomListener listener : atomListener) {
+                try {
+                    listener.receive(node, atom);
+                } catch (Throwable t) {
+                    t.printStackTrace(System.err);
+                }
+            }
         }
     }
 
