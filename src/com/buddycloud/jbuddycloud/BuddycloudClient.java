@@ -437,6 +437,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
     @SuppressWarnings("unchecked")
     @Override
     public void processPacket(Packet packet) {
+        try {
         if (packet instanceof Message) {
             Message message = (Message) packet;
             for (PacketExtension packetExtension : message.getExtensions()) {
@@ -482,6 +483,18 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                                 "http://jabber.org/protocol/geoloc-prev")
                             ) {
                                 geoLoc.setLocType(GeoLoc.Type.PREV);
+                            } else
+                            if (message.getFrom()
+                                    .equals("broadcaster.buddycloud.com")) {
+                                if (node.endsWith("/geo/current")) {
+                                    geoLoc.setLocType(GeoLoc.Type.CURRENT);
+                                } else
+                                if (node.endsWith("/geo/future")) {
+                                    geoLoc.setLocType(GeoLoc.Type.NEXT);
+                                } else
+                                if (node.endsWith("/geo/previous")) {
+                                    geoLoc.setLocType(GeoLoc.Type.PREV);
+                                }
                             }
                             fireGeoLoc(message.getFrom(), geoLoc);
                         } else {
@@ -492,15 +505,18 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                 }
             }
         }
+        } catch (Throwable t) {
+            t.printStackTrace(System.err);
+        }
     }
 
     private void fireGeoLoc(String from, GeoLoc geoLoc) {
         synchronized (geoListener) {
             if (from.equals("broadcaster.buddycloud.com")) {
                 from = getUser();
-                if (from.indexOf('/') != -1) {
-                    from = from.substring(0, from.lastIndexOf('/'));
-                }
+            }
+            if (from.indexOf('/') != -1) {
+                from = from.substring(0, from.lastIndexOf('/'));
             }
             for (BCGeoLocListener listener : geoListener) {
                 try {
