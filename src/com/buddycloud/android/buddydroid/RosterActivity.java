@@ -2,55 +2,30 @@
 package com.buddycloud.android.buddydroid;
 
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.SmackConfiguration;
-
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.database.ContentObserver;
 import android.database.Cursor;
-import android.database.DataSetObserver;
-import android.database.sqlite.SQLiteCursor;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.RelativeLayout.LayoutParams;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
-import com.buddycloud.jbuddycloud.BuddycloudClient;
 
 public class RosterActivity extends ListActivity {
 	
