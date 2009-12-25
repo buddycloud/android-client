@@ -33,6 +33,9 @@ public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtensi
     private String postalcode;
     private String uri;
     private Type locType;
+    private double lat;
+    private double lon;
+    private double accuracy;
 
     public Type getLocType() {
         return locType;
@@ -49,10 +52,6 @@ public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtensi
     public void setUri(String uri) {
         this.uri = uri;
     }
-
-    private double lat;
-    private double lon;
-    private double accuracy;
 
     @Override
     public String getChildElementXML() {
