@@ -59,6 +59,7 @@ public class RoasterSync extends Thread {
             if (jid.indexOf('/') != -1) {
                 jid = jid.substring(0, jid.indexOf('/'));
             }
+            jid = "/user/" + jid + "/channel";
 
             ContentValues values = new ContentValues();
             if (oldRoster.containsKey(jid)) {
