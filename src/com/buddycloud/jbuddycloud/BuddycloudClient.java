@@ -458,6 +458,21 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                         } else
                         if (payload .getPayload() instanceof GeoLoc) {
                             GeoLoc geoLoc = (GeoLoc) payload.getPayload();
+                            if (node.equals(
+                                    "http://jabber.org/protocol/geoloc")
+                            ) {
+                                geoLoc.setLocType(GeoLoc.Type.CURRENT);
+                            } else
+                            if (node.equals(
+                                "http://jabber.org/protocol/geoloc-next")
+                            ) {
+                                geoLoc.setLocType(GeoLoc.Type.NEXT);
+                            } else
+                            if (node.equals(
+                                "http://jabber.org/protocol/geoloc-prev")
+                            ) {
+                                geoLoc.setLocType(GeoLoc.Type.PREV);
+                            }
                             fireGeoLoc(message.getFrom(), geoLoc);
                         } else {
                             System.err.println("Unknown item payload " +

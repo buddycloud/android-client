@@ -140,18 +140,6 @@ public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtensi
             throws Exception {
         GeoLoc loc = new GeoLoc();
 
-        String namespace = parser.getNamespace();
-
-        if (namespace.equals("http://jabber.org/protocol/geoloc")) {
-            loc.locType = Type.CURRENT;
-        } else
-        if (namespace.equals("http://jabber.org/protocol/geoloc-prev")) {
-            loc.locType = Type.PREV;
-        } else
-        if (namespace.equals("http://jabber.org/protocol/geoloc-next")) {
-            loc.locType = Type.NEXT;
-        }
-
         for(;;) {
             switch (parser.next()) {
             case XmlPullParser.START_TAG:

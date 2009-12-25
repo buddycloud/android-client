@@ -24,8 +24,10 @@ import android.widget.Toast;
 import com.buddycloud.android.buddydroid.collector.CellListener;
 import com.buddycloud.android.buddydroid.collector.NetworkListener;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
+import com.buddycloud.jbuddycloud.BCAtomListener;
 import com.buddycloud.jbuddycloud.BCGeoLocListener;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
+import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
 import com.buddycloud.jbuddycloud.packet.LocationEvent;
@@ -99,10 +101,10 @@ public class BuddycloudService extends Service {
                     values.put(Roster.GEOLOC, loc.getText());
                 } else
                 if (loc.getLocType().equals(GeoLoc.Type.NEXT)) {
-                    values.put(Roster.GEOLOC, loc.getText());
+                    values.put(Roster.GEOLOC_NEXT, loc.getText());
                 } else
                 if (loc.getLocType().equals(GeoLoc.Type.PREV)) {
-                    values.put(Roster.GEOLOC, loc.getText());
+                    values.put(Roster.GEOLOC_PREV, loc.getText());
                 }
                 getContentResolver().update(Roster.CONTENT_URI, values,
                         Roster.JID + "='" + from + "'",
