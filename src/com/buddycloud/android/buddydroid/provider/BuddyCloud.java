@@ -90,26 +90,31 @@ public class BuddyCloud {
 	}
 	
 	private static class Item implements CacheColumns{
-		
-		public static final String  ITEM_ID="item_id";
-		
-		public static final String  ITEM_AUTHOR="item_author";
+
+		public static final String  PARENT = "parent_id";
+		public static final String  ITEM_ID = "item_id";
+
+		public static final String  AUTHOR = "author";
+		public static final String  AUTHOR_JID = "author_jid";
+		public static final String  AUTHOR_AFFILIATION = "author_affiliation";
 		
 		public static final String  PUBLISHED="published";
-		
+		public static final String  LAST_UPDATED="last_updated";
+
 		public static final String  CONTENT_TYPE="content_type";
-		
 		public static final String  CONTENT="content";
 		
 		public static final String  GEOLOC_LAT="geoloc_lat";
-		public static final String   GEOLOC_LON="geoloc_lon";
-		public static final String  GEOLOC_TIMESTAMP="geoloc_timestamp";
+		public static final String  GEOLOC_LON="geoloc_lon";
 		public static final String  GEOLOC_ACCURACY="geoloc_accuracy";
+
 		public static final String  GEOLOC_AREA="geoloc_area";
 		public static final String  GEOLOC_LOCALITY="geoloc_locality";
 		public static final String  GEOLOC_TEXT="geoloc_text";
 		public static final String  GEOLOC_REGION="geoloc_region";
 		public static final String  GEOLOC_COUNTRY="geoloc_country";
+
+		public static final String  GEOLOC_TYPE="geoloc_type";
 	}
 	
 	
@@ -123,19 +128,30 @@ public class BuddyCloud {
 			ChannelData.NODE_NAME,
 			ChannelData._ID,
 			ChannelData.CACHE_UPDATE_TIMESTAMP,
+
+			ChannelData.ITEM_ID,
+			ChannelData.PARENT,
+			ChannelData.LAST_UPDATED,
+
+			ChannelData.AUTHOR,
+			ChannelData.AUTHOR_JID,
+			ChannelData.AUTHOR_AFFILIATION,
+
 			ChannelData.CONTENT,
 			ChannelData.CONTENT_TYPE,
-			ChannelData.GEOLOC_ACCURACY,
-			ChannelData.GEOLOC_AREA,
-			ChannelData.GEOLOC_COUNTRY,
+
 			ChannelData.GEOLOC_LAT,
 			ChannelData.GEOLOC_LON,
+			ChannelData.GEOLOC_ACCURACY,
+
+			ChannelData.GEOLOC_AREA,
+			ChannelData.GEOLOC_COUNTRY,
 			ChannelData.GEOLOC_LOCALITY,
 			ChannelData.GEOLOC_REGION,
+
 			ChannelData.GEOLOC_TEXT,
-			ChannelData.GEOLOC_TIMESTAMP,
-			ChannelData.ITEM_AUTHOR,
-			ChannelData.ITEM_ID,
+			ChannelData.GEOLOC_TYPE,
+
 			ChannelData.PUBLISHED
 		};
 	}

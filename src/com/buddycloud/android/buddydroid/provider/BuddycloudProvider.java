@@ -6,19 +6,10 @@ package com.buddycloud.android.buddydroid.provider;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openintents.intents.ProviderIntents;
-
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.CacheColumns;
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.Channels;
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.Places;
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -27,8 +18,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.preference.PreferenceManager;
-import android.provider.BaseColumns;
 import android.util.Log;
+
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.CacheColumns;
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.Channels;
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.Places;
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 
 /**
  * @author zero
@@ -81,29 +77,57 @@ public class BuddycloudProvider extends ContentProvider {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + TABLE_CHANNELS
-                    + " (_id INTEGER PRIMARY KEY," + Channels.NODE_NAME
-                    + " VARCHAR," + Channels.TITLE + " VARCHAR,"
+                    + " (_id INTEGER PRIMARY KEY,"
+                    + Channels.NODE_NAME + " VARCHAR UNIQUE,"
+                    + Channels.TITLE + " VARCHAR,"
                     + Channels.DESCRIPTION + " VARCHAR,"
                     + Channels.CACHE_UPDATE_TIMESTAMP + " LONG,"
-                    + ChannelData._COUNT + " LONG" + ");");
+                    + ChannelData._COUNT + " LONG"
+                    + ");"
+            );
 
-            db.execSQL("CREATE TABLE " + TABLE_CHANNEL_DATA
-                    + " (_id INTEGER PRIMARY KEY," + ChannelData.ITEM_ID
-                    + " VARCHAR," + ChannelData.ITEM_AUTHOR + " VARCHAR,"
-                    + ChannelData.CONTENT_TYPE + " VARCHAR,"
+            db.execSQL("CREATE TABLE " + TABLE_CHANNEL_DATA + " ( "
+
+                    + ChannelData._ID + " INTEGER PRIMARY KEY,"
+                    + ChannelData.ITEM_ID + " INTEGER,"
+
+                    + ChannelData.PARENT + " VARCHAR,"
+                    + ChannelData.LAST_UPDATED + " LONG,"
+                    + ChannelData.PUBLISHED + " LONG,"
+
+                    + ChannelData.AUTHOR + " VARCHAR,"
+                    + ChannelData.AUTHOR_JID + " VARCHAR,"
+                    + ChannelData.AUTHOR_AFFILIATION + " VARCHAR,"
+
                     + ChannelData.CONTENT + " VARHCHAR,"
-                    + ChannelData.PUBLISHED + " VARCHAR,"
+                    + ChannelData.CONTENT_TYPE + " VARCHAR,"
+
                     + ChannelData.NODE_NAME + " VARCHAR,"
+
+                    + ChannelData.GEOLOC_LAT + " FLOAT,"
+                    + ChannelData.GEOLOC_LON + " FLOAT,"
                     + ChannelData.GEOLOC_ACCURACY + " FLOAT,"
+
                     + ChannelData.GEOLOC_AREA + " VARCHAR,"
                     + ChannelData.GEOLOC_COUNTRY + " VARCHAR,"
-                    + ChannelData.GEOLOC_LAT + " VARCHAR,"
-                    + ChannelData.GEOLOC_LON + " VARCHAR,"
                     + ChannelData.GEOLOC_REGION + " VARCHAR,"
+                    + ChannelData.GEOLOC_LOCALITY + " VARCHAR,"
+
                     + ChannelData.GEOLOC_TEXT + " VARCHAR,"
-                    + ChannelData.GEOLOC_TIMESTAMP + " VARCHAR,"
-                    + ChannelData.CACHE_UPDATE_TIMESTAMP + " LONG"
-                    + ChannelData._COUNT + " LONG" + ");"
+                    + ChannelData.GEOLOC_TYPE + " INTEGER,"
+
+                    + ChannelData.CACHE_UPDATE_TIMESTAMP + " LONG,"
+                    + ChannelData._COUNT + " LONG,"
+                    + "UNIQUE(" // CONSTRAIN
+                        + ChannelData.ITEM_ID + ","
+                        + ChannelData.NODE_NAME
+                    + "),"
+                    + "UNIQUE(" // INDEX
+                        + ChannelData.NODE_NAME + ","
+                        + ChannelData.LAST_UPDATED + ","
+                        + ChannelData.PUBLISHED
+                    + ")"
+                    + ");"
 
             );
 
@@ -195,9 +219,10 @@ public class BuddycloudProvider extends ContentProvider {
             break;
 
         case CHANNEL_DATA:
-            rowID = db.insert(TABLE_CHANNEL_DATA, ChannelData.ITEM_ID, values);
+            rowID = db.insert(TABLE_CHANNEL_DATA, ChannelData._ID, values);
             uri = ContentUris.withAppendedId(ChannelData.CONTENT_URI, rowID);
             break;
+
         case ROSTER:
             rowID = db.insert(TABLE_ROSTER, Roster.JID, values);
             // uri = ContentUris.withAppendedId(Roster.CONTENT_URI, rowID);
@@ -431,34 +456,50 @@ public class BuddycloudProvider extends ContentProvider {
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData._ID, ChannelData._ID);
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.NODE_NAME,
                 ChannelData.NODE_NAME);
+        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.PARENT,
+                ChannelData.PARENT);
+        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.LAST_UPDATED,
+                ChannelData.LAST_UPDATED);
+
+        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.ITEM_ID,
+                ChannelData.ITEM_ID);
+
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.CONTENT,
                 ChannelData.CONTENT);
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.CONTENT_TYPE,
                 ChannelData.CONTENT_TYPE);
-        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.ITEM_AUTHOR,
-                ChannelData.ITEM_AUTHOR);
-        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.ITEM_ID,
-                ChannelData.ITEM_ID);
+
+        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.AUTHOR,
+                ChannelData.AUTHOR);
+        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.AUTHOR_JID,
+                ChannelData.AUTHOR_JID);
+        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.AUTHOR_AFFILIATION,
+                ChannelData.AUTHOR_AFFILIATION);
+
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_LAT,
                 ChannelData.GEOLOC_LAT);
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_LON,
                 ChannelData.GEOLOC_LON);
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_ACCURACY,
                 ChannelData.GEOLOC_ACCURACY);
+
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_LOCALITY,
                 ChannelData.GEOLOC_LOCALITY);
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_REGION,
                 ChannelData.GEOLOC_REGION);
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_AREA,
                 ChannelData.GEOLOC_AREA);
-        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_TEXT,
-                ChannelData.GEOLOC_TEXT);
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_COUNTRY,
                 ChannelData.GEOLOC_COUNTRY);
-        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_TIMESTAMP,
-                ChannelData.GEOLOC_TIMESTAMP);
+
+        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_TEXT,
+                ChannelData.GEOLOC_TEXT);
+        CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.GEOLOC_TYPE,
+                ChannelData.GEOLOC_TYPE);
+
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.PUBLISHED,
                 ChannelData.PUBLISHED);
+
         CHANNELS_DATA_PROJECTION_MAP.put(ChannelData.CACHE_UPDATE_TIMESTAMP,
                 ChannelData.CACHE_UPDATE_TIMESTAMP);
 
