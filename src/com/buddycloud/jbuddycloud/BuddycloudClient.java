@@ -452,9 +452,15 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                         }
                         PayloadItem payload = (PayloadItem) itemsExtension;
                         if (payload.getPayload() instanceof BCAtom) {
-                            BCAtom atom = (BCAtom) payload.getPayload();
-                            atom.setId(Long.parseLong(payload.getId()));
-                            fireAtom(node, atom);
+                            if (message.getFrom()
+                                    .equals("broadcaster.buddycloud.com")) {
+                                BCAtom atom = (BCAtom) payload.getPayload();
+                                atom.setId(Long.parseLong(payload.getId()));
+                                fireAtom(node, atom);
+                            } else {
+                                System.err.println("Atom by unknown sender "
+                                    + message.getFrom());
+                            }
                         } else
                         if (payload .getPayload() instanceof GeoLoc) {
                             GeoLoc geoLoc = (GeoLoc) payload.getPayload();
