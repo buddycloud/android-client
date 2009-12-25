@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.buddycloud.android.buddydroid.collector.CellListener;
 import com.buddycloud.android.buddydroid.collector.NetworkListener;
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.android.buddydroid.sync.ChannelSync;
 import com.buddycloud.android.buddydroid.sync.RoasterSync;
@@ -128,8 +129,56 @@ public class BuddycloudService extends Service {
                         // /user/jid/mood ?
                         return;
                     }
+                    node = "/user/" + jid + "/channel";
                 }
                 // Channel !
+                ContentValues values = new ContentValues();
+                values.put(ChannelData.NODE_NAME,
+                           node);
+                values.put(ChannelData.AUTHOR,
+                           atom.getAuthorName());
+                values.put(ChannelData.AUTHOR_JID,
+                           atom.getAuthorJid());
+                values.put(ChannelData.AUTHOR_AFFILIATION,
+                           atom.getAffiliation());
+                values.put(ChannelData.CONTENT,
+                           atom.getContent());
+                values.put(ChannelData.CONTENT_TYPE,
+                           atom.getContentType());
+                values.put(ChannelData.ITEM_ID,
+                           atom.getId());
+                values.put(ChannelData.LAST_UPDATED,
+                           atom.getId());
+                values.put(ChannelData.PARENT,
+                           atom.getParentId());
+                values.put(ChannelData.PUBLISHED,
+                           atom.getPublished());
+                GeoLoc loc = atom.getGeoloc();
+                if (loc != null) {
+                    values.put(ChannelData.GEOLOC_ACCURACY,
+                               loc.getAccuracy());
+                    values.put(ChannelData.GEOLOC_AREA,
+                               loc.getArea());
+                    values.put(ChannelData.GEOLOC_COUNTRY,
+                               loc.getCountry());
+                    values.put(ChannelData.GEOLOC_LAT,
+                               loc.getLat());
+                    values.put(ChannelData.GEOLOC_LOCALITY,
+                               loc.getLocality());
+                    values.put(ChannelData.GEOLOC_LON,
+                               loc.getLon());
+                    values.put(ChannelData.GEOLOC_REGION,
+                               loc.getRegion());
+                    values.put(ChannelData.GEOLOC_TEXT,
+                               loc.getText());
+                    if (loc.getLocType() != null) {
+                        values.put(ChannelData.GEOLOC_TYPE,
+                                   loc.getLocType().toString());
+                    }
+                }
+
+                getContentResolver().insert(ChannelData.CONTENT_URI, values);
+                Log.d(TAG, "stored " + atom.getId() + "@" + node);
             }
         });
     }
