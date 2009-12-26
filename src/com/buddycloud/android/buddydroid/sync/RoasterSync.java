@@ -59,13 +59,13 @@ public class RoasterSync extends Thread {
             if (jid.indexOf('/') != -1) {
                 jid = jid.substring(0, jid.indexOf('/'));
             }
-            jid = "/user/" + jid + "/channel";
+            String ujid = "/user/" + jid + "/channel";
 
             ContentValues values = new ContentValues();
-            if (oldRoster.containsKey(jid)) {
-                oldRoster.remove(jid);
+            if (oldRoster.containsKey(ujid)) {
+                oldRoster.remove(ujid);
             } else {
-                values.put(Roster.JID, "/user/" + jid + "/channel");
+                values.put(Roster.JID, ujid);
                 values.put(Roster.NAME, jid.substring(0, jid.lastIndexOf('@')));
                 newEntries.add(values);
             }
