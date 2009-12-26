@@ -210,14 +210,13 @@ public class BuddycloudProvider extends ContentProvider {
             Log.d(TAG, "inserted " + values.getAsString(Roster.JID));
             break;
         }
-        if (rowID > 0) {
-            // Intent intent = new Intent(ProviderIntents.ACTION_INSERTED);
-            // intent.setData(uri);
-            // getContext().sendBroadcast(intent);
-            return uri;
-        }
 
         getContext().getContentResolver().notifyChange(uri, null);
+
+
+        if (rowID > 0) {
+            return uri;
+        }
 
         return null;
     }
