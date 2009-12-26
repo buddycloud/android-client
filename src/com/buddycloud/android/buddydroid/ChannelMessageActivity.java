@@ -37,7 +37,7 @@ public class ChannelMessageActivity extends ListActivity {
                 ChannelData.NODE_NAME + "='" + node + "'",
                 null,
                 ChannelData.LAST_UPDATED + " ASC, " +
-                ChannelData.PUBLISHED + " DESC"
+                ChannelData.ITEM_ID + " DESC"
             );
 
         setListAdapter(new ChannelMessageAdapter(this, messages));
@@ -58,14 +58,14 @@ public class ChannelMessageActivity extends ListActivity {
             long p = cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT));
             if (p == 0l) {
                 tv.setPadding(
-                    30,
+                    5,
                     tv.getPaddingTop(),
                     tv.getPaddingRight(),
                     tv.getPaddingBottom()
                 );
             } else {
                 tv.setPadding(
-                    5,
+                    30,
                     tv.getPaddingTop(),
                     tv.getPaddingRight(),
                     tv.getPaddingBottom()
