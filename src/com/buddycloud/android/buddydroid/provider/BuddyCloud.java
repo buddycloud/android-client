@@ -62,6 +62,8 @@ public class BuddyCloud {
 		
 		public static final String  GEOLOC="geoloc";
 		
+        public static final String LAST_UPDATED = "last_updated";
+
 		public static final String  GEOLOC_NEXT="geoloc_next";
 		public static final String[] PROJECTION_MAP = {
 			Roster._ID,

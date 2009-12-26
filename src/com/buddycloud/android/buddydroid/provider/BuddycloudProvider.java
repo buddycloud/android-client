@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.content.ContentProvider;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
@@ -125,6 +124,7 @@ public class BuddycloudProvider extends ContentProvider {
                     + Roster.GEOLOC + " VARCHAR,"
                     + Roster.GEOLOC_NEXT + " VARCHAR,"
                     + Roster.GEOLOC_PREV + " VARCHAR,"
+                    + Roster.LAST_UPDATED + " LONG,"
                     + Roster._COUNT + " LONG,"
                     + Roster.CACHE_UPDATE_TIMESTAMP + " LONG"
                     + ");");
@@ -200,8 +200,62 @@ public class BuddycloudProvider extends ContentProvider {
         switch (what) {
 
         case CHANNEL_DATA:
+            String node = values.getAsString(ChannelData.NODE_NAME);
+            long id = values.getAsLong(ChannelData.ITEM_ID);
+            long parent = values.getAsLong(ChannelData.PARENT);
+            // Channel update, yeah
+            Cursor c = db.rawQuery(
+                "SELECT "
+               + Roster.LAST_UPDATED
+               + " FROM "
+               + TABLE_ROSTER
+               + " WHERE "
+               + Roster.JID + "=?",
+               new String[]{node}
+            );
+            if (c.getCount() == 1) {
+                long published = values.getAsLong(ChannelData.PUBLISHED);
+                c.moveToFirst();
+                long last_updated =
+                    c.getLong(c.getColumnIndex(Roster.LAST_UPDATED));
+                if (published > last_updated) {
+                    ContentValues lu = new ContentValues();
+                    lu.put(Roster.LAST_UPDATED, last_updated);
+                    lu.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,
+                            System.currentTimeMillis());
+                    db.update(
+                        TABLE_ROSTER,
+                        lu,
+                        Roster.JID + "=?",
+                        new String[]{node}
+                    );
+                    if (parent == 0) {
+                        db.update(
+                            TABLE_CHANNEL_DATA,
+                            lu,
+                            ChannelData.NODE_NAME + "=? AND "
+                            + ChannelData.PARENT + "=" + id,
+                            new String[]{node}
+                        );
+                    } else {
+                        db.update(
+                            TABLE_CHANNEL_DATA,
+                            lu,
+                            ChannelData.NODE_NAME + "=? AND ("
+                            + ChannelData.PARENT + "=" + parent + " OR "
+                            + ChannelData.ITEM_ID + "=" + parent + ")",
+                            new String[]{node}
+                        );
+                    }
+                } else {
+                    values.put(ChannelData.LAST_UPDATED, last_updated);
+                }
+            } else {
+                Log.e("BC", "Couldn't update last_updated");
+            }
+            c.close();
             rowID = db.insert(TABLE_CHANNEL_DATA, ChannelData._ID, values);
-            uri = ContentUris.withAppendedId(ChannelData.CONTENT_URI, rowID);
+            // uri = ContentUris.withAppendedId(ChannelData.CONTENT_URI, rowID);
             break;
 
         case ROSTER:
@@ -320,7 +374,7 @@ public class BuddycloudProvider extends ContentProvider {
             c = mOpenHelper.getReadableDatabase().rawQuery("SELECT " +
                     "_id, jid, name, status, geoloc_prev, geoloc, geoloc_next, " +
                     "jid='" + jid + "' AS itsMe " +
-                    "FROM roster ORDER BY itsMe DESC, cache_update_timestamp DESC",
+                    "FROM roster ORDER BY itsMe DESC, last_updated DESC, cache_update_timestamp DESC",
                     new String[]{}
             );
             c.setNotificationUri(getContext().getContentResolver(), uri);
