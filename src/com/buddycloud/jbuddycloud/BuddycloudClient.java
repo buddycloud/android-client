@@ -469,6 +469,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                         } else
                         if (payload .getPayload() instanceof GeoLoc) {
                             GeoLoc geoLoc = (GeoLoc) payload.getPayload();
+                            String from = message.getFrom();
                             if (node.equals(
                                     "http://jabber.org/protocol/geoloc")
                             ) {
@@ -484,19 +485,24 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                             ) {
                                 geoLoc.setLocType(GeoLoc.Type.PREV);
                             } else
-                            if (message.getFrom()
-                                    .equals("broadcaster.buddycloud.com")) {
+                            if (from.equals("broadcaster.buddycloud.com")) {
                                 if (node.endsWith("/geo/current")) {
                                     geoLoc.setLocType(GeoLoc.Type.CURRENT);
+                                    from = node.substring(6);
+                                    from = from.substring(0, from.length()-12);
                                 } else
                                 if (node.endsWith("/geo/future")) {
                                     geoLoc.setLocType(GeoLoc.Type.NEXT);
+                                    from = node.substring(6);
+                                    from = from.substring(0, from.length()-11);
                                 } else
                                 if (node.endsWith("/geo/previous")) {
                                     geoLoc.setLocType(GeoLoc.Type.PREV);
+                                    from = node.substring(6);
+                                    from = from.substring(0, from.length()-13);
                                 }
                             }
-                            fireGeoLoc(message.getFrom(), geoLoc);
+                            fireGeoLoc(from, geoLoc);
                         } else {
                             System.err.println("Unknown item payload " +
                                     payload.getPayload().getClass().toString());
