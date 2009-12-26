@@ -36,8 +36,8 @@ public class ChannelMessageActivity extends ListActivity {
                 ChannelData.PROJECTION_MAP,
                 ChannelData.NODE_NAME + "='" + node + "'",
                 null,
-                ChannelData.LAST_UPDATED + " DESC, " +
-                ChannelData.PUBLISHED + " ASC"
+                ChannelData.LAST_UPDATED + " ASC, " +
+                ChannelData.PUBLISHED + " DESC"
             );
 
         setListAdapter(new ChannelMessageAdapter(this, messages));
