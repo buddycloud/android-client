@@ -2,14 +2,15 @@
 	xmlns:android="http://schemas.android.com/apk/res/android">  
 	<PreferenceCategory android:title="Connection Settings">
 		<EditTextPreference  
-		android:key="jid"  
-		android:title="JID"  
-		android:dialogTitle="Jabber ID"  
+		android:key="jid"
+		android:title="JID"
+		android:dialogTitle="Jabber ID"
+		android:inputType="textEmailAddress"
 		/> 
 		
 		<EditTextPreference  
-		android:key="password"  
-		android:title="password"  
+		android:key="password"
+		android:title="password"
 		android:password="true"
 		/> 
 	</PreferenceCategory>
