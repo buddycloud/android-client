@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	    android:id="@+id/channel_row"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+
+        android:gravity="fill_vertical|left"
 
         android:paddingLeft="3dip"
         android:paddingRight="3dip"
@@ -12,6 +14,8 @@
     <TextView
         android:id="@+id/tag"
 
+        android:gravity="fill_vertical"
+
         android:width="3dip"
 
         android:minWidth="3dip"
@@ -19,7 +23,7 @@
 
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-
+        android:layout_alignParentBottom="true"
         android:layout_height="fill_parent"
 
     />
@@ -37,4 +41,4 @@
 
     />
 
-</RelativeLayout>
+</LinearLayout>
