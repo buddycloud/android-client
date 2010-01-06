@@ -36,8 +36,8 @@ public class ChannelMessageActivity extends ListActivity {
                 ChannelData.PROJECTION_MAP,
                 ChannelData.NODE_NAME + "='" + node + "'",
                 null,
-                ChannelData.LAST_UPDATED + " ASC, " +
-                ChannelData.ITEM_ID + " DESC"
+                ChannelData.LAST_UPDATED + " DESC, " +
+                ChannelData.ITEM_ID + " ASC"
             );
 
         setListAdapter(new ChannelMessageAdapter(this, messages));
@@ -52,10 +52,10 @@ public class ChannelMessageActivity extends ListActivity {
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             TextView tv = (TextView) view.findViewById(R.id.text);
-            tv.setText(cursor.getString(
-                cursor.getColumnIndex(ChannelData.CONTENT)
-            ));
             long p = cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT));
+            tv.setText(
+                cursor.getString(cursor.getColumnIndex(ChannelData.CONTENT))
+            );
             if (p == 0l) {
                 tv.setPadding(
                     5,

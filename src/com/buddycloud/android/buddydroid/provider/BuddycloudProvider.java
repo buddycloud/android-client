@@ -214,13 +214,12 @@ public class BuddycloudProvider extends ContentProvider {
                new String[]{node}
             );
             if (c.getCount() == 1) {
-                long published = values.getAsLong(ChannelData.PUBLISHED);
                 c.moveToFirst();
                 long last_updated =
                     c.getLong(c.getColumnIndex(Roster.LAST_UPDATED));
-                if (published > last_updated) {
+                if (id > last_updated) {
                     ContentValues lu = new ContentValues();
-                    lu.put(Roster.LAST_UPDATED, last_updated);
+                    lu.put(Roster.LAST_UPDATED, id);
                     lu.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,
                             System.currentTimeMillis());
                     db.update(
