@@ -80,6 +80,14 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                         "http://jabber.org/protocol/pubsub",
                         new BCSubscriptionProvider());
         pm.addExtensionProvider(
+                        "subscriptions",
+                        "http://jabber.org/protocol/pubsub#owner",
+                        new org.jivesoftware.smackx.pubsub.provider.SubscriptionsProvider());
+        pm.addExtensionProvider(
+                        "subscription",
+                        "http://jabber.org/protocol/pubsub#owner",
+                        new BCSubscriptionProvider());
+        pm.addExtensionProvider(
                         "affiliations",
                         "http://jabber.org/protocol/pubsub",
                         new org.jivesoftware.smackx.pubsub.provider.AffiliationsProvider());

@@ -123,6 +123,10 @@ public class BCCollectionNode extends Node {
                 getId()), PubSubNamespace.OWNER);
         SubscriptionsExtension subElem = (SubscriptionsExtension)
                 reply.getExtension(PubSubElementType.SUBSCRIPTIONS);
+        if (subElem == null) {
+            subElem = (SubscriptionsExtension)
+                reply.getExtension(PubSubElementType.SUBSCRIPTIONS_OWNER);
+        }
         return subElem.getSubscriptions();
     }
 
