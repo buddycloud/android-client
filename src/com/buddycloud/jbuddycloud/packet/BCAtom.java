@@ -176,7 +176,7 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
                     Calendar cal = new GregorianCalendar(
                         TimeZone.getTimeZone("UTC")
                     );
-                    cal.set(Integer.parseInt(datePart[0]) + 1900,
+                    cal.set(Integer.parseInt(datePart[0]),
                             Integer.parseInt(datePart[1]),
                             Integer.parseInt(datePart[2]),
                             Integer.parseInt(timePart[0]),
