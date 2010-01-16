@@ -39,6 +39,26 @@
 
         android:singleLine="false"
 
+        android:layout_weight="1.0"
     />
 
+    <ImageView
+        android:id="@+id/add"
+        android:src="@drawable/add_channel_msg"
+
+        android:layout_marginTop="3dip"
+        android:layout_marginRight="5dip"
+
+        android:layout_width="20dip"
+        android:layout_height="20dip"
+
+        android:maxHeight="20dip"
+        android:maxWidth="20dip"
+
+        android:visibility="invisible"
+        android:clickable="true"
+        android:scaleType="fitCenter"
+        android:layout_weight="0.0"
+    />
+ 
 </LinearLayout>
