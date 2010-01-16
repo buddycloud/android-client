@@ -50,6 +50,10 @@ public class BuddyCloud {
 	public static class Roster implements CacheColumns{
 	
 		public static final Uri CONTENT_URI=Uri.parse("content://com.buddycloud/roster");
+
+		public static final Uri VIEW_CONTENT_URI=
+		    Uri.parse("content://com.buddycloud/roster_view");
+
 		public static final String  JID="jid";
 		
 		public static final String  NAME="name";

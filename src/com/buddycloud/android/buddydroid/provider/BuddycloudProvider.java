@@ -37,7 +37,8 @@ public class BuddycloudProvider extends ContentProvider {
     private static final int CHANNEL_DATA_ID = 104;
 
     private static final int ROSTER = 201;
-    private static final int ROSTER_ID = 202;
+    private static final int ROSTER_VIEW = 202;
+    private static final int ROSTER_ID = 203;
 
     private static final int PLACES = 301;
     private static final int PLACES_ID = 302;
@@ -364,9 +365,7 @@ public class BuddycloudProvider extends ContentProvider {
             );
             c.setNotificationUri(getContext().getContentResolver(), uri);
             return c;
-        case ROSTER:
-//            qb.setTables(TABLE_ROSTER);
-//            qb.setProjectionMap(ROSTER_PROJECTION_MAP);
+        case ROSTER_VIEW:
             String jid = "/user/" + PreferenceManager
                 .getDefaultSharedPreferences(getContext()).getString("jid","")
                 + "/channel";
@@ -378,6 +377,16 @@ public class BuddycloudProvider extends ContentProvider {
             );
             c.setNotificationUri(getContext().getContentResolver(), uri);
             return c;
+        case ROSTER:
+            return mOpenHelper.getReadableDatabase().query(
+                    TABLE_ROSTER,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    sortOrder
+            );
         case ROSTER_ID:
             qb.setTables(TABLE_ROSTER);
             qb.appendWhere("_id=" + uri.getPathSegments().get(1));
@@ -472,9 +481,12 @@ public class BuddycloudProvider extends ContentProvider {
     }
 
     private static HashMap<String, String> PLACES_PROJECTION_MAP = new HashMap<String, String>();
-
     private static HashMap<String, String> ROSTER_PROJECTION_MAP = new HashMap<String, String>();
-    private static HashMap<String, String> CHANNELS_PROJECTION_MAP = new HashMap<String, String>();
+
+    private final static String[] ROSTER_PROJECTION = new String[]{
+        
+    };
+
     static {
 
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -482,6 +494,7 @@ public class BuddycloudProvider extends ContentProvider {
         URI_MATCHER.addURI("com.buddycloud", "channeldata/#", CHANNEL_DATA_ID);
 
         URI_MATCHER.addURI("com.buddycloud", "roster", ROSTER);
+        URI_MATCHER.addURI("com.buddycloud", "roster_view", ROSTER_VIEW);
         URI_MATCHER.addURI("com.buddycloud", "roster/#", ROSTER_ID);
 
         URI_MATCHER.addURI("com.buddycloud", "places", PLACES);
@@ -547,7 +560,6 @@ public class BuddycloudProvider extends ContentProvider {
         ROSTER_PROJECTION_MAP.put(Roster.GEOLOC_PREV, Roster.GEOLOC_PREV);
         ROSTER_PROJECTION_MAP.put(Roster.CACHE_UPDATE_TIMESTAMP,
                 Roster.CACHE_UPDATE_TIMESTAMP);
-        
 
         PLACES_PROJECTION_MAP.put(Places._ID, Places._ID);
         PLACES_PROJECTION_MAP.put(Places._COUNT, Places._COUNT);

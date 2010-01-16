@@ -1,4 +1,3 @@
-
 package com.buddycloud.android.buddydroid;
 
 import android.app.ListActivity;
@@ -24,44 +23,48 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 
 public class RosterActivity extends ListActivity {
-	
-	protected static final String TAG = "RosterActivity";
-	private Cursor mBuddies;
-	private Intent backgroungService;
-	
-	
-	/** Called when the activity is first created. */
+
+    protected static final String TAG = "RosterActivity";
+
+    /**
+     * Called when the activity is first created.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	super.onCreate(savedInstanceState);
-    
-    	Cursor buddies = managedQuery(Roster.CONTENT_URI, Roster.PROJECTION_MAP, null, null, "isMe ASC");
-//    	Cursor buddies = getContentResolver().query(Roster.CONTENT_URI, Roster.PROJECTION_MAP, null, null, null);
-    	Log.d("provider", "cursor is: " + buddies);
-    	setListAdapter(new RosterAdapter(this, buddies));
 
-    	getListView().setOnItemSelectedListener(new OnItemSelectedListener() {
+        super.onCreate(savedInstanceState);
 
-			@Override
-			public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
-				((RosterAdapter)getListAdapter()).toggle(position);
-			}
+        Cursor buddies = managedQuery(
+                Roster.VIEW_CONTENT_URI,
+                Roster.PROJECTION_MAP,
+                null,
+                null,
+                "itsMe DESC, last_updated DESC, cache_update_timestamp DESC");
 
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0) {} 
-		});
-    	// getListView().setTextFilterEnabled(true);
+        Log.d("provider", "cursor is: " + buddies);
 
-    	registerForContextMenu(getListView());
+        setListAdapter(new RosterAdapter(this, buddies));
+
+        getListView().setOnItemSelectedListener(new OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> arg0, View arg1,
+                    int position, long arg3) {
+                ((RosterAdapter) getListAdapter()).toggle(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+            }
+        });
+
+        registerForContextMenu(getListView());
     }
-    
 
     @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {    
-       ((RosterAdapter)getListAdapter()).toggle(position);
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        ((RosterAdapter) getListAdapter()).toggle(position);
     }
-    
-    
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
@@ -70,13 +73,11 @@ public class RosterActivity extends ListActivity {
         getMenuInflater().inflate(R.menu.roster_context, menu);
 
         Intent openChannel = new Intent();
-        openChannel.setClassName(
-            "com.buddycloud.android.buddydroid",
-            ChannelMessageActivity.class.getCanonicalName()
-        );
+        openChannel.setClassName("com.buddycloud.android.buddydroid",
+                ChannelMessageActivity.class.getCanonicalName());
 
-        Cursor buddy = (Cursor)getListAdapter().getItem(
-                ((AdapterContextMenuInfo)menuInfo).position);
+        Cursor buddy = (Cursor) getListAdapter().getItem(
+                ((AdapterContextMenuInfo) menuInfo).position);
         String jid = buddy.getString(buddy.getColumnIndex(Roster.JID));
 
         openChannel.setData(Uri.parse("channel:" + jid));
@@ -86,22 +87,21 @@ public class RosterActivity extends ListActivity {
         super.onCreateContextMenu(menu, v, menuInfo);
     }
 
-
     private class RosterAdapter extends CursorAdapter {
 
-	    private int mExpandedPosition;
-	    
-    	public RosterAdapter(Context context, Cursor c) {
-            super(context, c);
-    	}
+        private int mExpandedPosition;
 
-    	public void toggle(int position) {
-    	    if (mExpandedPosition != position)
-    	        mExpandedPosition = position;
-    	    else
-    	        mExpandedPosition = -1;
-    	    notifyDataSetChanged();
-    	}
+        public RosterAdapter(Context context, Cursor c) {
+            super(context, c);
+        }
+
+        public void toggle(int position) {
+            if (mExpandedPosition != position)
+                mExpandedPosition = position;
+            else
+                mExpandedPosition = -1;
+            notifyDataSetChanged();
+        }
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
@@ -110,9 +110,11 @@ public class RosterActivity extends ListActivity {
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            
-            boolean hasNextLocation = (cursor.getString(cursor.getColumnIndex(Roster.GEOLOC_NEXT)) != null
-                    && !cursor.getString(cursor.getColumnIndex(Roster.GEOLOC_NEXT)).equals("null"));
+
+            boolean hasNextLocation = (cursor.getString(cursor
+                    .getColumnIndex(Roster.GEOLOC_NEXT)) != null && !cursor
+                    .getString(cursor.getColumnIndex(Roster.GEOLOC_NEXT))
+                    .equals("null"));
 
             String jid = cursor.getString(cursor.getColumnIndex(Roster.JID));
 
@@ -123,43 +125,52 @@ public class RosterActivity extends ListActivity {
                 if (jid.endsWith("/channel")) {
                     jid = jid.substring(0, jid.length() - 8);
                 }
-            } else
-            if (jid.startsWith("/channel/")) {
+            } else if (jid.startsWith("/channel/")) {
                 jid = jid.substring(9);
                 isChannel = true;
             }
 
             TextView tv = (TextView) view.findViewById(R.id.title);
-            tv.setText(cursor.getString(cursor.getColumnIndex(Roster.NAME)) + " (" + jid + ")");
+            tv.setText(cursor.getString(cursor.getColumnIndex(Roster.NAME))
+                    + " (" + jid + ")");
 
             if (cursor.getPosition() == mExpandedPosition && !isChannel) {
                 tv = (TextView) view.findViewById(R.id.desc);
-                tv.setText(cursor.getString(cursor.getColumnIndex(Roster.STATUS)));
+                tv.setText(cursor.getString(cursor
+                        .getColumnIndex(Roster.STATUS)));
 
                 tv = (TextView) view.findViewById(R.id.loc_prev);
-                tv.setText(cursor.getString(cursor.getColumnIndex(Roster.GEOLOC_PREV)));
-                tv.setPaintFlags(tv.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                tv.setText(cursor.getString(cursor
+                        .getColumnIndex(Roster.GEOLOC_PREV)));
+                tv.setPaintFlags(tv.getPaintFlags()
+                        | Paint.STRIKE_THRU_TEXT_FLAG);
                 tv = (TextView) view.findViewById(R.id.loc_current);
-                tv.setText(cursor.getString(cursor.getColumnIndex(Roster.GEOLOC)));
+                tv.setText(cursor.getString(cursor
+                        .getColumnIndex(Roster.GEOLOC)));
                 tv = (TextView) view.findViewById(R.id.loc_next);
-                if (hasNextLocation) tv.setText(cursor.getString(cursor.getColumnIndex(Roster.GEOLOC_NEXT)));
-                else tv.setText("");
+                if (hasNextLocation)
+                    tv.setText(cursor.getString(cursor
+                            .getColumnIndex(Roster.GEOLOC_NEXT)));
+                else
+                    tv.setText("");
 
                 view.findViewById(R.id.desc).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.arrow).setVisibility(View.VISIBLE);
                 ImageView iv = (ImageView) view.findViewById(R.id.arrow);
-                iv.setImageResource((hasNextLocation ? R.drawable.history2 : R.drawable.history1));
+                iv.setImageResource((hasNextLocation ? R.drawable.history2
+                        : R.drawable.history1));
 
                 view.findViewById(R.id.loc_prev).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.loc_current).setVisibility(View.VISIBLE);
-                view.findViewById(R.id.loc_next).setVisibility(hasNextLocation ? View.VISIBLE : View.GONE);
+                view.findViewById(R.id.loc_next).setVisibility(
+                        hasNextLocation ? View.VISIBLE : View.GONE);
 
-                ((ImageView)view.findViewById(R.id.icon)).setImageResource(
-                        R.drawable.contact
-                );
+                ((ImageView) view.findViewById(R.id.icon))
+                        .setImageResource(R.drawable.contact);
             } else {
                 tv = (TextView) view.findViewById(R.id.desc);
-                tv.setText(cursor.getString(cursor.getColumnIndex(Roster.GEOLOC)));
+                tv.setText(cursor.getString(cursor
+                        .getColumnIndex(Roster.GEOLOC)));
 
                 view.findViewById(R.id.arrow).setVisibility(View.GONE);
                 view.findViewById(R.id.loc_prev).setVisibility(View.GONE);
@@ -167,16 +178,14 @@ public class RosterActivity extends ListActivity {
                 view.findViewById(R.id.loc_next).setVisibility(View.GONE);
 
                 if (isChannel) {
-                    ((ImageView)view.findViewById(R.id.icon)).setImageResource(
-                            R.drawable.channel
-                    );
+                    ((ImageView) view.findViewById(R.id.icon))
+                            .setImageResource(R.drawable.channel);
                 } else {
-                    ((ImageView)view.findViewById(R.id.icon)).setImageResource(
-                            R.drawable.contact
-                    );
+                    ((ImageView) view.findViewById(R.id.icon))
+                            .setImageResource(R.drawable.contact);
                 }
             }
-//            view.setTag(jid);
+            // view.setTag(jid);
             return;
         }
     }

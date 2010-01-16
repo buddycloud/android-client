@@ -52,8 +52,10 @@ public class ChannelSync extends Thread {
                     query.moveToNext();
                 }
                 while (!query.isAfterLast()) {
-                    String jid = query.getString(1);
-                    String name = query.getString(2);
+                    String jid = query.getString(
+                            query.getColumnIndex(Roster.JID));
+                    String name = query.getString(
+                            query.getColumnIndex(Roster.NAME));
                     if (!jid.startsWith("/user/")) {
                         oldChannels.put(jid, name);
                     }
@@ -69,17 +71,23 @@ public class ChannelSync extends Thread {
             for (Subscription subscription : subscriptions) {
                 String channel = subscription.getNode();
                 if (channel.startsWith("/user/")) {
+                    updateUser(channel);
                     continue;
                 }
                 if (oldChannels.containsKey(channel)) {
+                    updateChannel(channel);
                     oldChannels.remove(channel);
                     continue;
                 }
                 Log.d("BC", "add channel " + channel);
                 ContentValues values = new ContentValues();
-                values.put(Roster.JID, channel);
-                values.put(Roster.NAME, fetchChannelTitle(channel));
-                newEntries.add(values);
+                try {
+                    values.put(Roster.JID, channel);
+                    values.put(Roster.NAME, fetchChannelTitle(channel));
+                    newEntries.add(values);
+                } catch (Throwable t) {
+                    t.printStackTrace(System.err);
+                }
             }
             resolver.bulkInsert(
                 Roster.CONTENT_URI,
@@ -114,6 +122,65 @@ public class ChannelSync extends Thread {
         } catch (Throwable t) {
             Log.e("BC", "Error during channel sync", t);
         }
+    }
+
+    private void updateUser(String user) {
+        if (!user.endsWith("/channel")) {
+            updateChannel(user);
+            return;
+        }
+        user = user.substring(0, user.indexOf("/channel"));
+        Log.d("BC", "update user " + user);
+        Cursor cursor = resolver.query(
+                Roster.CONTENT_URI,
+                new String[]{Roster.LAST_UPDATED},
+                "jid=?",
+                new String[]{user},
+                null
+        );
+        if (cursor.getCount() != 1) {
+            cursor.close();
+            return;
+        }
+        while (cursor.isBeforeFirst()) { cursor.moveToNext(); }
+        long l = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
+        cursor.close();
+        for (String subChannel: new String[]{
+                "/channel",
+                "/geo/current",
+                "/geo/previous",
+                "/geo/next"
+        }) {
+            client.sendPacket(new ChannelFetch(
+                user + subChannel,
+                l
+            ));
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) { }
+        }
+    }
+
+    private void updateChannel(String channel) {
+        Log.d("BC", "update channel " + channel);
+        Cursor cursor = resolver.query(
+                Roster.CONTENT_URI,
+                new String[]{Roster.LAST_UPDATED},
+                "jid=?",
+                new String[]{channel},
+                null
+        );
+        if (cursor.getCount() != 1) {
+            cursor.close();
+            return;
+        }
+        while (cursor.isBeforeFirst()) { cursor.moveToNext(); }
+        long l = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
+        cursor.close();
+        client.sendPacket(new ChannelFetch(channel, l));
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) { }
     }
 
     private String fetchChannelTitle(String nodeName) throws XMPPException {
