@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
@@ -17,6 +18,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.CacheColumns;
@@ -74,7 +76,7 @@ public class BuddycloudProvider extends ContentProvider {
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + TABLE_CHANNEL_DATA + " ( "
 
-                    + ChannelData._ID + " INTEGER PRIMARY KEY,"
+                    + ChannelData._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + ChannelData.ITEM_ID + " INTEGER,"
 
                     + ChannelData.PARENT + " VARCHAR,"
@@ -197,64 +199,72 @@ public class BuddycloudProvider extends ContentProvider {
         long rowID = 0;
         values.put(CacheColumns.CACHE_UPDATE_TIMESTAMP, System
                 .currentTimeMillis());
+        values.remove(BaseColumns._ID);
         SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         switch (what) {
 
         case CHANNEL_DATA:
-            String node = values.getAsString(ChannelData.NODE_NAME);
-            long id = values.getAsLong(ChannelData.ITEM_ID);
-            long parent = values.getAsLong(ChannelData.PARENT);
-            // Channel update, yeah
-            Cursor c = db.rawQuery(
-                "SELECT "
-               + Roster.LAST_UPDATED
-               + " FROM "
-               + TABLE_ROSTER
-               + " WHERE "
-               + Roster.JID + "=?",
-               new String[]{node}
-            );
-            if (c.getCount() == 1) {
-                c.moveToFirst();
-                long last_updated =
-                    c.getLong(c.getColumnIndex(Roster.LAST_UPDATED));
-                if (id > last_updated) {
-                    ContentValues lu = new ContentValues();
-                    lu.put(Roster.LAST_UPDATED, id);
-                    lu.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,
-                            System.currentTimeMillis());
-                    db.update(
-                        TABLE_ROSTER,
-                        lu,
-                        Roster.JID + "=?",
+            try {
+                db.beginTransaction();
+                String node = values.getAsString(ChannelData.NODE_NAME);
+                long id = values.getAsLong(ChannelData.ITEM_ID);
+                long parent = values.getAsLong(ChannelData.PARENT);
+                // Channel update, yeah
+                Cursor c = db.rawQuery(
+                        "SELECT "
+                        + Roster.LAST_UPDATED
+                        + " FROM "
+                        + TABLE_ROSTER
+                        + " WHERE "
+                        + Roster.JID + "=?",
                         new String[]{node}
-                    );
-                    if (parent == 0) {
+                );
+                if (c.getCount() == 1) {
+                    c.moveToFirst();
+                    long last_updated =
+                        c.getLong(c.getColumnIndex(Roster.LAST_UPDATED));
+                    if (id > last_updated) {
+                        ContentValues lu = new ContentValues();
+                        lu.put(Roster.LAST_UPDATED, id);
+                        lu.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,
+                            System.currentTimeMillis());
                         db.update(
-                            TABLE_CHANNEL_DATA,
+                            TABLE_ROSTER,
                             lu,
-                            ChannelData.NODE_NAME + "=? AND "
-                            + ChannelData.PARENT + "=" + id,
+                            Roster.JID + "=?",
                             new String[]{node}
                         );
+                        if (parent == 0) {
+                            db.update(
+                                TABLE_CHANNEL_DATA,
+                                lu,
+                                ChannelData.NODE_NAME + "=? AND "
+                                + ChannelData.PARENT + "=" + id,
+                                new String[]{node}
+                            );
+                        } else {
+                            db.update(
+                                TABLE_CHANNEL_DATA,
+                                lu,
+                                ChannelData.NODE_NAME + "=? AND ("
+                                + ChannelData.PARENT + "=" + parent + " OR "
+                                + ChannelData.ITEM_ID + "=" + parent + ")",
+                                new String[]{node}
+                            );
+                        }
                     } else {
-                        db.update(
-                            TABLE_CHANNEL_DATA,
-                            lu,
-                            ChannelData.NODE_NAME + "=? AND ("
-                            + ChannelData.PARENT + "=" + parent + " OR "
-                            + ChannelData.ITEM_ID + "=" + parent + ")",
-                            new String[]{node}
-                        );
+                        values.put(ChannelData.LAST_UPDATED, last_updated);
                     }
                 } else {
-                    values.put(ChannelData.LAST_UPDATED, last_updated);
+                    Log.e("BC", "Couldn't update last_updated");
                 }
-            } else {
-                Log.e("BC", "Couldn't update last_updated");
+                c.close();
+                values.put(ChannelData._ID, (Long)null);
+                rowID = db.insert(TABLE_CHANNEL_DATA, null, values);
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
             }
-            c.close();
-            rowID = db.insert(TABLE_CHANNEL_DATA, ChannelData._ID, values);
             // uri = ContentUris.withAppendedId(ChannelData.CONTENT_URI, rowID);
             break;
 
@@ -289,49 +299,18 @@ public class BuddycloudProvider extends ContentProvider {
         int what = URI_MATCHER.match(uri);
         MatrixCursor dummyCursor = null;
 
-        // Log.d("provider", "what: " + what);
-        // Log.d("provider", "uri: " + uri);
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
         switch (what) {
 
         case CHANNEL_DATA:
-            String sql = "SELECT " + ChannelData._ID + ","
-                                   + ChannelData.ITEM_ID + ","
-                                   + ChannelData.PARENT + ","
-                                   + ChannelData.LAST_UPDATED + ","
-                                   + ChannelData.PUBLISHED + ","
-                                   + ChannelData.AUTHOR + ","
-                                   + ChannelData.AUTHOR_JID + ","
-                                   + ChannelData.AUTHOR_AFFILIATION + ","
-                                   + ChannelData.CONTENT + ","
-                                   + ChannelData.CONTENT_TYPE + ","
-                                   + ChannelData.NODE_NAME + ","
-                                   + ChannelData.GEOLOC_LAT + ","
-                                   + ChannelData.GEOLOC_LON + ","
-                                   + ChannelData.GEOLOC_ACCURACY + ","
-                                   + ChannelData.GEOLOC_AREA + ","
-                                   + ChannelData.GEOLOC_COUNTRY + ","
-                                   + ChannelData.GEOLOC_REGION + ","
-                                   + ChannelData.GEOLOC_LOCALITY + ","
-                                   + ChannelData.GEOLOC_TEXT + ","
-                                   + ChannelData.GEOLOC_TYPE + ","
-                                   + ChannelData.CACHE_UPDATE_TIMESTAMP
-                      + " FROM "   + TABLE_CHANNEL_DATA;
-            if (selection != null) {
-                sql  += " WHERE "  + selection;
-            }
-            if (sortOrder != null) {
-                sql += " ORDER BY " + sortOrder;
-            }
-
-            Cursor c = mOpenHelper.getReadableDatabase().rawQuery(
-                    sql, selectionArgs
-            );
+            Cursor c = mOpenHelper.getReadableDatabase().query(
+                    TABLE_CHANNEL_DATA, projection, selection, selectionArgs,
+                    null, null, sortOrder);
             c.setNotificationUri(getContext().getContentResolver(), uri);
             return c;
         case CHANNEL_DATA_ID:
-            sql = "SELECT " + ChannelData._ID + ","
+            String sql = "SELECT " + ChannelData._ID + ","
                             + ChannelData.ITEM_ID + ","
                             + ChannelData.PARENT + ","
                             + ChannelData.LAST_UPDATED + ","
@@ -375,10 +354,11 @@ public class BuddycloudProvider extends ContentProvider {
                     "FROM roster ORDER BY itsMe DESC, last_updated DESC, cache_update_timestamp DESC",
                     new String[]{}
             );
-            c.setNotificationUri(getContext().getContentResolver(), uri);
+            //c.setNotificationUri(getContext().getContentResolver(),
+            //        Uri.parse("com.buddycloud:roster"));
             return c;
         case ROSTER:
-            return mOpenHelper.getReadableDatabase().query(
+            c = mOpenHelper.getReadableDatabase().query(
                     TABLE_ROSTER,
                     projection,
                     selection,
@@ -387,6 +367,9 @@ public class BuddycloudProvider extends ContentProvider {
                     null,
                     sortOrder
             );
+            Log.d("ROSTERURI", uri.toString());
+            c.setNotificationUri(getContext().getContentResolver(), uri);
+            return c;
         case ROSTER_ID:
             qb.setTables(TABLE_ROSTER);
             qb.appendWhere("_id=" + uri.getPathSegments().get(1));

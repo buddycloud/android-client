@@ -5,10 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.View.OnClickListener;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
@@ -34,13 +37,28 @@ public class ChannelMessageActivity extends ListActivity {
             managedQuery(
                 ChannelData.CONTENT_URI,
                 ChannelData.PROJECTION_MAP,
-                ChannelData.NODE_NAME + "='" + node + "'",
-                null,
+                ChannelData.NODE_NAME + "=?",
+                new String[]{node},
                 ChannelData.LAST_UPDATED + " DESC, " +
                 ChannelData.ITEM_ID + " ASC"
             );
 
         setListAdapter(new ChannelMessageAdapter(this, messages));
+    }
+
+    private static class PostOnClick implements OnClickListener {
+
+        private final long id;
+
+        public PostOnClick(long id) {
+            this.id = id;
+            Log.d("ADD", "ID: " + id);
+        }
+
+        public void onClick(View v) {
+            Log.d("POST", "ID: " + id);
+        }
+
     }
 
     private class ChannelMessageAdapter extends CursorAdapter {
@@ -56,6 +74,10 @@ public class ChannelMessageActivity extends ListActivity {
             tv.setText(
                 cursor.getString(cursor.getColumnIndex(ChannelData.CONTENT))
             );
+            view.setOnClickListener(new PostOnClick(
+                cursor.getLong(cursor.getColumnIndex(ChannelData._ID))
+            ));
+            ImageView iv = (ImageView) view.findViewById(R.id.add);
             if (p == 0l) {
                 tv.setPadding(
                     5,
@@ -63,6 +85,7 @@ public class ChannelMessageActivity extends ListActivity {
                     tv.getPaddingRight(),
                     tv.getPaddingBottom()
                 );
+                iv.setVisibility(ImageView.VISIBLE);
             } else {
                 tv.setPadding(
                     30,
@@ -70,6 +93,7 @@ public class ChannelMessageActivity extends ListActivity {
                     tv.getPaddingRight(),
                     tv.getPaddingBottom()
                 );
+                iv.setVisibility(ImageView.INVISIBLE);
             }
             tv = (TextView) view.findViewById(R.id.tag);
             String affiliation =
