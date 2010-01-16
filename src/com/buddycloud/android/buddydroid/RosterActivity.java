@@ -47,13 +47,11 @@ public class RosterActivity extends ListActivity {
 
         getListView().setOnItemSelectedListener(new OnItemSelectedListener() {
 
-            @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1,
                     int position, long arg3) {
                 ((RosterAdapter) getListAdapter()).toggle(position);
             }
 
-            @Override
             public void onNothingSelected(AdapterView<?> arg0) {
             }
         });

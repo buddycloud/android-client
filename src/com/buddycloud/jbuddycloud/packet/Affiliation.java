@@ -30,17 +30,14 @@ public class Affiliation implements
         this.affiliation = affiliation;
     }
 
-    @Override
     public String getElementName() {
         return "affiliation";
     }
 
-    @Override
     public String getNamespace() {
         return "http://jabber.org/protocol/pubsub#owner";
     }
 
-    @Override
     public String toXML() {
         StringBuilder sb = new StringBuilder();
         sb.append("<affiliation");

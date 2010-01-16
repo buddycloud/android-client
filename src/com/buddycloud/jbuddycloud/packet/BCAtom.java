@@ -117,22 +117,18 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
         this.geoloc = geoloc;
     }
 
-    @Override
     public String getElementName() {
         return "entry";
     }
 
-    @Override
     public String getNamespace() {
         return "http://www.w3.org/2005/Atom";
     }
 
-    @Override
     public String toXML() {
         return null;
     }
 
-    @Override
     public PacketExtension parseExtension(XmlPullParser parser)
             throws Exception {
         Log.d("ATOM", "try to parse an atom stanza");

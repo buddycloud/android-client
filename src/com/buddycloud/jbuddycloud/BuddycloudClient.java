@@ -434,7 +434,6 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
             return r;
         }
 
-        @Override
         public List<Item> getNodeItems() {
             // TODO Auto-generated method stub
             return null;
@@ -443,7 +442,6 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public void processPacket(Packet packet) {
         try {
         if (packet instanceof Message) {

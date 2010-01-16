@@ -84,7 +84,6 @@ public class BuddycloudService extends Service {
             return;
         }
         mConnection.addGeoLocListener(new BCGeoLocListener() {
-            @Override
             public void receive(String from, GeoLoc loc) {
                 if (loc.getType() == null) {
                     return;
@@ -106,7 +105,6 @@ public class BuddycloudService extends Service {
             }
         });
         mConnection.addAtomListener(new BCAtomListener() {
-            @Override
             public void receive(String node, BCAtom atom) {
                 if (node.startsWith("/user/")) {
                     node = node.substring(6);
@@ -219,7 +217,6 @@ public class BuddycloudService extends Service {
     public boolean sendBeaconLog(final int prio) throws InterruptedException {
         final int priority = Math.min(internalPriority, prio);
         return taskQueue.add(new Runnable() {
-            @Override
             public void run() {
                 if (mConnection == null ||
                     !mConnection.isAuthenticated()
@@ -249,7 +246,6 @@ public class BuddycloudService extends Service {
 
     public boolean send(final IQ iq) throws InterruptedException {
         return taskQueue.add(new Runnable() {
-            @Override
             public void run() {
                 if (mConnection == null ||
                     !mConnection.isAuthenticated()
@@ -274,7 +270,6 @@ public class BuddycloudService extends Service {
         try {
             if (!taskQueue.add(new Runnable() {
 
-                @Override
                 public void run() {
                     if (mConnection == null ||
                             !mConnection.isConnected() ||
@@ -325,7 +320,6 @@ public class BuddycloudService extends Service {
 
         try {
             taskQueue.add(new Runnable() {
-                @Override
                 public void run() {
                     synchronized (TAG) {
                         if (mConnection != null && mConnection.isConnected()) {

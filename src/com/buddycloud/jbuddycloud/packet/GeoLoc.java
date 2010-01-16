@@ -134,7 +134,6 @@ public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtensi
         this.postalcode = postalcode;
     }
 
-    @Override
     public PacketExtension parseExtension(XmlPullParser parser)
             throws Exception {
         GeoLoc loc = new GeoLoc();
@@ -204,12 +203,10 @@ public class GeoLoc extends IQ implements PacketExtensionProvider, PacketExtensi
        }
     }
 
-    @Override
     public String getElementName() {
         return "geoloc";
     }
 
-    @Override
     public String getNamespace() {
         return "http://jabber.org/protocol/geoloc";
     }
