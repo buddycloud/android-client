@@ -1,23 +1,17 @@
 package com.buddycloud.jbuddycloud.provider;
 
-import java.util.HashMap;
-
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.provider.IQProvider;
-import org.jivesoftware.smack.provider.PacketExtensionProvider;
 import org.xmlpull.v1.XmlPullParser;
 
 import android.util.Log;
 
-import com.buddycloud.jbuddycloud.packet.LocationEvent;
 import com.buddycloud.jbuddycloud.packet.LocationQueryResponse;
 
 public class LocationQueryResponseProvider implements IQProvider {
     
     public static String getNS() { return "http://buddycloud.com/protocol/location"; }
 
-    @Override
     public IQ parseIQ(XmlPullParser parser) throws Exception {
         Log.d("Service", "Juhu "+parser.getName());
         LocationQueryResponse loc = new LocationQueryResponse();
