@@ -1,26 +1,43 @@
 package com.buddycloud.android.buddydroid;
 
+import org.jivesoftware.smack.packet.IQ.Type;
+import org.jivesoftware.smackx.pubsub.Item;
+import org.jivesoftware.smackx.pubsub.PayloadItem;
+import org.jivesoftware.smackx.pubsub.PublishItem;
+import org.jivesoftware.smackx.pubsub.packet.PubSub;
+
+import android.app.Activity;
+import android.app.Dialog;
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
+import com.buddycloud.jbuddycloud.packet.BCAtom;
 
 public class ChannelMessageActivity extends ListActivity {
 
     private int transparent;
     private int owner;
     private int moderator;
+    private IBuddycloudService service;
+    private String node;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,7 +48,7 @@ public class ChannelMessageActivity extends ListActivity {
         owner = Color.argb(255, 241, 27, 27);
         moderator = Color.argb(255, 246, 169, 43);
 
-        String node = getIntent().getData().toString().substring(8);
+        node = getIntent().getData().toString().substring(8);
 
         Cursor messages =
             managedQuery(
@@ -44,9 +61,19 @@ public class ChannelMessageActivity extends ListActivity {
             );
 
         setListAdapter(new ChannelMessageAdapter(this, messages));
+
+        bindService(new Intent(IBuddycloudService.class.getName()), new ServiceConnection() {
+            
+            public void onServiceDisconnected(ComponentName name) {
+            }
+            
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                service = IBuddycloudService.Stub.asInterface(binder);
+            }
+        }, Context.BIND_AUTO_CREATE);
     }
 
-    private static class PostOnClick implements OnClickListener {
+    private class PostOnClick implements OnClickListener {
 
         private final long id;
 
@@ -57,6 +84,83 @@ public class ChannelMessageActivity extends ListActivity {
 
         public void onClick(View v) {
             Log.d("POST", "ID: " + id);
+            v = v.getRootView();
+            Cursor cursor = v.getContext().getContentResolver().query(
+                    ChannelData.CONTENT_URI,
+                    ChannelData.PROJECTION_MAP,
+                    ChannelData._ID + "=" + id,
+                    null,
+                    null
+            );
+            if (!cursor.moveToFirst()) {
+                return;
+            }
+            final long itemId =
+                cursor.getLong(cursor.getColumnIndex(ChannelData.ITEM_ID));
+            final Dialog post = new Dialog(v.getContext());
+            post.setContentView(R.layout.add_channel_msg);
+            post.setTitle("Post a reply");
+            TextView tv = (TextView) post.findViewById(R.id.orig);
+            tv.setText(cursor.getString(cursor.getColumnIndex(
+                    ChannelData.CONTENT)));
+            post.setOwnerActivity((Activity) v.getContext());
+            ((Button)post.findViewById(R.id.abort)).setOnClickListener(
+                new OnClickListener() {
+                    public void onClick(View v) {
+                        post.dismiss();
+                    }
+                });
+            ((Button)post.findViewById(R.id.post)).setOnClickListener(
+            new OnClickListener() {
+                public void onClick(View v) {
+
+                    Log.d("POST", "start post");
+
+                    BCAtom atom = new BCAtom();
+
+                    TextView tv = (TextView)post.findViewById(R.id.edit);
+                    atom.setContent(tv.getText().toString());
+                    String jid = null;
+                    try {
+                        jid = service.getJidWithResource();
+                        int pos = jid.indexOf('/');
+                        if (pos > 0) {
+                            jid = jid.substring(0, pos);
+                        }
+                        atom.setAuthorJid(jid);
+                    } catch (RemoteException e) {
+                        e.printStackTrace(System.err);
+                    }
+
+                    PayloadItem<BCAtom> item =
+                        new PayloadItem<BCAtom>(null, atom);
+                    PublishItem<Item> publish =
+                        new PublishItem<Item>(node, item);
+
+                    PubSub pubSub = new PubSub();
+                    pubSub.setFrom(jid);
+                    pubSub.setTo("broadcaster.buddycloud.com");
+                    pubSub.setType(Type.SET);
+
+                    pubSub.addExtension(publish);
+
+                    try {
+                        Log.d("POST", pubSub.toXML());
+                        service.send(pubSub.toXML());
+                    } catch (RemoteException e) {
+                        e.printStackTrace(System.err);
+                    }
+
+                    post.dismiss();
+                }
+            });
+            ((Button)post.findViewById(R.id.abort)).setOnClickListener(
+                new OnClickListener() {
+                    public void onClick(View v) {
+                        post.dismiss();
+                    }
+            });
+            post.show();
         }
 
     }

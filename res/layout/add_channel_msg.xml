@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  android:id="@+id/layout_root"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:minWidth="200dip"
+>
+
+<TextView
+    android:text=""
+    android:id="@+id/orig"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+/>
+
+<EditText
+    android:text=""
+    android:id="@+id/edit"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:minLines="3"
+    android:hint="Post"
+    android:gravity="fill_horizontal"
+/>
+
+<LinearLayout android:id="@+id/LinearLayout01"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content"
+>
+  <TextView
+      android:layout_weight="1.0"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="fill_horizontal"
+  />
+
+  <Button
+      android:text="Abort"
+      android:id="@+id/abort"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_weight="0.0"
+  />
+  <Button
+      android:text="Post"
+      android:id="@+id/post"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_weight="0.0"
+  />
+
+</LinearLayout>
+
+</LinearLayout>

@@ -46,8 +46,6 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
         Pattern.compile("..*@[^.].*\\.[^.][^.][^.]*");
 
     static {
-        System.setProperty("smack.debugEnabled", "true");
-
         ProviderManager pm = ProviderManager.getInstance();
         pm.addIQProvider(
             "query", "http://jabber.org/protocol/disco#items",
@@ -464,7 +462,9 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                         PayloadItem payload = (PayloadItem) itemsExtension;
                         if (payload.getPayload() instanceof BCAtom) {
                             if (message.getFrom()
-                                    .equals("broadcaster.buddycloud.com")) {
+                                    .equals("broadcaster.buddycloud.com") ||
+                                message.getFrom()
+                                    .equals("pubsub-bridge@broadcaster.buddycloud.com")) {
                                 BCAtom atom = (BCAtom) payload.getPayload();
                                 atom.setId(Long.parseLong(payload.getId()));
                                 fireAtom(node, atom);

@@ -208,7 +208,10 @@ public class BuddycloudProvider extends ContentProvider {
                 db.beginTransaction();
                 String node = values.getAsString(ChannelData.NODE_NAME);
                 long id = values.getAsLong(ChannelData.ITEM_ID);
-                long parent = values.getAsLong(ChannelData.PARENT);
+                long parent = 0l;
+                if (values.getAsLong(ChannelData.PARENT) != null) {
+                    parent = values.getAsLong(ChannelData.PARENT);
+                }
                 // Channel update, yeah
                 Cursor c = db.rawQuery(
                         "SELECT "

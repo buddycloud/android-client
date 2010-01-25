@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -24,6 +25,7 @@ import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
+import com.buddycloud.jbuddycloud.packet.PlainPacket;
 
 public class BuddycloudService extends Service {
 
@@ -71,6 +73,7 @@ public class BuddycloudService extends Service {
         }
         String password = pm.getString("password", null);
 
+        BuddycloudClient.DEBUG_ENABLED = true;
         mConnection = BuddycloudClient.createBuddycloudClient(
             jid,
             password,
@@ -346,10 +349,27 @@ public class BuddycloudService extends Service {
         Log.i(TAG, "disonnected.");
     }
 
-        @Override
-        public IBinder onBind(Intent intent) {
-                // TODO Auto-generated method stub
-                return null;
-        }
+    private final IBuddycloudService.Stub binder =
+        new IBuddycloudService.Stub() {
 
+            public boolean isConnected() throws RemoteException {
+                return (mConnection != null) && mConnection.isConnected();
+            }
+
+            public void send(String rawXml)
+                    throws RemoteException {
+                Log.d("RemoteBC", "received: " + rawXml);
+                mConnection.sendPacket(new PlainPacket(rawXml));
+            }
+
+            public String getJidWithResource() throws RemoteException {
+                return mConnection.getUser();
+            }
+        
+    };
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
 }

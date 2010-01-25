@@ -1,6 +1,7 @@
 package com.buddycloud.jbuddycloud.packet;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +10,8 @@ import java.util.TimeZone;
 import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.provider.PacketExtensionProvider;
 import org.jivesoftware.smack.util.PacketParserUtils;
+import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.pubsub.util.XmlUtils;
 import org.xmlpull.v1.XmlPullParser;
 
 import android.util.Log;
@@ -19,8 +22,8 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
      * <entry xmlns='http://www.w3.org/2005/Atom'>
      *     <author>
      *         <name>user@buddycloud.com</name>
-     *         <jid>user@buddycloud.com</jid>
-     *         <affiliation>publisher</affiliation>
+     *         <jid xmlns="http://buddycloud.com/atom-elements-0">user@buddycloud.com</jid>
+     *         <affiliation xmlns="http://buddycloud.com/atom-elements-0">publisher</affiliation>
      *     </author>
      *     <content type='text'>Uh, no.</content>
      *     <published>2009-12-20T07:53:07Z</published>
@@ -40,9 +43,9 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
     private String affiliation;
     private String content;
     private String contentType;
-    private long published;
-    private long parentId;
-    private long id;
+    private Long published;
+    private Long parentId;
+    private Long id;
     private GeoLoc geoloc;
 
     public String getAuthorName() {
@@ -89,23 +92,23 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
         return published;
     }
 
-    public void setPublished(long published) {
+    public void setPublished(Long published) {
         this.published = published;
     }
 
-    public long getParentId() {
+    public Long getParentId() {
         return parentId;
     }
 
-    public void setParentId(long parentId) {
+    public void setParentId(Long parentId) {
         this.parentId = parentId;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -126,7 +129,70 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
     }
 
     public String toXML() {
-        return null;
+        if (published == null) {
+            published = System.currentTimeMillis();
+        }
+        StringBuilder builder = new StringBuilder();
+        Calendar calendar = Calendar.getInstance();
+
+        builder.append("<entry xmlns=\"http://www.w3.org/2005/Atom\">");
+        builder.append("<published>");
+        builder.append(calendar.get(Calendar.YEAR));
+        builder.append("-");
+        int field = calendar.get(Calendar.MONTH) + 1;
+        if (field < 10) { builder.append("0"); }
+        builder.append(field);
+        builder.append("-");
+        field = calendar.get(Calendar.DAY_OF_MONTH);
+        if (field < 10) { builder.append("0"); }
+        builder.append(field);
+        builder.append("T");
+        field = calendar.get(Calendar.HOUR_OF_DAY);
+        if (field < 10) { builder.append("0"); }
+        builder.append(field);
+        builder.append(":");
+        field = calendar.get(Calendar.HOUR);
+        if (field < 10) { builder.append("0"); }
+        builder.append(field);
+        builder.append(":");
+        field = calendar.get(Calendar.MILLISECOND);
+        if (field <  10) { builder.append("00"); } else
+        if (field < 100) { builder.append( "0"); }
+        builder.append(field);
+        builder.append("Z");
+        builder.append("</published>");
+
+        builder.append("<author>");
+        if (authorName != null) {
+            builder.append("<name>");
+            builder.append(StringUtils.escapeForXML(authorName));
+            builder.append("</name>");
+        }
+        if (authorJid != null) {
+            if (authorName == null) {
+                builder.append("<name>");
+                builder.append(StringUtils.escapeForXML(authorJid));
+                builder.append("</name>");
+            };
+            builder.append("<jid xmlns=\"http://buddycloud.com/atom-elements-0\">");
+            builder.append(StringUtils.escapeForXML(authorJid));
+            builder.append("</jid>");
+        }
+        builder.append("</author>");
+
+        if (content != null) {
+            builder.append("<content type=\"text\">");
+            builder.append(StringUtils.escapeForXML(content));
+            builder.append("</content>");
+        }
+
+        if (geoloc != null) {
+            builder.append(geoloc.toXML());
+        }
+
+        builder.append("</entry>");
+
+        return builder.toString();
     }
 
     public PacketExtension parseExtension(XmlPullParser parser)
