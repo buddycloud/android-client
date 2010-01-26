@@ -1,7 +1,6 @@
 package com.buddycloud.jbuddycloud.packet;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +10,6 @@ import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.provider.PacketExtensionProvider;
 import org.jivesoftware.smack.util.PacketParserUtils;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.pubsub.util.XmlUtils;
 import org.xmlpull.v1.XmlPullParser;
 
 import android.util.Log;
@@ -32,9 +30,7 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
      *         <locality>Bremen</locality>
      *         <country>Germany</country>
      *     </geoloc>
-     *     <headers xmlns='http://jabber.org/protocol/shim'>
-     *         <header name='In-Reply-To'>1261295132420</header>
-     *     </headers>
+     *     <in-reply-to xmlns="http://buddycloud.com/atom-elements-0">1262814123179</in-reply-to>
      * </entry>
      */
 
@@ -190,6 +186,12 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
             builder.append(geoloc.toXML());
         }
 
+        if (parentId != null) {
+            builder.append("<in-reply-to xmlns=\"http://buddycloud.com/atom-elements-0\">");
+            builder.append(parentId);
+            builder.append("</in-reply-to>");
+        }
+
         builder.append("</entry>");
 
         return builder.toString();
@@ -247,19 +249,18 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
                     );
                     atom.published = cal.getTime().getTime();
                 } else
-                if (tagName.equals("headers")) {
-                    do {
-                        if ((tag = parser.next()) == XmlPullParser.START_TAG) {
-                           tagName = parser.getName();
-                           if (tagName.equals("header")) {
-                               if (parser.getAttributeValue("", "name")
-                                       .equals("In-Reply-To")) {
-                                   atom.parentId =
-                                       Long.parseLong(parser.nextText());
-                               }
-                           }
+                if (tagName.equals("in-reply-to")) {
+                    if (!parser.isEmptyElementTag()) {
+                        atom.parentId =
+                            Long.parseLong(parser.nextText());
+                    } else {
+                        for (int i = 0; i < parser.getAttributeCount(); i++) {
+                            if (parser.getAttributeName(i).equals("ref")) {
+                                atom.parentId =
+                                    Long.parseLong(parser.getAttributeValue(i));
+                            }
                         }
-                    } while (!"headers".equals(parser.getName()));
+                    }
                 } else
                 if (tagName.equals("content")) {
                     atom.contentType = parser.getAttributeValue("", "type");
