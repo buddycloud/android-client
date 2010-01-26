@@ -62,15 +62,7 @@ public class ChannelMessageActivity extends ListActivity {
 
         setListAdapter(new ChannelMessageAdapter(this, messages));
 
-        bindService(new Intent(IBuddycloudService.class.getName()), new ServiceConnection() {
-            
-            public void onServiceDisconnected(ComponentName name) {
-            }
-            
-            public void onServiceConnected(ComponentName name, IBinder binder) {
-                service = IBuddycloudService.Stub.asInterface(binder);
-            }
-        }, Context.BIND_AUTO_CREATE);
+        bindBCService();
     }
 
     private class PostOnClick implements OnClickListener {
@@ -131,6 +123,7 @@ public class ChannelMessageActivity extends ListActivity {
                     } catch (RemoteException e) {
                         e.printStackTrace(System.err);
                     }
+                    atom.setParentId(itemId);
 
                     PayloadItem<BCAtom> item =
                         new PayloadItem<BCAtom>(null, atom);
@@ -217,6 +210,54 @@ public class ChannelMessageActivity extends ListActivity {
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             return getLayoutInflater().inflate(R.layout.channel_row, null);
         }
+    }
+
+    private final void bindBCService() {
+        bindService(new Intent(IBuddycloudService.class.getName()), new ServiceConnection() {
+            
+            public void onServiceDisconnected(ComponentName name) {
+            }
+            
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                service = IBuddycloudService.Stub.asInterface(binder);
+            }
+        }, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle state) {
+        super.onRestoreInstanceState(state);
+        bindBCService();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        bindBCService();
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        bindBCService();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        bindBCService();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bindBCService();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        bindBCService();
     }
 
 }
