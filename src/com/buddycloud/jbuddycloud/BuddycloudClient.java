@@ -461,10 +461,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                         }
                         PayloadItem payload = (PayloadItem) itemsExtension;
                         if (payload.getPayload() instanceof BCAtom) {
-                            if (message.getFrom()
-                                    .equals("broadcaster.buddycloud.com") ||
-                                message.getFrom()
-                                    .equals("pubsub-bridge@broadcaster.buddycloud.com")) {
+                            if (isBroadcaster(message.getFrom())) {
                                 BCAtom atom = (BCAtom) payload.getPayload();
                                 atom.setId(Long.parseLong(payload.getId()));
                                 fireAtom(node, atom);
@@ -491,7 +488,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                             ) {
                                 geoLoc.setLocType(GeoLoc.Type.PREV);
                             } else
-                            if (from.equals("broadcaster.buddycloud.com")) {
+                            if (isBroadcaster(from)) {
                                 if (node.endsWith("/geo/current")) {
                                     geoLoc.setLocType(GeoLoc.Type.CURRENT);
                                     from = node.substring(6);
@@ -524,7 +521,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
 
     private void fireGeoLoc(String from, GeoLoc geoLoc) {
         synchronized (geoListener) {
-            if (from.equals("broadcaster.buddycloud.com")) {
+            if (isBroadcaster(from)) {
                 from = getUser();
             }
             if (from.indexOf('/') != -1) {
@@ -576,4 +573,8 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
         }
     }
 
+    private final static boolean isBroadcaster(String jid) {
+        return jid.equals("broadcaster.buddycloud.com") ||
+               jid.equals("pubsub-bridge@broadcaster.buddycloud.com");
+    }
 }
