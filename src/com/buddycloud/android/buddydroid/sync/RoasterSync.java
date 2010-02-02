@@ -45,8 +45,8 @@ public class RoasterSync extends Thread {
                     query.moveToNext();
                 }
                 while (!query.isAfterLast()) {
-                    String jid = query.getString(1);
-                    String name = query.getString(2);
+                    String jid = query.getString(query.getColumnIndex(Roster.JID));
+                    String name = query.getString(query.getColumnIndex(Roster.NAME));
                     if (jid.startsWith("/user/") && jid.endsWith("/channel")) {
                         oldRoster.put(jid, name);
                     }
