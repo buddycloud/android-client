@@ -10,7 +10,7 @@ public class ChannelFetch extends IQ {
     public ChannelFetch(String node, long since) {
         this.node = node;
         this.since = since;
-        setTo("broadcaster.buddycloud.com");
+        setTo("pubsub-bridge@broadcaster.buddycloud.com");
         setType(Type.GET);
     }
 
