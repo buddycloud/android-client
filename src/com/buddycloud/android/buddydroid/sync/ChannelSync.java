@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smackx.FormField;
 import org.jivesoftware.smackx.packet.DataForm;
@@ -135,10 +136,11 @@ public class ChannelSync extends Thread {
                 Roster.CONTENT_URI,
                 new String[]{Roster.LAST_UPDATED},
                 "jid=?",
-                new String[]{user},
+                new String[]{user + "/channel"},
                 null
         );
         if (cursor.getCount() != 1) {
+            Log.e("BC", "uodate channel " + user + " canceled");
             cursor.close();
             return;
         }
@@ -151,10 +153,8 @@ public class ChannelSync extends Thread {
                 "/geo/previous",
                 "/geo/next"
         }) {
-            client.sendPacket(new ChannelFetch(
-                user + subChannel,
-                l
-            ));
+            IQ iq = new ChannelFetch(user + subChannel, l);
+            client.sendPacket(iq);
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) { }
@@ -171,13 +171,15 @@ public class ChannelSync extends Thread {
                 null
         );
         if (cursor.getCount() != 1) {
+            Log.e("BC", "uodate channel " + channel + " canceled");
             cursor.close();
             return;
         }
         while (cursor.isBeforeFirst()) { cursor.moveToNext(); }
         long l = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
         cursor.close();
-        client.sendPacket(new ChannelFetch(channel, l));
+        IQ iq = new ChannelFetch(channel, l);
+        client.sendPacket(iq);
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) { }
