@@ -1,10 +1,13 @@
 package com.buddycloud.jbuddycloud;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import javax.crypto.spec.OAEPParameterSpec;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.PacketListener;
@@ -12,6 +15,7 @@ import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.PacketExtension;
@@ -105,6 +109,12 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
         pm.addExtensionProvider("default",
                 "http://jabber.org/protocol/pubsub#owner",
                 new org.jivesoftware.smackx.pubsub.provider.FormNodeProvider());
+
+        pm.addIQProvider("event",
+                "http://jabber.org/protocol/pubsub#event",
+                new com.buddycloud.jbuddycloud.provider.EventProvider()
+                );
+
         pm.addExtensionProvider("event",
                 "http://jabber.org/protocol/pubsub#event",
                 new org.jivesoftware.smackx.pubsub.provider.EventProvider());
@@ -322,7 +332,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
         }
         addPacketListener(this, null);
         discoveryManager = new ServiceDiscoveryManager(this);
-        pubSubManager = new BCPubSubManager(this, "broadcaster.buddycloud.com");
+        pubSubManager = new BCPubSubManager(this, "pubsub-bridge@broadcaster.buddycloud.com");
     }
 
     private static class InitialPresence extends Packet {
@@ -352,14 +362,17 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
 
         getRoster().setSubscriptionMode(SubscriptionMode.manual);
 
-        if (!getRoster().contains("broadcaster.buddycloud.com")) {
-            getRoster().createEntry("broadcaster.buddycloud.com",
-                "broadcaster.buddycloud.com", null);
+        for (String jid: new String[]{
+                "broadcaster.buddycloud.com",
+                "pubsub-bridge@broadcaster.buddycloud.com"
+        }) {
+            if (!getRoster().contains(jid)) {
+                getRoster().createEntry(jid, jid, null);
+            }
+            Presence presence = new Presence(Presence.Type.subscribe);
+            presence.setTo(jid);
+            sendPacket(presence);
         }
-
-        Presence presence = new Presence(Presence.Type.subscribe);
-        presence.setTo("broadcaster.buddycloud.com");
-        sendPacket(presence);
 
         pubSubManager.getSupportedFeatures();
         pubSubManager.getSubscriptions();
@@ -372,7 +385,7 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
                     Affiliations affs = new Affiliations(
                         "/user/" + mJid + "/channel"
                     );
-                    affs.setTo("broadcaster.buddycloud.com");
+                    affs.setTo("pubsub-bridge@broadcaster.buddycloud.com");
                     try {
                         List<Subscription> subscriptions =
                             getPersonalNode().getBCSubscriptions();
@@ -440,80 +453,96 @@ public class BuddycloudClient extends XMPPConnection implements PacketListener {
     }
 
     @SuppressWarnings("unchecked")
-    public void processPacket(Packet packet) {
-        try {
-        if (packet instanceof Message) {
-            Message message = (Message) packet;
-            for (PacketExtension packetExtension : message.getExtensions()) {
-                if (!(packetExtension instanceof EventElement)) {
-                    continue;
+    private void processItems(String from, ItemsExtension items) {
+        String node = items.getNode();
+        for (PacketExtension itemsExtension : items.getExtensions()) {
+            if (!(itemsExtension instanceof PayloadItem)) {
+                continue;
+            }
+            PayloadItem payload = (PayloadItem) itemsExtension;
+            if (payload.getPayload() instanceof BCAtom) {
+                if (isBroadcaster(from)) {
+                    BCAtom atom = (BCAtom) payload.getPayload();
+                    atom.setId(Long.parseLong(payload.getId()));
+                    fireAtom(node, atom);
+                } else {
+                    System.err.println("Atom by unknown sender " + from);
                 }
-                EventElement event = (EventElement) packetExtension;
-                for (PacketExtension eventExtension : event.getExtensions()) {
-                    if (!(eventExtension instanceof ItemsExtension)) {
-                        continue;
-                    }
-                    ItemsExtension items = (ItemsExtension) eventExtension;
-                    String node = items.getNode();
-                    for (PacketExtension itemsExtension : items.getExtensions()) {
-                        if (!(itemsExtension instanceof PayloadItem)) {
-                            continue;
-                        }
-                        PayloadItem payload = (PayloadItem) itemsExtension;
-                        if (payload.getPayload() instanceof BCAtom) {
-                            if (isBroadcaster(message.getFrom())) {
-                                BCAtom atom = (BCAtom) payload.getPayload();
-                                atom.setId(Long.parseLong(payload.getId()));
-                                fireAtom(node, atom);
-                            } else {
-                                System.err.println("Atom by unknown sender "
-                                    + message.getFrom());
-                            }
-                        } else
-                        if (payload .getPayload() instanceof GeoLoc) {
-                            GeoLoc geoLoc = (GeoLoc) payload.getPayload();
-                            String from = message.getFrom();
-                            if (node.equals(
-                                    "http://jabber.org/protocol/geoloc")
-                            ) {
-                                geoLoc.setLocType(GeoLoc.Type.CURRENT);
-                            } else
-                            if (node.equals(
-                                "http://jabber.org/protocol/geoloc-next")
-                            ) {
-                                geoLoc.setLocType(GeoLoc.Type.NEXT);
-                            } else
-                            if (node.equals(
-                                "http://jabber.org/protocol/geoloc-prev")
-                            ) {
-                                geoLoc.setLocType(GeoLoc.Type.PREV);
-                            } else
-                            if (isBroadcaster(from)) {
-                                if (node.endsWith("/geo/current")) {
-                                    geoLoc.setLocType(GeoLoc.Type.CURRENT);
-                                    from = node.substring(6);
-                                    from = from.substring(0, from.length()-12);
-                                } else
-                                if (node.endsWith("/geo/future")) {
-                                    geoLoc.setLocType(GeoLoc.Type.NEXT);
-                                    from = node.substring(6);
-                                    from = from.substring(0, from.length()-11);
-                                } else
-                                if (node.endsWith("/geo/previous")) {
-                                    geoLoc.setLocType(GeoLoc.Type.PREV);
-                                    from = node.substring(6);
-                                    from = from.substring(0, from.length()-13);
-                                }
-                            }
-                            fireGeoLoc(from, geoLoc);
-                        } else {
-                            System.err.println("Unknown item payload " +
-                                    payload.getPayload().getClass().toString());
-                        }
+            } else
+            if (payload .getPayload() instanceof GeoLoc) {
+                GeoLoc geoLoc = (GeoLoc) payload.getPayload();
+                if (node.equals(
+                        "http://jabber.org/protocol/geoloc")
+                ) {
+                    geoLoc.setLocType(GeoLoc.Type.CURRENT);
+                } else
+                if (node.equals(
+                    "http://jabber.org/protocol/geoloc-next")
+                ) {
+                    geoLoc.setLocType(GeoLoc.Type.NEXT);
+                } else
+                if (node.equals(
+                    "http://jabber.org/protocol/geoloc-prev")
+                ) {
+                    geoLoc.setLocType(GeoLoc.Type.PREV);
+                } else
+                if (isBroadcaster(from)) {
+                    if (node.endsWith("/geo/current")) {
+                        geoLoc.setLocType(GeoLoc.Type.CURRENT);
+                        from = node.substring(6);
+                        from = from.substring(0, from.length()-12);
+                    } else
+                    if (node.endsWith("/geo/future")) {
+                        geoLoc.setLocType(GeoLoc.Type.NEXT);
+                        from = node.substring(6);
+                        from = from.substring(0, from.length()-11);
+                    } else
+                    if (node.endsWith("/geo/previous")) {
+                        geoLoc.setLocType(GeoLoc.Type.PREV);
+                        from = node.substring(6);
+                        from = from.substring(0, from.length()-13);
                     }
                 }
+                fireGeoLoc(from, geoLoc);
+            } else {
+                System.err.println("Unknown item payload " +
+                        payload.getPayload().getClass().toString());
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void processPacket(Packet packet) {
+        try {
+            Collection<PacketExtension> extensions = null;
+
+            if (packet instanceof IQ) {
+                extensions = ((IQ)packet).getExtensions();
+            } else
+            if (packet instanceof Message) {
+                extensions = ((Message)packet).getExtensions();
+            } else {
+                return;
+            }
+
+            String from = packet.getFrom();
+
+            for (PacketExtension packetExtension : extensions) {
+
+                if (packetExtension instanceof EventElement) {
+                    EventElement event = (EventElement) packetExtension;
+                    for (PacketExtension eventExtension : event.getExtensions()) {
+                        if (!(eventExtension instanceof ItemsExtension)) {
+                            continue;
+                        }
+                        processItems(from, (ItemsExtension)eventExtension);
+                    }
+                } else
+                if (packetExtension instanceof ItemsExtension) {
+                    processItems(from, (ItemsExtension)packetExtension);
+                }
+
+            }
         } catch (Throwable t) {
             t.printStackTrace(System.err);
         }
