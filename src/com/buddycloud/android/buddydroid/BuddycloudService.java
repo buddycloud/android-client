@@ -1,5 +1,6 @@
 package com.buddycloud.android.buddydroid;
 
+import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.packet.IQ;
 
 import android.app.Service;
@@ -73,6 +74,7 @@ public class BuddycloudService extends Service {
         }
         String password = pm.getString("password", null);
 
+        Connection.DEBUG_ENABLED = true;
         BuddycloudClient.DEBUG_ENABLED = true;
         mConnection = BuddycloudClient.createBuddycloudClient(
             jid,
