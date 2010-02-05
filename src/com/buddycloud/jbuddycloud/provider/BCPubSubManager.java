@@ -1,6 +1,6 @@
 package com.buddycloud.jbuddycloud.provider;
 
-import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.pubsub.CollectionNode;
 import org.jivesoftware.smackx.pubsub.LeafNode;
@@ -9,14 +9,14 @@ import org.jivesoftware.smackx.pubsub.PubSubManager;
 
 public class BCPubSubManager extends PubSubManager {
 
-    private final XMPPConnection connection;
+    private final Connection connection;
 
-    public BCPubSubManager(XMPPConnection connection) {
+    public BCPubSubManager(Connection connection) {
         super(connection);
         this.connection = connection;
     }
 
-    public BCPubSubManager(XMPPConnection connection, String toAddress) {
+    public BCPubSubManager(Connection connection, String toAddress) {
         super(connection, toAddress);
         this.connection = connection;
     }

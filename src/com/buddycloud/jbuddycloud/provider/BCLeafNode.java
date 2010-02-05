@@ -3,7 +3,7 @@ package com.buddycloud.jbuddycloud.provider;
 import java.util.Collection;
 import java.util.List;
 
-import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smackx.Form;
@@ -28,7 +28,7 @@ public class BCLeafNode extends Node {
 
     private final LeafNode node;
 
-    public BCLeafNode(XMPPConnection connection, LeafNode node) {
+    public BCLeafNode(Connection connection, LeafNode node) {
         super(connection, node.getId());
         this.node = node;
         this.to = "broadcaster.buddycloud.com";
