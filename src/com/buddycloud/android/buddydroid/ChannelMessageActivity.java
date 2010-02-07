@@ -87,6 +87,11 @@ public class ChannelMessageActivity extends ListActivity {
             if (!cursor.moveToFirst()) {
                 return;
             }
+            final long parent =
+                cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT));
+            if (parent != 0) {
+                return;
+            }
             final long itemId =
                 cursor.getLong(cursor.getColumnIndex(ChannelData.ITEM_ID));
             final Dialog post = new Dialog(v.getContext());
@@ -190,8 +195,10 @@ public class ChannelMessageActivity extends ListActivity {
                     tv.getPaddingRight(),
                     tv.getPaddingBottom()
                 );
-                iv.setVisibility(ImageView.INVISIBLE);
+                iv.setVisibility(ImageView.GONE);
             }
+            tv = (TextView) view.findViewById(R.id.author);
+            tv.setText("-- " + cursor.getString(cursor.getColumnIndex(ChannelData.AUTHOR_JID)));
             tv = (TextView) view.findViewById(R.id.tag);
             String affiliation =
                 cursor.getString(cursor.getColumnIndex(
