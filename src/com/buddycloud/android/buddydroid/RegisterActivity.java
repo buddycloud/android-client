@@ -50,7 +50,6 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	
     }
 
-	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.goto_login_button:
