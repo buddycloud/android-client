@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:background="@color/background"
+	android:layout_height="fill_parent"
+	android:layout_width="fill_parent"
+	android:padding="15dip"
+	android:orientation="horizontal">
+	
+		
+		<LinearLayout
+				android:orientation="vertical"
+			    android:layout_height="fill_parent"
+			    android:layout_width="fill_parent"
+			    android:layout_gravity="center"> 
+			    <ImageView   
+			  		android:layout_width="wrap_content"
+			  		android:layout_height="wrap_content"
+			  		android:layout_gravity="center"
+			  		android:layout_marginBottom="15dip"
+			  		android:src="@drawable/buddycloud_2">
+  				</ImageView>
+				<TextView android:text="@string/main_title"
+	    		  android:layout_height="wrap_content"
+	    		  android:layout_width="wrap_content" 
+	    		  android:layout_gravity="center"
+	    		  android:layout_marginBottom="15dip" 
+	    		  android:textSize="24.5sp" 
+	    		  android:textColor="@color/textcolor"/>
+				
+	    		<TextView android:text="Please choose, whether you want test Buddycloud or log in with your Account."
+	    		  android:layout_height="wrap_content"
+	    		  android:layout_width="wrap_content" 
+	    		  android:layout_gravity="center"
+	    		  android:textColor="@color/textcolor"
+	    		  android:layout_marginBottom="10dip"/> 
+	    
+	    	<TableLayout
+	    		android:layout_height="wrap_content"
+	    		android:layout_width="wrap_content"
+	    		android:layout_gravity="center"
+	    		android:stretchColumns="*">
+	    		
+	    		<TableRow>
+	    			<TextView android:id="@+id/anonymous_login_text"
+	    					  android:textColor="@color/textcolor"
+ 							  android:text="Login anonymous: "/>
+	    			<Button
+	    				android:id="@+id/anonymousButton"
+	    				android:text="@string/anonymous_text"
+	    				/>
+	    		</TableRow>
+	    		<TableRow>
+	    			<TextView android:id="@+id/login_text"
+	    					  android:textColor="@color/textcolor"
+ 							  android:text="Normal Login: "
+ 					/>
+ 							  
+	    			<Button
+	    				android:id="@+id/goto_login_button"
+	    				android:text="@string/normal_login_text"
+	    				/>
+	    		</TableRow>
+	    	<Button 
+	    	android:id="@+id/exit_button" 
+	    	android:text="Exit" 
+	    	android:layout_gravity="center" 
+	    	android:layout_width="wrap_content" 
+	    	android:layout_height="wrap_content">
+ 		    </Button>
+ 		    </TableLayout>
+ 		</LinearLayout> 
+ 		
+</LinearLayout>
