@@ -1,37 +1,28 @@
 package com.buddycloud.android.buddydroid;
 
-import org.jivesoftware.smack.BOSHConnection;
-import org.jivesoftware.smack.Connection;
+import java.util.LinkedList;
+
 import org.jivesoftware.smack.packet.IQ;
 
 import android.app.Service;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.buddycloud.android.buddydroid.collector.CellListener;
 import com.buddycloud.android.buddydroid.collector.NetworkListener;
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.android.buddydroid.sync.ChannelSync;
 import com.buddycloud.android.buddydroid.sync.RoasterSync;
-import com.buddycloud.jbuddycloud.BCAtomListener;
-import com.buddycloud.jbuddycloud.BCGeoLocListener;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
-import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
-import com.buddycloud.jbuddycloud.packet.GeoLoc;
 import com.buddycloud.jbuddycloud.packet.PlainPacket;
 
 public class BuddycloudService extends Service {
 
-    private static final String TAG = "Service";
+    static final String TAG = "BCService";
     private BuddycloudClient mConnection;
     private BuddycloudService service = this;
 
@@ -40,16 +31,10 @@ public class BuddycloudService extends Service {
 
     private TaskQueueThread taskQueue;
 
-    private Handler toastHandler = new Handler() {
+    private volatile ConnectionThread connectionThread = null;
 
-        @Override
-        public void handleMessage(android.os.Message msg) {
-            super.handleMessage(msg);
-            Toast.makeText(service, msg.getData().get("msg").toString(),
-                    Toast.LENGTH_LONG).show();
-        }
-
-    };
+    private LinkedList<IBuddycloudServiceListener> listeners =
+        new LinkedList<IBuddycloudServiceListener>();
 
     @Override
     public void onCreate() {
@@ -57,139 +42,25 @@ public class BuddycloudService extends Service {
         Log.d(TAG, " onCreate");
         cellListener = new CellListener(this);
         networkListener = new NetworkListener(this);
-    }
 
-    public void createConnection() {
-        if (mConnection != null && mConnection.isConnected()) {
+        if (connectionThread != null || mConnection != null) {
             return;
         }
 
-        SharedPreferences pm =
+        // check for cached credentials. If available, use it!
+        SharedPreferences preferences =
             PreferenceManager.getDefaultSharedPreferences(this);
-
-        String jid = pm.getString("jid", null);
-
-        if (jid != null && jid.indexOf('@') == -1) {
-            Log.d("SMACK", "Invalid jid!!");
-            return;
+        String jid = preferences.getString("jid", null);
+        String username = preferences.getString("username", null);
+        String password = preferences.getString("password", null);
+        String host = preferences.getString("host", null);
+        Integer port = preferences.getInt("port", -1);
+        if (port == -1) { port = null; }
+        if (jid != null && password != null) {
+            connectionThread = new ConnectionThread(
+                jid, username, password, host, port, false, service
+            );
         }
-        String password = pm.getString("password", null);
-
-        Connection.DEBUG_ENABLED = true;
-        BOSHConnection.DEBUG_ENABLED = true;
-        BuddycloudClient.DEBUG_ENABLED = true;
-        mConnection = BuddycloudClient.createBuddycloudClient(
-            jid,
-            password,
-            null, null, null
-        );
-
-    }
-
-    public void configureConnection() {
-        if (mConnection == null || !mConnection.isAuthenticated()) {
-            return;
-        }
-        mConnection.addGeoLocListener(new BCGeoLocListener() {
-            public void receive(String from, GeoLoc loc) {
-                if (loc.getType() == null) {
-                    return;
-                }
-                ContentValues values = new ContentValues();
-                if (loc.getLocType().equals(GeoLoc.Type.CURRENT)) {
-                    values.put(Roster.GEOLOC, loc.getText());
-                } else
-                if (loc.getLocType().equals(GeoLoc.Type.NEXT)) {
-                    values.put(Roster.GEOLOC_NEXT, loc.getText());
-                } else
-                if (loc.getLocType().equals(GeoLoc.Type.PREV)) {
-                    values.put(Roster.GEOLOC_PREV, loc.getText());
-                }
-                Log.d(TAG, "Update '/user/" + from + "/channel'");
-                getContentResolver().update(Roster.CONTENT_URI, values,
-                        Roster.JID + "='/user/" + from + "/channel'",
-                        null);
-            }
-        });
-        mConnection.addAtomListener(new BCAtomListener() {
-            public void receive(String node, BCAtom atom) {
-                if (node.startsWith("/user/")) {
-                    node = node.substring(6);
-                    String jid = node.substring(0, node.indexOf('/'));
-                    node = node.substring(node.indexOf('/') + 1);
-                    if (node.startsWith("geo/")) {
-                        ContentValues values = new ContentValues();
-                        GeoLoc loc = atom.getGeoloc();
-                        if (node.equals("geo/future")) {
-                            values.put(Roster.GEOLOC_NEXT, loc.getText());
-                        } else
-                        if (node.equals("geo/current")) {
-                            values.put(Roster.GEOLOC, loc.getText());
-                        } else
-                        if (node.equals("geo/previous")) {
-                            values.put(Roster.GEOLOC_PREV, loc.getText());
-                        }
-                        getContentResolver().update(Roster.CONTENT_URI, values,
-                                Roster.JID + "='" + jid + "'",
-                                null);
-                        return;
-                    }
-                    if (!node.equals("channel")) {
-                        // /user/jid/mood ?
-                        return;
-                    }
-                    node = "/user/" + jid + "/" + node;
-                }
-                // Channel !
-                ContentValues values = new ContentValues();
-                values.put(ChannelData.NODE_NAME,
-                           node);
-                values.put(ChannelData.AUTHOR,
-                           atom.getAuthorName());
-                values.put(ChannelData.AUTHOR_JID,
-                           atom.getAuthorJid());
-                values.put(ChannelData.AUTHOR_AFFILIATION,
-                           atom.getAffiliation());
-                values.put(ChannelData.CONTENT,
-                           atom.getContent());
-                values.put(ChannelData.CONTENT_TYPE,
-                           atom.getContentType());
-                values.put(ChannelData.ITEM_ID,
-                           atom.getId());
-                values.put(ChannelData.LAST_UPDATED,
-                           atom.getId());
-                values.put(ChannelData.PARENT,
-                           atom.getParentId());
-                values.put(ChannelData.PUBLISHED,
-                           atom.getPublished());
-                GeoLoc loc = atom.getGeoloc();
-                if (loc != null) {
-                    values.put(ChannelData.GEOLOC_ACCURACY,
-                               loc.getAccuracy());
-                    values.put(ChannelData.GEOLOC_AREA,
-                               loc.getArea());
-                    values.put(ChannelData.GEOLOC_COUNTRY,
-                               loc.getCountry());
-                    values.put(ChannelData.GEOLOC_LAT,
-                               loc.getLat());
-                    values.put(ChannelData.GEOLOC_LOCALITY,
-                               loc.getLocality());
-                    values.put(ChannelData.GEOLOC_LON,
-                               loc.getLon());
-                    values.put(ChannelData.GEOLOC_REGION,
-                               loc.getRegion());
-                    values.put(ChannelData.GEOLOC_TEXT,
-                               loc.getText());
-                    if (loc.getLocType() != null) {
-                        values.put(ChannelData.GEOLOC_TYPE,
-                                   loc.getLocType().toString());
-                    }
-                }
-
-                getContentResolver().insert(ChannelData.CONTENT_URI, values);
-                Log.d(TAG, "stored " + atom.getId() + "@" + node);
-            }
-        });
     }
 
     public void updateRoaster() {
@@ -284,30 +155,6 @@ public class BuddycloudService extends Service {
                         ) {
                             cellListener.start();
 
-                            createConnection();
-
-                            android.os.Message msg = new android.os.Message();
-                            if (mConnection != null && mConnection.isAuthenticated()) {
-                                msg.getData().putString("msg", "You are online!");
-                                toastHandler.sendMessage(msg);
-                                try {
-                                    sendBeaconLog(0);
-                                } catch (InterruptedException e) {
-                                    Log.d(TAG, e.toString(), e);
-                                }
-                            } else {
-                                msg.getData().putString("msg", "Login failed :-(");
-                                toastHandler.sendMessage(msg);
-                                return;
-                            }
-                            try {
-                                sendBeaconLog(0);
-                            } catch (InterruptedException e) {
-                                Log.d(TAG, e.toString(), e);
-                            }
-                            configureConnection();
-                            updateRoaster();
-                            updateChannels();
                         }
                 }
             })) {
@@ -362,18 +209,168 @@ public class BuddycloudService extends Service {
 
             public void send(String rawXml)
                     throws RemoteException {
-                Log.d("RemoteBC", "received: " + rawXml);
                 mConnection.sendPacket(new PlainPacket(rawXml));
             }
 
             public String getJidWithResource() throws RemoteException {
                 return mConnection.getUser();
             }
-        
-    };
+
+            public void createAccount(String username, String password)
+                throws RemoteException {
+                synchronized (service) {
+                    if (connectionThread != null) {
+                        connectionThread.setStop(true);
+                        connectionThread.interrupt();
+                    }
+                    connectionThread = new ConnectionThread(
+                        username, null, password, null, null, true, service
+                    );
+                }
+            }
+
+
+            public void login(String username, String password)
+                    throws RemoteException {
+                synchronized (service) {
+                    if (connectionThread != null) {
+                        connectionThread.setStop(true);
+                        connectionThread.interrupt();
+                    }
+                    connectionThread = new ConnectionThread(
+                        username, null, password, null, null, false, service
+                    );
+                }
+            }
+
+            public void loginAnonymously() throws RemoteException {
+                synchronized (service) {
+                    if (connectionThread != null) {
+                        connectionThread.setStop(true);
+                        connectionThread.interrupt();
+                    }
+                    connectionThread = new ConnectionThread(
+                        null, null, null, null, null, false, service
+                    );
+                }
+            }
+
+            public boolean isAnonymous() throws RemoteException {
+                return mConnection != null && mConnection.isConnected() &&
+                    mConnection.isAnonymous();
+            }
+
+            public boolean isAuthenticated() throws RemoteException {
+                return mConnection != null && mConnection.isConnected() &&
+                    mConnection.isAuthenticated();
+            }
+
+            public void addListener(IBuddycloudServiceListener listener)
+                    throws RemoteException {
+                synchronized (this) {
+                    if (listener.asBinder().isBinderAlive()) {
+                        listeners.add(listener);
+                    }
+                }
+            }
+        };
 
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
     }
+
+    public void setClient(BuddycloudClient client, String password) {
+        synchronized (this) {
+            if (mConnection != null) {
+                try {
+                    mConnection.disconnect();
+                } catch (Exception e) {
+                    // we just throw the connection away
+                }
+            }
+            mConnection = client;
+            if (!mConnection.isAnonymous()) {
+                SharedPreferences preferences =
+                    PreferenceManager.getDefaultSharedPreferences(this);
+                String jid = client.getUser();
+                if (jid.indexOf('/') != -1) {
+                    jid = jid.substring(0, jid.indexOf('/'));
+                }
+                preferences.edit().putString("jid", jid);
+                preferences.edit().putString(
+                        "username", client.getLoginUsername()
+                );
+                preferences.edit().putString("password", password);
+                preferences.edit().putString("host", client.getHost());
+                preferences.edit().putInt("port", client.getPort());
+            }
+            mConnection.addGeoLocListener(
+                new ConnectionBCGeolocListener(getContentResolver())
+            );
+            mConnection.addAtomListener(
+                new BCConnectionAtomListener(getContentResolver())
+            );
+
+            LinkedList<IBuddycloudServiceListener> remove = null;
+            for (IBuddycloudServiceListener listener: listeners) {
+                if (listener.asBinder().isBinderAlive()) {
+                    try {
+                        listener.onBCConnected();
+                    } catch (RemoteException e) {
+                        if (remove == null) {
+                            remove = new LinkedList<IBuddycloudServiceListener>();
+                        }
+                        remove.add(listener);
+                    }
+                } else {
+                    // remove listener
+                    if (remove == null) {
+                        remove = new LinkedList<IBuddycloudServiceListener>();
+                    }
+                    remove.add(listener);
+                }
+            }
+            if (remove != null) {
+                listeners.removeAll(remove);
+            }
+
+            updateRoaster();
+            updateChannels();
+        }
+    }
+
+    public void connectionFailed(Exception e) {
+        synchronized (this) {
+            if (mConnection != null && mConnection.isConnected()) {
+                // multithreading? We may be connected before all
+                // attempts come back...
+                // So we ignore the problem if we have a working connection.
+                return;
+            }
+            LinkedList<IBuddycloudServiceListener> remove = null;
+            for (IBuddycloudServiceListener listener: listeners) {
+                if (listener.asBinder().isBinderAlive()) {
+                    try {
+                        listener.onBCLoginFailed();
+                    } catch (RemoteException ex) {
+                        if (remove == null) {
+                            remove = new LinkedList<IBuddycloudServiceListener>();
+                        }
+                        remove.add(listener);
+                    }
+                } else {
+                    // remove listener
+                    if (remove == null) {
+                        remove = new LinkedList<IBuddycloudServiceListener>();
+                    }
+                    remove.add(listener);
+                }
+            }
+            if (remove != null) {
+                listeners.removeAll(remove);
+            }
+        }
+    }
+
 }

@@ -13,7 +13,7 @@ public class TaskQueueThread extends Thread {
     public void run() {
         while (taskQueue != null) {
             try {
-                Runnable runnable = taskQueue.poll(2, TimeUnit.SECONDS);
+                Runnable runnable = taskQueue.poll(1800, TimeUnit.SECONDS);
                 if (runnable != null) {
                     runnable.run();
                 }

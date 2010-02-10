@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.jivesoftware.smack.BOSHConfiguration;
+import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
@@ -22,8 +22,6 @@ import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
 import org.jivesoftware.smackx.pubsub.Subscription;
-
-import android.util.Log;
 
 import com.buddycloud.jbuddycloud.packet.Affiliation;
 import com.buddycloud.jbuddycloud.packet.Affiliations;
@@ -160,135 +158,198 @@ public class BuddycloudClient extends XMPPConnection {
                 new LocationQueryResponseProvider());
     }
 
+    public static BuddycloudClient createAnonymousBuddycloudClient() {
+        ConnectionConfiguration config =
+            new ConnectionConfiguration("buddycloud.com");
+
+        BuddycloudClient connection = null;
+
+        try {
+            connection = new BuddycloudClient(config);
+            connection.connect();
+        } catch (Exception e) {
+            // TODO logging
+        }
+
+        if (connection == null || !connection.isConnected()) {
+            return null;
+        }
+
+        try {
+            connection.getSASLAuthentication().authenticateAnonymously();
+        } catch (XMPPException e) {
+            // TODO logging
+        }
+
+        if (!connection.isAuthenticated()) {
+            return null;
+        }
+
+        return connection;
+    }
+
+    public static BuddycloudClient registerBuddycloudClient(
+            String username,
+            String password
+    ) {
+        ConnectionConfiguration config =
+            new ConnectionConfiguration("buddycloud.com");
+
+        BuddycloudClient connection = null;
+
+        try {
+            connection = new BuddycloudClient(config);
+            connection.connect();
+        } catch (Exception e) {
+            // TODO logging
+        }
+
+        if (connection == null || !connection.isConnected()) {
+            return null;
+        }
+
+        AccountManager accountManager = connection.getAccountManager();
+
+        try {
+            accountManager.createAccount(username, password);
+            connection.login(username, password);
+        } catch (XMPPException e) {
+            // TODO logging
+        }
+
+        if (!connection.isConnected() || !connection.isAuthenticated()) {
+            return null;
+        }
+
+        return connection;
+    }
+
     public static BuddycloudClient createBuddycloudClient(
             String jid,
             String password,
             String host,
             Integer port,
             String cachedUsername
-        ) {
-        ArrayList<ConnectionConfiguration> configs =
-            new ArrayList<ConnectionConfiguration>(3);
-
-        if (jid != null && jid.length() == 0) {
-            jid = null;
-        }
-
-        if (host != null && port != null) {
-            configs.add(new ConnectionConfiguration(host, port));
-        }
+    ) {
 
         if (jid == null) {
-            configs.add(new ConnectionConfiguration("buddycloud.com"));
+            return null;
+        }
+
+        if (jid.length() == 0 || !JID_PATTERN.matcher(jid).matches()) {
+            return null;
+        }
+
+        ConnectionConfiguration config =
+            new ConnectionConfiguration("buddycloud.com");
+        if (host != null && port != null) {
+            config = new ConnectionConfiguration(host, port);
         } else
-        if (JID_PATTERN.matcher(jid).matches()) {
-            configs.add(
-                new ConnectionConfiguration(
-                    jid.substring(jid.lastIndexOf('@') + 1)
-                )
+        if (host != null) {
+            config = new ConnectionConfiguration(host);
+        } else
+        if (jid.indexOf('@') != -1) {
+            config = new ConnectionConfiguration(
+                jid.substring(jid.lastIndexOf('@') + 1)
             );
         }
 
         BuddycloudClient connection = null;
-        for (ConnectionConfiguration conf: configs) {
 
+        try {
+            connection = new BuddycloudClient(config);
+            connection.connect();
+        } catch (Exception e) {
+                // TODO logging
+        }
+
+        if (connection == null || !connection.isConnected()) {
+            return null;
+        }
+
+        if (cachedUsername != null) {
             try {
-                connection = new BuddycloudClient(conf);
-                connection.connect();
-            } catch (Exception e) {
+                connection.login(cachedUsername, password);
+            } catch (XMPPException e) {
                 // TODO logging
             }
 
-            if (!connection.isConnected()) {
-                continue;
-            }
+        } else {
 
-            if (jid == null) {
+            String id = jid + '@';
+            while (id.indexOf('@') != -1) {
+                id = id.substring(0, id.lastIndexOf('@'));
+                if (id.equals(cachedUsername)) {
+                    continue;
+                }
+
                 try {
-                    connection.loginAnonymously();
+                    connection.login(id, password);
                 } catch (XMPPException e) {
                     // TODO logging
                 }
-            } else {
-                if (cachedUsername != null) {
-                    try {
-                        connection.login(cachedUsername, password);
-                    } catch (XMPPException e) {
-                        // TODO logging
-                    }
+
+                if (connection.isAuthenticated()) {
+                    connection.setLoginUsername(id);
+                    return connection;
                 }
-                String id = jid + '@';
-                while (id.indexOf('@') != -1) {
-                    id = id.substring(0, id.lastIndexOf('@'));
-                    if (!connection.isAuthenticated() &&
-                        !jid.equals(cachedUsername)
-                    ) {
-                        try {
-                            connection.login(id, password);
-                        } catch (XMPPException e) {
-                            // TODO logging
-                        }
-                        if (!connection.isAuthenticated()) {
-                            try {
-                                connection.disconnect();
-                            } catch (Exception e) {
-                               // Unimportant
-                            }
-                            try {
-                                connection = new BuddycloudClient(conf);
-                                connection.connect();
-                            } catch (Exception e) {
-                                // TODO logging
-                            }
-                        }
-                    }
+
+                try {
+                    connection.disconnect();
+                } catch (Exception e) {
+                    // Unimportant
+                }
+                try {
+                    connection = new BuddycloudClient(config);
+                    connection.connect();
+                } catch (Exception e) {
+                    // TODO logging
+                }
+
+                if (!connection.isConnected()) {
+                    return null;
                 }
             }
 
-            if (connection != null && (
-                connection.isAuthenticated() || connection.isAnonymous()
-            )) {
-                connection.discoveryManager
-                .addFeature("http://jabber.org/protocol/disco#info");
-                connection.discoveryManager
-                .addFeature("http://jabber.org/protocol/pubsub");
-                connection.discoveryManager
-                .addFeature("http://jabber.org/protocol/geoloc");
-                connection.discoveryManager
-                .addFeature("http://jabber.org/protocol/geoloc+notify");
-                connection.discoveryManager
-                .addFeature("http://jabber.org/protocol/geoloc-prev");
-                connection.discoveryManager
-                .addFeature("http://jabber.org/protocol/geoloc-prev+notify");
-                connection.discoveryManager
-                .addFeature("http://jabber.org/protocol/geoloc-next");
-                connection.discoveryManager
-                .addFeature("http://jabber.org/protocol/geoloc-next+notify");
-                connection.discoveryManager
-                .setNodeInformationProvider(
-                    "http://buddydroid.com/caps#" + VERSION,
-                    new JBuddycloudFeatures()
-                );
-                connection.sendPacket(new InitialPresence());
-                return connection;
-            } else {
-                if (connection.isConnected()) {
-                    try {
-                        connection.disconnect();
-                    } catch (Exception e) {
-                        // TODO logging
-                    }
-                }
-            }
         }
 
-        return null;
+        if (!(connection.isConnected() && connection.isAuthenticated())) {
+            return null;
+        }
+
+        connection.discoveryManager
+            .addFeature("http://jabber.org/protocol/disco#info");
+        connection.discoveryManager
+            .addFeature("http://jabber.org/protocol/pubsub");
+        connection.discoveryManager
+            .addFeature("http://jabber.org/protocol/geoloc");
+        connection.discoveryManager
+            .addFeature("http://jabber.org/protocol/geoloc+notify");
+        connection.discoveryManager
+            .addFeature("http://jabber.org/protocol/geoloc-prev");
+        connection.discoveryManager
+            .addFeature("http://jabber.org/protocol/geoloc-prev+notify");
+        connection.discoveryManager
+            .addFeature("http://jabber.org/protocol/geoloc-next");
+        connection.discoveryManager
+            .addFeature("http://jabber.org/protocol/geoloc-next+notify");
+        connection.discoveryManager
+            .setNodeInformationProvider(
+                "http://buddydroid.com/caps#" + VERSION,
+                new JBuddycloudFeatures()
+            );
+
+        connection.sendPacket(new InitialPresence());
+
+        return connection;
+
     }
 
     private ServiceDiscoveryManager discoveryManager;
     private BCPubSubManager pubSubManager;
     private BuddycloudLocationChannelListener locationChannelListener =
         new BuddycloudLocationChannelListener();
+    private String loginUsername;
 
     private BCLeafNode personalNode;
 
@@ -452,6 +513,14 @@ public class BuddycloudClient extends XMPPConnection {
 
     public void addAtomListener(BCAtomListener bcAtomListener) {
         locationChannelListener.addAtomListener(bcAtomListener);
+    }
+
+    public String getLoginUsername() {
+        return loginUsername;
+    }
+
+    public void setLoginUsername(String loginUsername) {
+        this.loginUsername = loginUsername;
     }
 
 }
