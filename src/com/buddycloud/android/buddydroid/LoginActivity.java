@@ -34,22 +34,19 @@ public class LoginActivity extends Activity implements OnClickListener {
             TextView password_tv = (TextView) this
                     .findViewById(R.id.password_textbox);
 
-            try {
-                service.login(
-                        jID_tv.getText().toString(),
-                        password_tv.getText().toString()
-                );
-            } catch (RemoteException e) {
-                e.printStackTrace(System.err);
-            }
+            String jid = jID_tv.getText().toString();
+            String password = password_tv.getText().toString();
 
             jID_tv.setText("");
             password_tv.setText("");
 
             setVisible(false);
 
-            Intent main = new Intent(this, MainActivity.class);
-            startActivity(main);
+            try {
+                service.login(jid, password);
+            } catch (RemoteException e) {
+                e.printStackTrace(System.err);
+            }
 
             break;
         }
