@@ -46,21 +46,6 @@ public class BuddycloudService extends Service {
         if (connectionThread != null || mConnection != null) {
             return;
         }
-
-        // check for cached credentials. If available, use it!
-        SharedPreferences preferences =
-            PreferenceManager.getDefaultSharedPreferences(this);
-        String jid = preferences.getString("jid", null);
-        String username = preferences.getString("username", null);
-        String password = preferences.getString("password", null);
-        String host = preferences.getString("host", null);
-        Integer port = preferences.getInt("port", -1);
-        if (port == -1) { port = null; }
-        if (jid != null && password != null) {
-            connectionThread = new ConnectionThread(
-                jid, username, password, host, port, false, service
-            );
-        }
     }
 
     public void updateRoaster() {
@@ -162,6 +147,27 @@ public class BuddycloudService extends Service {
             }
         } catch (InterruptedException e) {
             Log.d(TAG, e.getMessage(), e);
+        }
+
+        synchronized (this) {
+            if (connectionThread != null) {
+                return;
+            }
+            if (mConnection != null && mConnection.isConnected()) {
+                return;
+            }
+
+            // check for cached credentials. If available, use it!
+            SharedPreferences preferences =
+                PreferenceManager.getDefaultSharedPreferences(this);
+            String jid = preferences.getString("jid", null);
+            String username = preferences.getString("username", null);
+            String password = preferences.getString("password", null);
+            if (jid != null && password != null) {
+                connectionThread = new ConnectionThread(
+                    jid, username, password, null, null, false, service
+                );
+            }
         }
     }
 
@@ -291,19 +297,20 @@ public class BuddycloudService extends Service {
             }
             mConnection = client;
             if (!mConnection.isAnonymous()) {
+
+                Log.d(TAG, "cache credentials");
+
                 SharedPreferences preferences =
                     PreferenceManager.getDefaultSharedPreferences(this);
                 String jid = client.getUser();
                 if (jid.indexOf('/') != -1) {
                     jid = jid.substring(0, jid.indexOf('/'));
                 }
-                preferences.edit().putString("jid", jid);
-                preferences.edit().putString(
-                        "username", client.getLoginUsername()
-                );
-                preferences.edit().putString("password", password);
-                preferences.edit().putString("host", client.getHost());
-                preferences.edit().putInt("port", client.getPort());
+                preferences.edit()
+                    .putString("jid", jid)
+                    .putString("username", client.getLoginUsername())
+                    .putString("password", password)
+                    .commit();
             }
             mConnection.addGeoLocListener(
                 new ConnectionBCGeolocListener(getContentResolver())
@@ -312,6 +319,8 @@ public class BuddycloudService extends Service {
                 new BCConnectionAtomListener(getContentResolver())
             );
 
+            Log.d(TAG, "notify handler about new connection");
+
             LinkedList<IBuddycloudServiceListener> remove = null;
             for (IBuddycloudServiceListener listener: listeners) {
                 if (listener.asBinder().isBinderAlive()) {
@@ -319,7 +328,8 @@ public class BuddycloudService extends Service {
                         listener.onBCConnected();
                     } catch (RemoteException e) {
                         if (remove == null) {
-                            remove = new LinkedList<IBuddycloudServiceListener>();
+                            remove =
+                                new LinkedList<IBuddycloudServiceListener>();
                         }
                         remove.add(listener);
                     }
@@ -348,6 +358,7 @@ public class BuddycloudService extends Service {
                 // So we ignore the problem if we have a working connection.
                 return;
             }
+            e.printStackTrace(System.err);
             LinkedList<IBuddycloudServiceListener> remove = null;
             for (IBuddycloudServiceListener listener: listeners) {
                 if (listener.asBinder().isBinderAlive()) {
