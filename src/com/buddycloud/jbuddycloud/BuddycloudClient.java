@@ -168,7 +168,7 @@ public class BuddycloudClient extends XMPPConnection {
             connection = new BuddycloudClient(config);
             connection.connect();
         } catch (Exception e) {
-            // TODO logging
+            e.printStackTrace(System.err);
         }
 
         if (connection == null || !connection.isConnected()) {
@@ -176,14 +176,16 @@ public class BuddycloudClient extends XMPPConnection {
         }
 
         try {
-            connection.getSASLAuthentication().authenticateAnonymously();
+            connection.loginAnonymously();
         } catch (XMPPException e) {
-            // TODO logging
+            e.printStackTrace(System.err);
         }
 
-        if (!connection.isAuthenticated()) {
+        if (!(connection.isAuthenticated() || connection.isAnonymous())) {
             return null;
         }
+
+        configureFeatures(connection);
 
         return connection;
     }
@@ -217,9 +219,11 @@ public class BuddycloudClient extends XMPPConnection {
             // TODO logging
         }
 
-        if (!connection.isConnected() || !connection.isAuthenticated()) {
+        if (!connection.isConnected() && !connection.isAuthenticated()) {
             return null;
         }
+
+        configureFeatures(connection);
 
         return connection;
     }
@@ -260,7 +264,7 @@ public class BuddycloudClient extends XMPPConnection {
             connection = new BuddycloudClient(config);
             connection.connect();
         } catch (Exception e) {
-                // TODO logging
+            e.printStackTrace(System.err);
         }
 
         if (connection == null || !connection.isConnected()) {
@@ -271,7 +275,7 @@ public class BuddycloudClient extends XMPPConnection {
             try {
                 connection.login(cachedUsername, password);
             } catch (XMPPException e) {
-                // TODO logging
+                e.printStackTrace(System.err);
             }
 
         } else {
@@ -286,7 +290,7 @@ public class BuddycloudClient extends XMPPConnection {
                 try {
                     connection.login(id, password);
                 } catch (XMPPException e) {
-                    // TODO logging
+                    e.printStackTrace(System.err);
                 }
 
                 if (connection.isAuthenticated()) {
@@ -303,7 +307,7 @@ public class BuddycloudClient extends XMPPConnection {
                     connection = new BuddycloudClient(config);
                     connection.connect();
                 } catch (Exception e) {
-                    // TODO logging
+                    e.printStackTrace(System.err);
                 }
 
                 if (!connection.isConnected()) {
@@ -317,6 +321,13 @@ public class BuddycloudClient extends XMPPConnection {
             return null;
         }
 
+        configureFeatures(connection);
+
+        return connection;
+
+    }
+
+    private final static void configureFeatures(BuddycloudClient connection) {
         connection.discoveryManager
             .addFeature("http://jabber.org/protocol/disco#info");
         connection.discoveryManager
@@ -335,14 +346,11 @@ public class BuddycloudClient extends XMPPConnection {
             .addFeature("http://jabber.org/protocol/geoloc-next+notify");
         connection.discoveryManager
             .setNodeInformationProvider(
-                "http://buddydroid.com/caps#" + VERSION,
-                new JBuddycloudFeatures()
-            );
+            "http://buddydroid.com/caps#" + VERSION,
+            new JBuddycloudFeatures()
+        );
 
         connection.sendPacket(new InitialPresence());
-
-        return connection;
-
     }
 
     private ServiceDiscoveryManager discoveryManager;
