@@ -29,6 +29,10 @@ public class RoasterSync extends Thread {
     @Override
     public void run() {
         try {
+            if (client.isAnonymous()) {
+                return;
+            }
+
             Log.d("Roster", "read roaster");
             long time = -System.currentTimeMillis();
 
