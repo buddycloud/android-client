@@ -184,7 +184,11 @@ public class RegisterActivity extends Activity implements OnClickListener {
                     }
                     try {
                         if (service.isAuthenticated()) {
-                            loggedIn();
+                            runOnUiThread(new Runnable() {
+                                public void run() {
+                                    loggedIn();
+                                }
+                            });
                         }
                     } catch (RemoteException e) {
                         e.printStackTrace(System.err);
