@@ -47,6 +47,7 @@
 		    		<TableRow>
 		    			<EditText
 		    				android:id="@+id/e_mail_textbox"
+		    				android:inputType="textEmailAddress"
 		    				android:singleLine="true"
 		    				android:maxLines="1"
 		    				/>

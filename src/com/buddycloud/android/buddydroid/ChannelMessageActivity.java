@@ -8,7 +8,6 @@ import org.jivesoftware.smackx.pubsub.packet.PubSub;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -26,23 +25,28 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 
-public class ChannelMessageActivity extends ListActivity {
+public class ChannelMessageActivity extends Activity {
 
     private int transparent;
     private int owner;
     private int moderator;
     private IBuddycloudService service;
     private String node;
+    private String name;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        setContentView(R.layout.channel_layout);
 
         transparent = Color.argb(0, 0, 0, 0);
         owner = Color.argb(255, 241, 27, 27);
@@ -60,7 +64,34 @@ public class ChannelMessageActivity extends ListActivity {
                 ChannelData.ITEM_ID + " ASC"
             );
 
-        setListAdapter(new ChannelMessageAdapter(this, messages));
+        Cursor channel = managedQuery(
+                Roster.CONTENT_URI, Roster.PROJECTION_MAP,
+                Roster.JID + "=?", new String[]{node}, null);
+        while (channel.isBeforeFirst()) {
+            channel.moveToNext();
+        }
+
+        name = channel.getString(channel.getColumnIndex(Roster.NAME));
+        String jid = channel.getString(channel.getColumnIndex(Roster.JID));
+        if (jid.startsWith("/user/")) {
+            jid = jid.substring(6);
+            jid = jid.substring(0, jid.indexOf('/'));
+            name = name + "'s personal channel";
+        } else
+        if (jid.startsWith("/channel/")) {
+            jid = jid.substring(9);
+            name = name + " channel";
+        }
+
+        TextView titleView = ((TextView)findViewById(R.id.channel_title));
+        titleView.setText(name);
+        titleView.setOnClickListener(new PostOnClick(-1));
+        TextView jidView = ((TextView)findViewById(R.id.channel_jid));
+        jidView.setText(name);
+        jidView.setOnClickListener(new PostOnClick(-1));
+
+        ((ListView)findViewById(R.id.message_list))
+            .setAdapter(new ChannelMessageAdapter(this, messages));
 
         bindBCService();
     }
@@ -71,42 +102,51 @@ public class ChannelMessageActivity extends ListActivity {
 
         public PostOnClick(long id) {
             this.id = id;
-            Log.d("ADD", "ID: " + id);
         }
 
         public void onClick(View v) {
             Log.d("POST", "ID: " + id);
-            v = v.getRootView();
-            Cursor cursor = v.getContext().getContentResolver().query(
+            final long itemId;
+            final Dialog post = new Dialog(v.getContext());
+
+            post.setContentView(R.layout.add_channel_msg);
+            if (id != -1) {
+                v = v.getRootView();
+                Cursor cursor = v.getContext().getContentResolver().query(
                     ChannelData.CONTENT_URI,
                     ChannelData.PROJECTION_MAP,
                     ChannelData._ID + "=" + id,
                     null,
                     null
-            );
-            if (!cursor.moveToFirst()) {
-                return;
-            }
-            final long parent =
-                cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT));
-            if (parent != 0) {
-                return;
-            }
-            final long itemId =
-                cursor.getLong(cursor.getColumnIndex(ChannelData.ITEM_ID));
-            final Dialog post = new Dialog(v.getContext());
-            post.setContentView(R.layout.add_channel_msg);
-            post.setTitle("Post a reply");
-            TextView tv = (TextView) post.findViewById(R.id.orig);
-            tv.setText(cursor.getString(cursor.getColumnIndex(
+                );
+                if (!cursor.moveToFirst()) {
+                    return;
+                }
+                final long parent =
+                    cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT));
+                if (parent != 0) {
+                    return;
+                }
+                itemId =
+                    cursor.getLong(cursor.getColumnIndex(ChannelData.ITEM_ID));
+                post.setTitle("Post a reply");
+                TextView tv = (TextView) post.findViewById(R.id.orig);
+                tv.setText(cursor.getString(cursor.getColumnIndex(
                     ChannelData.CONTENT)));
-            post.setOwnerActivity((Activity) v.getContext());
+                post.setOwnerActivity((Activity) v.getContext());
+            } else {
+                itemId = 0;
+                post.setTitle("Post a message");
+                TextView tv = (TextView) post.findViewById(R.id.orig);
+                tv.setText("Post to " + name);
+            }
+
             ((Button)post.findViewById(R.id.abort)).setOnClickListener(
                 new OnClickListener() {
                     public void onClick(View v) {
                         post.dismiss();
                     }
-                });
+            });
             ((Button)post.findViewById(R.id.post)).setOnClickListener(
             new OnClickListener() {
                 public void onClick(View v) {
@@ -128,7 +168,9 @@ public class ChannelMessageActivity extends ListActivity {
                     } catch (RemoteException e) {
                         e.printStackTrace(System.err);
                     }
-                    atom.setParentId(itemId);
+                    if (itemId != 0) {
+                        atom.setParentId(itemId);
+                    }
 
                     PayloadItem<BCAtom> item =
                         new PayloadItem<BCAtom>(null, atom);
@@ -180,22 +222,31 @@ public class ChannelMessageActivity extends ListActivity {
                 cursor.getLong(cursor.getColumnIndex(ChannelData._ID))
             ));
             ImageView iv = (ImageView) view.findViewById(R.id.add);
+            View v = view.findViewById(R.id.channel_row);
             if (p == 0l) {
-                tv.setPadding(
-                    5,
-                    tv.getPaddingTop(),
-                    tv.getPaddingRight(),
-                    tv.getPaddingBottom()
+                v.setPadding(
+                    3,
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
                 );
                 iv.setVisibility(ImageView.VISIBLE);
+                view.findViewById(R.id.text)
+                .setBackgroundColor(Color.WHITE);
+                view.findViewById(R.id.author)
+                    .setBackgroundColor(Color.WHITE);
             } else {
-                tv.setPadding(
+                v.setPadding(
                     30,
-                    tv.getPaddingTop(),
-                    tv.getPaddingRight(),
-                    tv.getPaddingBottom()
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
                 );
                 iv.setVisibility(ImageView.GONE);
+                view.findViewById(R.id.text)
+                    .setBackgroundColor(Color.LTGRAY);
+                view.findViewById(R.id.author)
+                    .setBackgroundColor(Color.LTGRAY);
             }
             tv = (TextView) view.findViewById(R.id.author);
             tv.setText("-- " + cursor.getString(cursor.getColumnIndex(ChannelData.AUTHOR_JID)));
@@ -220,6 +271,7 @@ public class ChannelMessageActivity extends ListActivity {
     }
 
     private final void bindBCService() {
+        
         bindService(new Intent(IBuddycloudService.class.getName()), new ServiceConnection() {
             
             public void onServiceDisconnected(ComponentName name) {
