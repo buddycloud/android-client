@@ -121,6 +121,7 @@
                 android:paddingLeft="5dip"
             />
 
+<!--
             <TextView
                 android:id="@+id/time"
                 android:text=" | time"
@@ -129,6 +130,7 @@
                 android:singleLine="true"
                 android:textSize="12dip"
             />
+-->
 
             </LinearLayout>
             <!-- /JID | TIME -->

@@ -31,6 +31,7 @@ import android.widget.TextView;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
+import com.buddycloud.android.buddydroid.util.HumanTime;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 
 public class ChannelMessageActivity extends Activity {
@@ -239,6 +240,8 @@ public class ChannelMessageActivity extends Activity {
                 cursor.getString(cursor.getColumnIndex(
                         ChannelData.AUTHOR_AFFILIATION)
                 );
+            long time =
+                cursor.getLong(cursor.getColumnIndex(ChannelData.ITEM_ID));
 
             cursor.moveToNext();
             boolean endOfList = cursor.isAfterLast() ||
@@ -260,18 +263,22 @@ public class ChannelMessageActivity extends Activity {
                 jidView.setTextColor(Color.BLACK);
             }
 
+            String humanTime = HumanTime.humanReadableString(
+                    System.currentTimeMillis() - time);
+
             TextView locationView = (TextView)view.findViewById(R.id.location);
             if (town != null && town.length() > 0) {
                 if (country != null && country.length() > 0) {
-                    locationView.setText(town + ", " + country);
+                    locationView.setText(town + ", " + country + ", " +
+                            humanTime);
                 } else {
-                    locationView.setText(town);
+                    locationView.setText(town + ", " + humanTime);
                 }
             } else {
                 if (country != null && country.length() > 0) {
-                    locationView.setText(country);
+                    locationView.setText(country + ", " + humanTime);
                 } else {
-                    locationView.setText("");
+                    locationView.setText(humanTime);
                 }
             }
 
