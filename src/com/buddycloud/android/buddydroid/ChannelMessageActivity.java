@@ -300,6 +300,7 @@ public class ChannelMessageActivity extends Activity {
                 );
                 addIcon.setVisibility(ImageView.VISIBLE);
             } else {
+                view.setOnClickListener(null);
                 topShadowLayout.setVisibility(LinearLayout.GONE);
                 messageInlineContainer.setBackgroundColor(
                         Color.rgb(200, 200, 200)
