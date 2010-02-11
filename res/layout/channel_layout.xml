@@ -36,6 +36,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/message_list"
+            android:cacheColorHint="#00000000"
             android:background="@drawable/channel_view_background"
         />
 
