@@ -2,122 +2,208 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         style="@style/MyTheme"
+
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
 
         android:gravity="fill_vertical|left"
 
-        android:paddingLeft="3dip"
-        android:paddingRight="3dip"
-        android:paddingTop="3dip"
-        android:paddingBottom="3dip"
->
-
-    <!-- color bar for affiliation -->
-    <TextView
-        android:id="@+id/tag"
-
-        android:gravity="fill_vertical|left"
-
-        android:width="3dip"
-
-        android:minWidth="3dip"
-        android:layout_width="3dip"
-
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentBottom="true"
-        android:layout_height="fill_parent"
-
-        android:layout_weight="0.0"
-    />
-    <!-- /color bar for affiliation -->
-
-
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:id="@+id/channel_row"
-
-        android:gravity="fill_vertical|right"
+        android:paddingRight="10dip"
 
         android:orientation="vertical"
 
-        android:paddingRight="4dip"
+>
 
+    <!-- top shadow bar -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/top_shadow"
+
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="fill_vertical|left"
+        android:paddingTop="5dip"
+        android:orientation="vertical"
+
+        android:visibility="gone"
+    >
+
+    <TextView
+        android:background="@drawable/channel_view_msg_top_background"
+
+        android:layout_width="fill_parent"
+        android:layout_height="18dip"
+
+        android:maxHeight="18dip"
+        android:minHeight="18dip"
+
+        android:layout_weight="0.0"
+    />
+
+    </LinearLayout>
+    <!-- /top shadow bar -->
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/message_container"
+        android:gravity="fill_horizontal|left"
+        android:background="@drawable/channel_view_msg_background"
+        android:layout_weight="1.0"
+        android:orientation="vertical"
+        android:paddingBottom="3dip"
+    >
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="fill_horizontal|left"
+        android:layout_weight="1.0"
+        android:orientation="vertical"
+        android:paddingRight="11px"
+    >
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/message_inline_container"
+        android:gravity="fill_horizontal|left"
+        android:layout_weight="1.0"
+        android:orientation="vertical"
+        android:paddingLeft="2dip"
+        android:paddingTop="2dip"
+        android:paddingBottom="1dip"
+    >
+
+    <!-- msg head layout -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/channel_row"
+        android:gravity="fill_horizontal|left"
         android:layout_weight="1.0"
     >
 
+        <!-- user icon -->
+        <ImageView
+            android:paddingLeft="5dip"
+            android:id="@+id/user_icon"
+            android:src="@drawable/contact"
+            android:layout_width="49dip"
+            android:layout_height="49dip"
+            android:layout_weight="0.0"
+        />
+        <!-- /user icon -->
+
+
+        <!-- msg head text layout -->
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-
-                android:paddingLeft="3dip"
-                android:paddingRight="2dip"
-                android:gravity="fill_vertical|left"
-        >
-
-            <TextView
-                android:id="@+id/text"
-                android:layout_toRightOf="@id/tag"
-                android:layout_alignTop="@id/tag"
-
-                android:text="text"
-
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-
-                android:singleLine="false"
-
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
                 android:layout_weight="1.0"
-            />
-
-        </LinearLayout>
-
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-
-                android:gravity="fill_vertical|left"
-                android:paddingLeft="3dip"
-                android:paddingRight="2dip"
+                android:gravity="top|left"
+                android:orientation="vertical"
         >
 
-            <TextView
-                android:id="@+id/author"
-
-                android:text="author"
-
-                android:textSize="10dip"
-
-                android:textStyle="italic"
-
+            <!-- JID | TIME -->
+            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:gravity="top|left"
+            >
 
+            <TextView
+                android:id="@+id/jid"
+                android:text="jid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:singleLine="true"
+                android:textSize="12dip"
+                android:paddingLeft="5dip"
             />
 
+            <TextView
+                android:id="@+id/time"
+                android:text=" | time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textSize="12dip"
+            />
+
+            </LinearLayout>
+            <!-- /JID | TIME -->
+
+            <!-- Town, Country -->
+            <TextView
+                android:id="@+id/location"
+                android:text="location"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textSize="12dip"
+                android:paddingLeft="5dip"
+            />
+            <!-- /Town, Country -->
+
         </LinearLayout>
+        <!-- /msg head text layout -->
+
+        <!-- add icon -->
+        <ImageView
+            android:id="@+id/add_icon"
+            android:src="@drawable/channel_view_add_msg"
+            android:layout_weight="0.0"
+            android:layout_width="20dip"
+            android:layout_height="15dip"
+            android:scaleType="fitXY"
+            android:paddingRight="5dip"
+        />
+        <!-- /add icon -->
+
+    </LinearLayout>
+    <!-- /msg head layout -->
+
+    <TextView
+        android:id="@+id/message"
+        android:text="message"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="12dip"
+        android:paddingLeft="5dip"
+    />
 
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/add"
-        android:src="@drawable/add_channel_msg"
+    </LinearLayout>
 
-        android:layout_marginRight="5dip"
+    </LinearLayout>
 
-        android:layout_width="20dip"
-        android:layout_height="20dip"
+    <!-- bottom shadow bar -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/bottom_shadow"
 
-        android:maxHeight="20dip"
-        android:maxWidth="20dip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="fill_vertical|left"
+        android:paddingBottom="4dip"
+        android:orientation="vertical"
 
         android:visibility="gone"
-        android:scaleType="fitCenter"
+    >
+
+    <TextView
+        android:background="@drawable/channel_view_msg_bottom_background"
+
+        android:layout_width="fill_parent"
+        android:layout_height="25dip"
+
+        android:maxHeight="25dip"
+        android:minHeight="25dip"
+
         android:layout_weight="0.0"
     />
+
+    </LinearLayout>
+    <!-- /bottom shadow bar -->
  
 </LinearLayout>

@@ -25,6 +25,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -87,11 +88,14 @@ public class ChannelMessageActivity extends Activity {
         titleView.setText(name);
         titleView.setOnClickListener(new PostOnClick(-1));
         TextView jidView = ((TextView)findViewById(R.id.channel_jid));
-        jidView.setText(name);
+        jidView.setText(jid);
         jidView.setOnClickListener(new PostOnClick(-1));
 
-        ((ListView)findViewById(R.id.message_list))
-            .setAdapter(new ChannelMessageAdapter(this, messages));
+        ListView listView = ((ListView)findViewById(R.id.message_list));
+        listView.setAdapter(new ChannelMessageAdapter(this, messages));
+        listView.setDivider(null);
+        listView.setDividerHeight(0);
+        listView.setBackgroundResource(R.drawable.channel_view_background);
 
         bindBCService();
     }
@@ -213,54 +217,117 @@ public class ChannelMessageActivity extends Activity {
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            TextView tv = (TextView) view.findViewById(R.id.text);
-            long p = cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT));
-            tv.setText(
-                cursor.getString(cursor.getColumnIndex(ChannelData.CONTENT))
-            );
-            view.setOnClickListener(new PostOnClick(
-                cursor.getLong(cursor.getColumnIndex(ChannelData._ID))
-            ));
-            ImageView iv = (ImageView) view.findViewById(R.id.add);
-            View v = view.findViewById(R.id.channel_row);
-            if (p == 0l) {
-                v.setPadding(
-                    3,
-                    v.getPaddingTop(),
-                    v.getPaddingRight(),
-                    v.getPaddingBottom()
+            final float scale = context.getResources()
+                                        .getDisplayMetrics().density;
+
+            long parent =
+                cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT));
+            String message =
+                cursor.getString(cursor.getColumnIndex(ChannelData.CONTENT));
+            String town =
+                cursor.getString(cursor.getColumnIndex(
+                        ChannelData.GEOLOC_LOCALITY)
                 );
-                iv.setVisibility(ImageView.VISIBLE);
-                view.findViewById(R.id.text)
-                .setBackgroundColor(Color.WHITE);
-                view.findViewById(R.id.author)
-                    .setBackgroundColor(Color.WHITE);
-            } else {
-                v.setPadding(
-                    30,
-                    v.getPaddingTop(),
-                    v.getPaddingRight(),
-                    v.getPaddingBottom()
+            String country =
+                cursor.getString(cursor.getColumnIndex(
+                        ChannelData.GEOLOC_COUNTRY)
                 );
-                iv.setVisibility(ImageView.GONE);
-                view.findViewById(R.id.text)
-                    .setBackgroundColor(Color.LTGRAY);
-                view.findViewById(R.id.author)
-                    .setBackgroundColor(Color.LTGRAY);
-            }
-            tv = (TextView) view.findViewById(R.id.author);
-            tv.setText("-- " + cursor.getString(cursor.getColumnIndex(ChannelData.AUTHOR_JID)));
-            tv = (TextView) view.findViewById(R.id.tag);
+            long id = cursor.getLong(cursor.getColumnIndex(ChannelData._ID));
+            String jid = 
+                cursor.getString(cursor.getColumnIndex(ChannelData.AUTHOR_JID));
             String affiliation =
                 cursor.getString(cursor.getColumnIndex(
-                        ChannelData.AUTHOR_AFFILIATION));
-            if (affiliation.equals("owner")) {
-                tv.setBackgroundColor(owner);
+                        ChannelData.AUTHOR_AFFILIATION)
+                );
+
+            cursor.moveToNext();
+            boolean endOfList = cursor.isAfterLast() ||
+                cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT)) <= 0;
+            cursor.move(-1);
+
+            TextView messageView = (TextView)view.findViewById(R.id.message);
+            messageView.setText(message);
+
+            TextView jidView = (TextView)view.findViewById(R.id.jid);
+            jidView.setText(jid);
+
+            if ("owner".equals(affiliation)) {
+                jidView.setTextColor(Color.rgb(150, 15, 20));
             } else
-            if (affiliation.equals("moderator")) {
-                tv.setBackgroundColor(moderator);
+            if ("moderator".equals(affiliation)) {
+                jidView.setTextColor(Color.rgb(200, 130, 50));
             } else {
-                tv.setBackgroundColor(transparent);
+                jidView.setTextColor(Color.BLACK);
+            }
+
+            TextView locationView = (TextView)view.findViewById(R.id.location);
+            if (town != null && town.length() > 0) {
+                if (country != null && country.length() > 0) {
+                    locationView.setText(town + ", " + country);
+                } else {
+                    locationView.setText(town);
+                }
+            } else {
+                if (country != null && country.length() > 0) {
+                    locationView.setText(country);
+                } else {
+                    locationView.setText("");
+                }
+            }
+
+            LinearLayout messageContainer = (LinearLayout)
+                view.findViewById(R.id.message_container);
+
+            LinearLayout messageInlineContainer = (LinearLayout)
+            view.findViewById(R.id.message_inline_container);
+
+            LinearLayout topShadowLayout = (LinearLayout)
+                view.findViewById(R.id.top_shadow);
+
+            ImageView addIcon = (ImageView)
+                view.findViewById(R.id.add_icon);
+
+            if (parent <= 0) {
+                view.setOnClickListener(new PostOnClick(id));
+                topShadowLayout.setVisibility(LinearLayout.VISIBLE);
+                messageInlineContainer.setBackgroundColor(Color.TRANSPARENT);
+                messageContainer.setPadding(
+                    (int)(3f * scale),
+                    (int)(5f * scale),
+                    0,
+                    (int)(2f * scale)
+                );
+                addIcon.setVisibility(ImageView.VISIBLE);
+            } else {
+                topShadowLayout.setVisibility(LinearLayout.GONE);
+                messageInlineContainer.setBackgroundColor(
+                        Color.rgb(200, 200, 200)
+                );
+                if (endOfList) {
+                    messageContainer.setPadding(
+                            (int)(30f * scale),
+                            (int)(5f * scale),
+                            0,
+                            (int)(2f * scale)
+                    );
+                } else {
+                    messageContainer.setPadding(
+                            (int)(30f * scale),
+                            (int)(5f * scale),
+                            0,
+                            (int)(6f * scale)
+                    );
+                }
+                addIcon.setVisibility(ImageView.GONE);
+            }
+
+            LinearLayout bottomShadowLayout = (LinearLayout)
+                view.findViewById(R.id.bottom_shadow);
+
+            if (endOfList) {
+                bottomShadowLayout.setVisibility(LinearLayout.VISIBLE);
+            } else {
+                bottomShadowLayout.setVisibility(LinearLayout.GONE);
             }
         }
 
