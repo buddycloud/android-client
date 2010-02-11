@@ -36,9 +36,6 @@ import com.buddycloud.jbuddycloud.packet.BCAtom;
 
 public class ChannelMessageActivity extends Activity {
 
-    private int transparent;
-    private int owner;
-    private int moderator;
     private IBuddycloudService service;
     private String node;
     private String name;
@@ -49,10 +46,6 @@ public class ChannelMessageActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         setContentView(R.layout.channel_layout);
-
-        transparent = Color.argb(0, 0, 0, 0);
-        owner = Color.argb(255, 241, 27, 27);
-        moderator = Color.argb(255, 246, 169, 43);
 
         node = getIntent().getData().toString().substring(8);
 
@@ -93,10 +86,11 @@ public class ChannelMessageActivity extends Activity {
         jidView.setOnClickListener(new PostOnClick(-1));
 
         ListView listView = ((ListView)findViewById(R.id.message_list));
+        listView.setFadingEdgeLength(0);
         listView.setAdapter(new ChannelMessageAdapter(this, messages));
         listView.setDivider(null);
         listView.setDividerHeight(0);
-        listView.setBackgroundResource(R.drawable.channel_view_background);
+        listView.setSmoothScrollbarEnabled(false);
 
         bindBCService();
     }
