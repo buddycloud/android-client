@@ -18,13 +18,13 @@ public class RegisterActivity extends Activity implements OnClickListener {
 
     private final IBuddycloudServiceListener listener =
         new IBuddycloudServiceListener.Stub() {
-            
+
             public void onBCLoginFailed() throws RemoteException {
             }
-            
+
             public void onBCDisconnected() throws RemoteException {
             }
-            
+
             public void onBCConnected() throws RemoteException {
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -78,6 +78,14 @@ public class RegisterActivity extends Activity implements OnClickListener {
         case R.id.exit_button:
             finish();
             break;
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            bindBCService();
         }
     }
 
@@ -162,6 +170,17 @@ public class RegisterActivity extends Activity implements OnClickListener {
             if (service != null) {
                 try {
                     if (service.isConnected()) {
+                        try {
+                            if (service.isAuthenticated()) {
+                                runOnUiThread(new Runnable() {
+                                    public void run() {
+                                        loggedIn();
+                                    }
+                                });
+                            }
+                        } catch (RemoteException e) {
+                            e.printStackTrace(System.err);
+                        }
                         return;
                     }
                 } catch (RemoteException e) { /* ignore */ }
@@ -169,33 +188,32 @@ public class RegisterActivity extends Activity implements OnClickListener {
             try {
                 unbindService(serviceConnection);
             } catch (Exception e) { /* ignore */ }
-        } else {
-            serviceConnection = new ServiceConnection() {
-
-                public void onServiceDisconnected(ComponentName name) {
-                }
-
-                public void onServiceConnected(ComponentName name, IBinder binder) {
-                    service = IBuddycloudService.Stub.asInterface(binder);
-                    try {
-                        service.addListener(listener);
-                    } catch (RemoteException e) {
-                        e.printStackTrace(System.err);
-                    }
-                    try {
-                        if (service.isAuthenticated()) {
-                            runOnUiThread(new Runnable() {
-                                public void run() {
-                                    loggedIn();
-                                }
-                            });
-                        }
-                    } catch (RemoteException e) {
-                        e.printStackTrace(System.err);
-                    }
-                }
-            };
         }
+        serviceConnection = new ServiceConnection() {
+
+            public void onServiceDisconnected(ComponentName name) {
+            }
+
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                service = IBuddycloudService.Stub.asInterface(binder);
+                try {
+                    service.addListener(listener);
+                } catch (RemoteException e) {
+                    e.printStackTrace(System.err);
+                }
+                try {
+                    if (service.isAuthenticated()) {
+                        runOnUiThread(new Runnable() {
+                            public void run() {
+                                loggedIn();
+                            }
+                        });
+                    }
+                } catch (RemoteException e) {
+                    e.printStackTrace(System.err);
+                }
+            }
+        };
         bindService(
                 new Intent(IBuddycloudService.class.getName()),
                 serviceConnection,
