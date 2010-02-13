@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
@@ -156,11 +157,13 @@ public class BuddycloudClient extends XMPPConnection {
         pm.addIQProvider("location",
                 LocationQueryResponseProvider.getNS(),
                 new LocationQueryResponseProvider());
+        SmackConfiguration.setKeepAliveInterval(-1);
     }
 
     public static BuddycloudClient createAnonymousBuddycloudClient() {
         ConnectionConfiguration config =
             new ConnectionConfiguration("buddycloud.com");
+        config.setReconnectionAllowed(false);
 
         BuddycloudClient connection = null;
 
@@ -196,6 +199,7 @@ public class BuddycloudClient extends XMPPConnection {
     ) {
         ConnectionConfiguration config =
             new ConnectionConfiguration("buddycloud.com");
+        config.setReconnectionAllowed(false);
 
         BuddycloudClient connection = null;
 
@@ -257,6 +261,7 @@ public class BuddycloudClient extends XMPPConnection {
                 jid.substring(jid.lastIndexOf('@') + 1)
             );
         }
+        config.setReconnectionAllowed(false);
 
         BuddycloudClient connection = null;
 
@@ -371,6 +376,24 @@ public class BuddycloudClient extends XMPPConnection {
 
     public BuddycloudClient(ConnectionConfiguration config) {
         super(config);
+    }
+
+    public boolean testConnection() {
+        if (!isConnected() || !socket.isConnected() || socket.isClosed()) {
+            return false;
+        }
+        if (socket.isInputShutdown() || socket.isOutputShutdown()) {
+            return false;
+        }
+        try {
+            writer.append(' ');
+            writer.flush();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            disconnect();
+            return false;
+        }
+        return true;
     }
 
     @Override

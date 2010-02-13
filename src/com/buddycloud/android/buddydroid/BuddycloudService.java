@@ -5,7 +5,10 @@ import java.util.LinkedList;
 import org.jivesoftware.smack.packet.IQ;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -42,10 +45,46 @@ public class BuddycloudService extends Service {
         Log.d(TAG, " onCreate");
         cellListener = new CellListener(this);
         networkListener = new NetworkListener(this);
-
-        if (connectionThread != null || mConnection != null) {
-            return;
-        }
+        final BuddycloudService service = this;
+        final BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d(TAG, "Received " + intent);
+                synchronized(TAG) {
+                    if (connectionThread != null &&
+                        connectionThread.isAlive()) {
+                        // connection in progress
+                        Log.d(TAG, "Connect running");
+                        return;
+                    }
+                    if (mConnection != null && mConnection.isConnected()) {
+                        // connected
+                        Log.d(TAG, "test connection");
+                        if (mConnection.testConnection()) {
+                            Log.d(TAG, "Connection ok");
+                            return;
+                        }
+                    }
+                    SharedPreferences preferences =
+                        PreferenceManager.getDefaultSharedPreferences(service);
+                    String jid = preferences.getString("jid", null);
+                    String username = preferences.getString("username", null);
+                    String password = preferences.getString("password", null);
+                    if (jid != null && password != null) {
+                        Log.d(TAG, "triggering reconnect...");
+                        connectionThread = new ConnectionThread(
+                            jid, username, password, null, null, false, service
+                        );
+                    } else {
+                        Log.d(TAG, "missing settings");
+                    }
+                }
+            }
+        };
+        registerReceiver(receiver,
+                new IntentFilter("android.intent.action.TIME_TICK"));
+        registerReceiver(receiver,
+                new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
     }
 
     public void updateRoaster() {
@@ -130,27 +169,10 @@ public class BuddycloudService extends Service {
             taskQueue.start();
         }
 
-        try {
-            if (!taskQueue.add(new Runnable() {
+        cellListener.start();
 
-                public void run() {
-                    if (mConnection == null ||
-                            !mConnection.isConnected() ||
-                            !mConnection.isAuthenticated()
-                        ) {
-                            cellListener.start();
-
-                        }
-                }
-            })) {
-                Log.d(TAG, "Failed to start service");
-            }
-        } catch (InterruptedException e) {
-            Log.d(TAG, e.getMessage(), e);
-        }
-
-        synchronized (this) {
-            if (connectionThread != null) {
+        synchronized (TAG) {
+            if (connectionThread != null && connectionThread.isAlive()) {
                 return;
             }
             if (mConnection != null && mConnection.isConnected()) {
@@ -224,7 +246,7 @@ public class BuddycloudService extends Service {
 
             public void createAccount(String username, String password)
                 throws RemoteException {
-                synchronized (service) {
+                synchronized (TAG) {
                     if (connectionThread != null) {
                         connectionThread.setStop(true);
                         connectionThread.interrupt();
@@ -238,7 +260,7 @@ public class BuddycloudService extends Service {
 
             public void login(String username, String password)
                     throws RemoteException {
-                synchronized (service) {
+                synchronized (TAG) {
                     if (connectionThread != null) {
                         connectionThread.setStop(true);
                         connectionThread.interrupt();
@@ -250,7 +272,7 @@ public class BuddycloudService extends Service {
             }
 
             public void loginAnonymously() throws RemoteException {
-                synchronized (service) {
+                synchronized (TAG) {
                     if (connectionThread != null) {
                         connectionThread.setStop(true);
                         connectionThread.interrupt();
@@ -273,7 +295,7 @@ public class BuddycloudService extends Service {
 
             public void addListener(IBuddycloudServiceListener listener)
                     throws RemoteException {
-                synchronized (this) {
+                synchronized (TAG) {
                     if (listener.asBinder().isBinderAlive()) {
                         listeners.add(listener);
                     }
@@ -351,7 +373,7 @@ public class BuddycloudService extends Service {
     }
 
     public void connectionFailed(Exception e) {
-        synchronized (this) {
+        synchronized (TAG) {
             if (mConnection != null && mConnection.isConnected()) {
                 // multithreading? We may be connected before all
                 // attempts come back...
