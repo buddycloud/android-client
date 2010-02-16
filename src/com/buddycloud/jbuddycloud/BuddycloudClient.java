@@ -1,5 +1,6 @@
 package com.buddycloud.jbuddycloud;
 
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -379,6 +380,9 @@ public class BuddycloudClient extends XMPPConnection {
     }
 
     public boolean testConnection() {
+        if (socket == null) {
+            return false;
+        }
         if (!isConnected() || !socket.isConnected() || socket.isClosed()) {
             return false;
         }
@@ -386,6 +390,18 @@ public class BuddycloudClient extends XMPPConnection {
             return false;
         }
         try {
+            if (socket.getSendBufferSize() != 1024) {
+                socket.setReceiveBufferSize(1024);
+                socket.setSendBufferSize(1024);
+                socket.setSoTimeout(100000);
+                socket.setKeepAlive(true);
+                socket.setTcpNoDelay(true);
+            }
+        } catch (SocketException e) {
+            e.printStackTrace(System.err);
+        }
+        try {
+            socket.getInputStream().available();
             writer.append(' ');
             writer.flush();
         } catch (Exception e) {

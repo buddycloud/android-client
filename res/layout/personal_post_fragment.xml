@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/message_inline_container"
+    android:gravity="fill_horizontal|left"
+    android:layout_weight="1.0"
+    android:orientation="vertical"
+    android:paddingLeft="2dip"
+    android:paddingTop="2dip"
+    android:paddingBottom="1dip"
+>
+
+    <!-- msg head layout -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/channel_row"
+        android:gravity="fill_horizontal|left"
+        android:layout_weight="1.0"
+    >
+
+        <!-- user icon -->
+        <ImageView
+            android:paddingLeft="5dip"
+            android:id="@+id/user_icon"
+            android:src="@drawable/contact"
+            android:layout_width="49dip"
+            android:layout_height="49dip"
+            android:layout_weight="0.0"
+        />
+        <!-- /user icon -->
+
+
+        <!-- msg head text layout -->
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="1.0"
+                android:gravity="top|left"
+                android:orientation="vertical"
+        >
+
+            <!-- JID -->
+            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top|left"
+            >
+
+            <TextView
+                android:id="@+id/jid"
+                android:text="jid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textSize="12dip"
+                android:paddingLeft="5dip"
+            />
+
+            </LinearLayout>
+            <!-- /JID -->
+
+            <!-- Town, Country, Time -->
+            <TextView
+                android:id="@+id/location"
+                android:text="location"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textSize="12dip"
+                android:paddingLeft="5dip"
+            />
+            <!-- /Town, Country -->
+
+        </LinearLayout>
+        <!-- /msg head text layout -->
+
+        <!-- add icon -->
+        <ImageView
+            android:id="@+id/add_icon"
+            android:src="@drawable/channel_view_add_msg"
+            android:layout_weight="0.0"
+            android:layout_width="20dip"
+            android:layout_height="15dip"
+            android:scaleType="fitXY"
+            android:paddingRight="5dip"
+        />
+        <!-- /add icon -->
+
+    </LinearLayout>
+    <!-- /msg head layout -->
+
+    <TextView
+        android:id="@+id/message"
+        android:text="message"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="12dip"
+        android:paddingLeft="5dip"
+    />
+
+</LinearLayout>

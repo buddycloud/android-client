@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="#ffffffff"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:paddingLeft="3dip"
+    android:paddingRight="3dip"
+    android:id="@+id/post_message"
+>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_weight="0.0"
+        android:layout_gravity="center"
+    >
+    <TextView
+        android:text="Post"
+        android:id="@+id/title"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginBottom="5dip"
+        android:paddingBottom="4dip"
+        android:textSize="16dip"
+        android:textColor="@color/textcolor"
+    />
+    </LinearLayout>
+
+    <include
+        android:id="@+id/message_inline_container"
+        android:layout_weight="0.0"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/personal_post_fragment"
+    />
+
+    <EditText
+        android:minLines="3"
+        android:id="@+id/posting"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.0"
+        android:gravity="top|left"
+        android:textSize="10dip"
+        android:scrollbars="vertical"
+    />
+
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_weight="0.0"
+        android:layout_gravity="right|bottom"
+    >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+        />
+        <Button
+            android:text="Abort"
+            android:id="@+id/abort"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="5dip"
+        />
+        <Button
+            android:text="Post"
+            android:id="@+id/post"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+        />
+    </LinearLayout>
+
+</LinearLayout>
