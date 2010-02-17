@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1.0"
         android:gravity="top|left"
-        android:textSize="10dip"
+        android:textSize="14dip"
         android:scrollbars="vertical"
     />
 
