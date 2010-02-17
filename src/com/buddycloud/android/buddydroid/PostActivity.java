@@ -136,7 +136,6 @@ public class PostActivity extends Activity implements OnClickListener {
 
         if (width <= height) {
             height = (55 * height) / 100;
-            width = width;
         } else {
             height = (90 * height) / 100;
             width = (80 * width) / 100;
