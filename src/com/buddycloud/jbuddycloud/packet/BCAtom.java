@@ -17,21 +17,28 @@ import android.util.Log;
 public class BCAtom implements PacketExtension, PacketExtensionProvider {
 
     /*
-     * <entry xmlns='http://www.w3.org/2005/Atom'>
-     *     <author>
-     *         <name>user@buddycloud.com</name>
-     *         <jid xmlns="http://buddycloud.com/atom-elements-0">user@buddycloud.com</jid>
-     *         <affiliation xmlns="http://buddycloud.com/atom-elements-0">publisher</affiliation>
-     *     </author>
-     *     <content type='text'>Uh, no.</content>
-     *     <published>2009-12-20T07:53:07Z</published>
-     *     <geoloc xmlns='http://jabber.org/protocol/geoloc'>
-     *         <text>Bremen, Germany</text>
-     *         <locality>Bremen</locality>
-     *         <country>Germany</country>
-     *     </geoloc>
-     *     <in-reply-to xmlns="http://buddycloud.com/atom-elements-0">1262814123179</in-reply-to>
-     * </entry>
+     * <event xmlns='http://jabber.org/protocol/pubsub#event'>
+     *     <items node='/user/jid@jabber.ccc.de/channel'>
+     *         <item id='1266517381817'>
+     *             <entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0'>
+     *                 <author>
+     *                     <jid xmlns='http://buddycloud.com/atom-elements-0'>XXX@buddycloud.com</jid>
+     *                     <affiliation xmlns='http://buddycloud.com/atom-elements-0'>publisher</affiliation>
+     *                 </author>
+     *                 <content type='text'>This is a comment</content>
+     *                 <published>2010-02-18T18:23:01Z</published>
+     *                 <updated>2010-02-18T18:23:01Z</updated>
+     *                 <id>/user/jid@jabber.ccc.de/channel:1266517381817</id>
+     *                 <geoloc xmlns='http://jabber.org/protocol/geoloc'>
+     *                     <text>München, Germany</text>
+     *                     <locality>München</locality>
+     *                     <country>Germany</country>
+     *                 </geoloc>
+     *                 <thr:in-reply-to ref='1266517219960'/>
+     *             </entry>
+     *         </item>
+     *     </items>
+     * </event>
      */
 
     private String authorName;
@@ -131,7 +138,7 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
         StringBuilder builder = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
 
-        builder.append("<entry xmlns=\"http://www.w3.org/2005/Atom\">");
+        builder.append("<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0'>");
         builder.append("<published>");
         builder.append(calendar.get(Calendar.YEAR));
         builder.append("-");
@@ -187,9 +194,9 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
         }
 
         if (parentId != null) {
-            builder.append("<in-reply-to xmlns=\"http://buddycloud.com/atom-elements-0\">");
+            builder.append("<thr:in-reply-to ref='");
             builder.append(parentId);
-            builder.append("</in-reply-to>");
+            builder.append("' />");
         }
 
         builder.append("</entry>");
