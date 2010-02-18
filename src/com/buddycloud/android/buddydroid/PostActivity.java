@@ -27,14 +27,40 @@ import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
 import com.buddycloud.android.buddydroid.util.HumanTime;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 
+/**
+ * Posting window, handles service interaction, content provider fetch of the
+ * original posting and user interaction.
+ */
 public class PostActivity extends Activity implements OnClickListener {
 
+    /**
+     * The item to be replied to
+     */
     private long itemId;
+
+    /**
+     * The text we will post
+     */
     private String posting;
+
+    /**
+     * The binding connection to the 
+     */
     private ServiceConnection connection;
+
+    /**
+     * The RPC implementation.
+     */
     private IBuddycloudService service;
+
+    /**
+     * The channel node (e.g. /user/yourname@yourdomain.tld/channel)
+     */
     private String node;
 
+    /**
+     * Bind to the buddycloud service, if not yet bound or dead.
+     */
     private final synchronized void bindBCService() {
         if (connection == null) {
             connection = new ServiceConnection() {
@@ -65,6 +91,9 @@ public class PostActivity extends Activity implements OnClickListener {
         );
     }
 
+    /**
+     * Remove the binding to the buddycloud service.
+     */
     private final synchronized void unbindBCService() {
         if (connection == null) {
             return;
@@ -80,42 +109,9 @@ public class PostActivity extends Activity implements OnClickListener {
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        unbindBCService();
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onPause() {
-        unbindBCService();
-        super.onPause();
-    }
-
-    @Override
-    protected void onRestart() {
-        bindBCService();
-        super.onRestart();
-    }
-
-    @Override
-    protected void onResume() {
-        bindBCService();
-        super.onResume();
-    }
-
-    @Override
-    protected void onStart() {
-        bindBCService();
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        unbindBCService();
-        super.onStop();
-    }
-
+    /**
+     * Unbind/Bind the service on focus change.
+     */
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         if (hasFocus) {
@@ -126,6 +122,9 @@ public class PostActivity extends Activity implements OnClickListener {
         super.onWindowFocusChanged(hasFocus);
     }
 
+    /**
+     * Create a new instance of the post window.
+     */
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -144,10 +143,32 @@ public class PostActivity extends Activity implements OnClickListener {
 
         bindBCService();
 
-        long id = getIntent().getLongExtra("id", -1);
-        String name = getIntent().getCharSequenceExtra("name").toString();
-        node = getIntent().getCharSequenceExtra("node").toString();
+        setup(getIntent());
+    }
 
+    /**
+     * Called on new intents, will reset the internal state.
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        bindBCService();
+
+        setup(intent);
+    }
+
+    /**
+     * Initialize the internal state from an intent. Called by
+     * <i>onNewIntent</i> and <i>onCreate</i>.
+     * @param intent The intent with basic metadata.
+     */
+    private void setup(Intent intent) {
+
+        // Fetch intent metadata
+        long id = intent.getLongExtra("id", -1);
+        String name = intent.getCharSequenceExtra("name").toString();
+        node = intent.getCharSequenceExtra("node").toString();
+
+        // fetch all views
         TextView titleView = (TextView) findViewById(R.id.title);
         TextView textView = (TextView) findViewById(R.id.message);
         TextView jidView = (TextView) findViewById(R.id.jid);
@@ -155,10 +176,13 @@ public class PostActivity extends Activity implements OnClickListener {
         Button abortButton = (Button) findViewById(R.id.abort);
         Button postButton = (Button) findViewById(R.id.post);
 
+        // listeners
         abortButton.setOnClickListener(this);
         postButton.setOnClickListener(this);
 
         if (id != -1) {
+
+            // fetch parent data
             Cursor cursor = getContentResolver().query(
                 ChannelData.CONTENT_URI,
                 ChannelData.PROJECTION_MAP,
@@ -196,6 +220,8 @@ public class PostActivity extends Activity implements OnClickListener {
                     ChannelData.AUTHOR_AFFILIATION));
 
             cursor.close();
+
+            // update UI
 
             titleView.setText("Reply");
             textView.setText(originalText);
@@ -237,6 +263,9 @@ public class PostActivity extends Activity implements OnClickListener {
 
     }
 
+    /**
+     * Handle Post/Abort onClick.
+     */
     public void onClick(View v) {
         switch (v.getId()) {
         case R.id.abort:
@@ -253,6 +282,10 @@ public class PostActivity extends Activity implements OnClickListener {
         }
     }
 
+    /**
+     * Post a new message to the current node.
+     * @return true on success.
+     */
     private boolean post() {
         BCAtom atom = new BCAtom();
 
@@ -326,6 +359,60 @@ public class PostActivity extends Activity implements OnClickListener {
             bindBCService();
         }
         return false;
+    }
+
+    /**
+     * Unbind service on destroy.
+     */
+    @Override
+    protected void onDestroy() {
+        unbindBCService();
+        super.onDestroy();
+    }
+
+    /**
+     * Unbind service on pause.
+     */
+    @Override
+    protected void onPause() {
+        unbindBCService();
+        super.onPause();
+    }
+
+    /**
+     * Bind service on restart.
+     */
+    @Override
+    protected void onRestart() {
+        bindBCService();
+        super.onRestart();
+    }
+
+    /**
+     * Bind service on resume.
+     */
+    @Override
+    protected void onResume() {
+        bindBCService();
+        super.onResume();
+    }
+
+    /**
+     * Bind service on start.
+     */
+    @Override
+    protected void onStart() {
+        bindBCService();
+        super.onStart();
+    }
+
+    /**
+     * Unbind service on stop.
+     */
+    @Override
+    protected void onStop() {
+        unbindBCService();
+        super.onStop();
     }
 
 }
