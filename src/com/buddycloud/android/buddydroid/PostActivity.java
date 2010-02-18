@@ -6,15 +6,10 @@ import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.PublishItem;
 import org.jivesoftware.smackx.pubsub.packet.PubSub;
 
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
@@ -31,7 +26,7 @@ import com.buddycloud.jbuddycloud.packet.BCAtom;
  * Posting window, handles service interaction, content provider fetch of the
  * original posting and user interaction.
  */
-public class PostActivity extends Activity implements OnClickListener {
+public class PostActivity extends BCActivity implements OnClickListener {
 
     /**
      * The item to be replied to
@@ -44,83 +39,9 @@ public class PostActivity extends Activity implements OnClickListener {
     private String posting;
 
     /**
-     * The binding connection to the 
-     */
-    private ServiceConnection connection;
-
-    /**
-     * The RPC implementation.
-     */
-    private IBuddycloudService service;
-
-    /**
      * The channel node (e.g. /user/yourname@yourdomain.tld/channel)
      */
     private String node;
-
-    /**
-     * Bind to the buddycloud service, if not yet bound or dead.
-     */
-    private final synchronized void bindBCService() {
-        if (connection == null) {
-            connection = new ServiceConnection() {
-
-                public void onServiceDisconnected(ComponentName name) {
-                }
-
-                public void onServiceConnected(
-                        ComponentName name,
-                        IBinder binder
-                ) {
-                    service =
-                        IBuddycloudService.Stub.asInterface(binder);
-                }
-            };
-        }
-        if (service != null) {
-            if (service.asBinder().isBinderAlive()) {
-                return;
-            } else {
-                service = null;
-            }
-        }
-        bindService(new Intent(
-            IBuddycloudService.class.getName()),
-            connection,
-            Context.BIND_AUTO_CREATE
-        );
-    }
-
-    /**
-     * Remove the binding to the buddycloud service.
-     */
-    private final synchronized void unbindBCService() {
-        if (connection == null) {
-            return;
-        }
-        try {
-            unbindService(connection);
-        } catch (IllegalArgumentException e) {
-            /* How could we verify that there is a pending connection request?
-             * 
-             * Looks like this is impossible. Silence the exception is evil
-             * but somehow works around the problem.
-             */
-        }
-    }
-
-    /**
-     * Unbind/Bind the service on focus change.
-     */
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        if (hasFocus) {
-            bindBCService();
-        } else {
-            unbindBCService();
-        }
-        super.onWindowFocusChanged(hasFocus);
-    }
 
     /**
      * Create a new instance of the post window.
@@ -140,8 +61,6 @@ public class PostActivity extends Activity implements OnClickListener {
             width = (80 * width) / 100;
         }
         getWindow().setLayout(width, height);
-
-        bindBCService();
 
         setup(getIntent());
     }
@@ -359,60 +278,6 @@ public class PostActivity extends Activity implements OnClickListener {
             bindBCService();
         }
         return false;
-    }
-
-    /**
-     * Unbind service on destroy.
-     */
-    @Override
-    protected void onDestroy() {
-        unbindBCService();
-        super.onDestroy();
-    }
-
-    /**
-     * Unbind service on pause.
-     */
-    @Override
-    protected void onPause() {
-        unbindBCService();
-        super.onPause();
-    }
-
-    /**
-     * Bind service on restart.
-     */
-    @Override
-    protected void onRestart() {
-        bindBCService();
-        super.onRestart();
-    }
-
-    /**
-     * Bind service on resume.
-     */
-    @Override
-    protected void onResume() {
-        bindBCService();
-        super.onResume();
-    }
-
-    /**
-     * Bind service on start.
-     */
-    @Override
-    protected void onStart() {
-        bindBCService();
-        super.onStart();
-    }
-
-    /**
-     * Unbind service on stop.
-     */
-    @Override
-    protected void onStop() {
-        unbindBCService();
-        super.onStop();
     }
 
 }
