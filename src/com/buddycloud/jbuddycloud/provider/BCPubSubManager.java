@@ -13,8 +13,6 @@ import org.jivesoftware.smackx.pubsub.LeafNode;
 import org.jivesoftware.smackx.pubsub.Node;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
 
-import android.util.Log;
-
 public class BCPubSubManager extends PubSubManager {
 
     private final Connection connection;
@@ -52,11 +50,9 @@ public class BCPubSubManager extends PubSubManager {
             while (fields.hasNext()) {
                 FormField field = fields.next();
                 if (field.getVariable().equals("pubsub#title")) {
-                    Log.d("BC", "ChannelName[" + node.getId() +"]=" + field.getValues().next().trim());
                     return field.getValues().next().trim();
                 }
             }
-            Log.d("BC", "PE: " + packetExtension.getClass().toString());
         }
         return node.getId();
     }
