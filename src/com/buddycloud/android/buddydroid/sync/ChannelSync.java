@@ -171,7 +171,7 @@ public class ChannelSync extends Thread {
                 null
         );
         if (cursor.getCount() != 1) {
-            Log.e("BC", "uodate channel " + channel + " canceled");
+            Log.e("BC", "update channel " + channel + " canceled");
             cursor.close();
             return;
         }
