@@ -22,6 +22,7 @@ import android.util.Log;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
+import com.buddycloud.jbuddycloud.provider.BCPubSubManager;
 
 public class ChannelSync extends Thread {
 
@@ -83,8 +84,12 @@ public class ChannelSync extends Thread {
                 Log.d("BC", "add channel " + channel);
                 ContentValues values = new ContentValues();
                 try {
+                    BCPubSubManager pubSubManager = client.getPubSubManager();
+                    String title = pubSubManager.fetchChannelTitle(
+                            pubSubManager.getNode(channel)
+                    );
                     values.put(Roster.JID, channel);
-                    values.put(Roster.NAME, fetchChannelTitle(channel));
+                    values.put(Roster.NAME, title);
                     newEntries.add(values);
                 } catch (Throwable t) {
                     t.printStackTrace(System.err);
@@ -183,27 +188,6 @@ public class ChannelSync extends Thread {
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) { }
-    }
-
-    private String fetchChannelTitle(String nodeName) throws XMPPException {
-        Node node = client.getPubSubManager().getNode(nodeName);
-        DiscoverInfo info = node.discoverInfo();
-        for (PacketExtension packetExtension : info.getExtensions()) {
-            if (!(packetExtension instanceof DataForm)) {
-                continue;
-            }
-            DataForm dataForm = (DataForm) packetExtension;
-            Iterator<FormField> fields = dataForm.getFields();
-            while (fields.hasNext()) {
-                FormField field = fields.next();
-                if (field.getVariable().equals("pubsub#title")) {
-                    Log.d("BC", "ChannelName[" + nodeName +"]=" + field.getValues().next().trim());
-                    return field.getValues().next().trim();
-                }
-            }
-            Log.d("BC", "PE: " + packetExtension.getClass().toString());
-        }
-        return nodeName;
     }
 
 }
