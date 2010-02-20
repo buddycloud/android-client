@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:paddingLeft="10dip"
+    android:paddingRight="10dip"
+    android:paddingTop="5dip"
+    android:paddingBottom="5dip"
+>
+
+    <EditText
+        android:id="@+id/edit"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="#channel or jid@domain.tld"
+        android:singleLine="true"
+        android:layout_marginTop="25dip"
+        android:layout_marginBottom="2dip"
+        android:layout_weight="0"
+    />
+
+    <TextView
+        android:text="unrecognized"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dip"
+        android:layout_marginBottom="2dip"
+        android:paddingLeft="5dip"
+        android:paddingRight="5dip"
+        android:layout_weight="1"
+    />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dip"
+        android:layout_marginBottom="2dip"
+        android:layout_weight="0"
+    >
+        <Button
+            android:id="@+id/abort"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Abort"
+            android:width="0px"
+            android:layout_weight="1"
+        />
+        <Button
+            android:id="@+id/follow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Follow"
+            android:width="0px"
+            android:layout_weight="1"
+        />
+    </LinearLayout>
+
+</LinearLayout>

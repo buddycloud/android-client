@@ -2,14 +2,18 @@ package com.buddycloud.android.buddydroid;
 
 import java.util.LinkedList;
 
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.pubsub.Node;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
@@ -17,11 +21,14 @@ import android.util.Log;
 
 import com.buddycloud.android.buddydroid.collector.CellListener;
 import com.buddycloud.android.buddydroid.collector.NetworkListener;
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.android.buddydroid.sync.ChannelSync;
 import com.buddycloud.android.buddydroid.sync.RoasterSync;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
+import com.buddycloud.jbuddycloud.packet.ChannelFetch;
 import com.buddycloud.jbuddycloud.packet.PlainPacket;
+import com.buddycloud.jbuddycloud.provider.BCPubSubManager;
 
 public class BuddycloudService extends Service {
 
@@ -104,7 +111,7 @@ public class BuddycloudService extends Service {
         ) {
             return;
         }
-        new ChannelSync(mConnection, getContentResolver());
+        new ChannelSync(this, mConnection, getContentResolver());
     }
 
     private long beaconLogTimer;
@@ -157,6 +164,31 @@ public class BuddycloudService extends Service {
                 mConnection.sendPacket(iq);
             }
         });
+    }
+
+    public void updateChannel(String channel) {
+        Log.d("BC", "update channel " + channel);
+        Cursor cursor = getContentResolver().query(
+                Roster.CONTENT_URI,
+                new String[]{Roster.LAST_UPDATED},
+                "jid=?",
+                new String[]{channel},
+                null
+        );
+        if (cursor.getCount() != 1) {
+            Log.e("BC", "update channel " + channel + " canceled");
+            cursor.close();
+            return;
+        }
+        while (cursor.isBeforeFirst()) { cursor.moveToNext(); }
+        long l = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
+        cursor.close();
+        IQ iq = new ChannelFetch(channel, l);
+        try {
+            send(iq);
+        } catch (InterruptedException e) {
+            e.printStackTrace(System.err);
+        }
     }
 
     @Override
@@ -230,6 +262,40 @@ public class BuddycloudService extends Service {
 
     private final IBuddycloudService.Stub binder =
         new IBuddycloudService.Stub() {
+
+            public boolean follow(String channel) throws RemoteException {
+                if (!isConnected()) {
+                    return false;
+                }
+                String user = mConnection.getUser();
+                if (user == null) {
+                    return false;
+                }
+                if (user.indexOf('/') != -1) {
+                    user = user.substring(0, user.indexOf('/'));
+                }
+                BCPubSubManager pubSubManager = mConnection.getPubSubManager();
+                Node node;
+                String title;
+                try {
+                    node = pubSubManager.getNode(channel);
+                    node.subscribe(user);
+                    title = pubSubManager.fetchChannelTitle(node);
+                } catch (XMPPException e) {
+                    e.printStackTrace();
+                    throw new RemoteException();
+                }
+
+                // basically subscribed, add to content provider
+
+                ContentValues channelEntry = new ContentValues();
+                channelEntry.put(Roster.JID, channel);
+                channelEntry.put(Roster.NAME, title);
+                getContentResolver().insert(Roster.CONTENT_URI, channelEntry);
+                updateChannel(channel);
+
+                return true;
+            }
 
             public boolean isConnected() throws RemoteException {
                 return (mConnection != null) && mConnection.isConnected();

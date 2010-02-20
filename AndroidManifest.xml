@@ -30,6 +30,12 @@
               >
      </activity>
 
+     <activity android:name=".FollowActivity"
+              android:label="@string/app_follow_name"
+              android:theme="@style/MyDialog"
+              >
+     </activity>
+
 		<activity android:name=".MainActivity" />
 
         <activity android:name=".ChannelMessageActivity" />

@@ -2,16 +2,9 @@ package com.buddycloud.android.buddydroid.sync;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.packet.PacketExtension;
-import org.jivesoftware.smackx.FormField;
-import org.jivesoftware.smackx.packet.DataForm;
-import org.jivesoftware.smackx.packet.DiscoverInfo;
-import org.jivesoftware.smackx.pubsub.Node;
 import org.jivesoftware.smackx.pubsub.Subscription;
 
 import android.content.ContentResolver;
@@ -19,6 +12,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.util.Log;
 
+import com.buddycloud.android.buddydroid.BuddycloudService;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
@@ -28,10 +22,13 @@ public class ChannelSync extends Thread {
 
     private final BuddycloudClient client;
     private final ContentResolver resolver;
+    private final BuddycloudService service;
 
-    public ChannelSync(BuddycloudClient client, ContentResolver resolver) {
+    public ChannelSync(BuddycloudService service,
+            BuddycloudClient client, ContentResolver resolver) {
         this.client = client;
         this.resolver = resolver;
+        this.service = service;
         this.start();
     }
 
@@ -77,7 +74,7 @@ public class ChannelSync extends Thread {
                     continue;
                 }
                 if (oldChannels.containsKey(channel)) {
-                    updateChannel(channel);
+                    service.updateChannel(channel);
                     oldChannels.remove(channel);
                     continue;
                 }
@@ -132,7 +129,7 @@ public class ChannelSync extends Thread {
 
     private void updateUser(String user) {
         if (!user.endsWith("/channel")) {
-            updateChannel(user);
+            service.updateChannel(user);
             return;
         }
         user = user.substring(0, user.indexOf("/channel"));
@@ -164,30 +161,6 @@ public class ChannelSync extends Thread {
                 Thread.sleep(100);
             } catch (InterruptedException e) { }
         }
-    }
-
-    private void updateChannel(String channel) {
-        Log.d("BC", "update channel " + channel);
-        Cursor cursor = resolver.query(
-                Roster.CONTENT_URI,
-                new String[]{Roster.LAST_UPDATED},
-                "jid=?",
-                new String[]{channel},
-                null
-        );
-        if (cursor.getCount() != 1) {
-            Log.e("BC", "update channel " + channel + " canceled");
-            cursor.close();
-            return;
-        }
-        while (cursor.isBeforeFirst()) { cursor.moveToNext(); }
-        long l = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
-        cursor.close();
-        IQ iq = new ChannelFetch(channel, l);
-        client.sendPacket(iq);
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) { }
     }
 
 }

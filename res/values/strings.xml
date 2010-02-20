@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BuddyDroid</string>
+    <string name="app_follow_name">Follow a person/channel</string>
     <string name="app_post_name">Post a message</string>
     <string name="main_title">Buddycloud</string>
 	<string name="app_login_name">Login with your account</string>

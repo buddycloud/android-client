@@ -1,6 +1,6 @@
 package com.buddycloud.android.buddydroid;
 
-import android.app.ListActivity;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -12,19 +12,26 @@ import android.view.ContextMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 
-public class RosterActivity extends ListActivity {
+public class RosterActivity extends Activity
+    implements OnItemClickListener, OnClickListener {
 
     protected static final String TAG = "RosterActivity";
+
+    protected ListView rosterList;
+    protected RosterAdapter listAdapter;
 
     /**
      * Called when the activity is first created.
@@ -33,6 +40,10 @@ public class RosterActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.roster);
+
+        rosterList = (ListView) findViewById(R.id.roster_list);
+        Button follow = (Button) findViewById(R.id.follow);
 
         Cursor buddies = managedQuery(
                 Roster.VIEW_CONTENT_URI,
@@ -43,25 +54,31 @@ public class RosterActivity extends ListActivity {
 
         Log.d("provider", "cursor is: " + buddies);
 
-        setListAdapter(new RosterAdapter(this, buddies));
-
-        getListView().setOnItemSelectedListener(new OnItemSelectedListener() {
+        follow.setOnClickListener(this);
+        listAdapter = new RosterAdapter(this, buddies);
+        rosterList.setAdapter(listAdapter);
+        rosterList.setOnItemClickListener(this);
+        rosterList.setOnItemSelectedListener(new OnItemSelectedListener() {
 
             public void onItemSelected(AdapterView<?> arg0, View arg1,
                     int position, long arg3) {
-                ((RosterAdapter) getListAdapter()).toggle(position);
+                listAdapter.toggle(position);
             }
 
             public void onNothingSelected(AdapterView<?> arg0) {
             }
         });
 
-        registerForContextMenu(getListView());
+        registerForContextMenu(rosterList);
     }
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        ((RosterAdapter) getListAdapter()).toggle(position);
+    public void onItemClick(
+        AdapterView<?> parent,
+        View view,
+        int position,
+        long id
+    ) {
+        listAdapter.toggle(position);
     }
 
     @Override
@@ -74,7 +91,7 @@ public class RosterActivity extends ListActivity {
         openChannel.setClassName("com.buddycloud.android.buddydroid",
                 ChannelMessageActivity.class.getCanonicalName());
 
-        Cursor buddy = (Cursor) getListAdapter().getItem(
+        Cursor buddy = (Cursor) listAdapter.getItem(
                 ((AdapterContextMenuInfo) menuInfo).position);
         String jid = buddy.getString(buddy.getColumnIndex(Roster.JID));
 
@@ -186,5 +203,9 @@ public class RosterActivity extends ListActivity {
             // view.setTag(jid);
             return;
         }
+    }
+
+    public void onClick(View v) {
+        startActivity(new Intent(this, FollowActivity.class));
     }
 }

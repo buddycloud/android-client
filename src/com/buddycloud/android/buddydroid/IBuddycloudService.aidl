@@ -22,4 +22,6 @@ interface IBuddycloudService {
 
     void addListener(IBuddycloudServiceListener listener);
 
+    boolean follow(String channel);
+
 }
