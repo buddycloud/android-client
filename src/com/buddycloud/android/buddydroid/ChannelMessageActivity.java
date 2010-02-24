@@ -1,6 +1,7 @@
 package com.buddycloud.android.buddydroid;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -136,6 +137,9 @@ public class ChannelMessageActivity extends Activity {
             long time =
                 cursor.getLong(cursor.getColumnIndex(ChannelData.ITEM_ID));
 
+            boolean unread =
+                cursor.getInt(cursor.getColumnIndex(ChannelData.UNREAD)) == 1;
+
             cursor.moveToNext();
             boolean endOfList = cursor.isAfterLast() ||
                 cursor.getLong(cursor.getColumnIndex(ChannelData.PARENT)) <= 0;
@@ -229,6 +233,17 @@ public class ChannelMessageActivity extends Activity {
                 bottomShadowLayout.setVisibility(LinearLayout.VISIBLE);
             } else {
                 bottomShadowLayout.setVisibility(LinearLayout.GONE);
+            }
+
+            if (unread) {
+                ContentValues values = new ContentValues();
+                values.put(ChannelData.UNREAD, Boolean.FALSE);
+                getContentResolver().update(
+                    ChannelData.CONTENT_URI,
+                    values,
+                    ChannelData.NODE_NAME + "=?",
+                    new String[]{node}
+                );
             }
         }
 

@@ -40,7 +40,7 @@ public class BuddycloudProvider extends ContentProvider {
     // private SQLiteOpenHelper mOpenHelper;
     DatabaseHelper mOpenHelper;
 
-    private static final String TAG = "Provider";
+    static final String TAG = "Provider";
     private static final String DATABASE_NAME = "buddycloud.db";
 
     /**
@@ -50,7 +50,7 @@ public class BuddycloudProvider extends ContentProvider {
      * 
      * 1: Release 0.0.1
      */
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 8;
 
     static class DatabaseHelper extends SQLiteOpenHelper {
         DatabaseHelper(Context context) {
@@ -88,7 +88,7 @@ public class BuddycloudProvider extends ContentProvider {
 
                     + ChannelData.GEOLOC_TEXT + " VARCHAR,"
                     + ChannelData.GEOLOC_TYPE + " INTEGER,"
-                    + ChannelData.UNREAD + " BOOLEAN,"
+                    + ChannelData.UNREAD + " BOOLEAN DEFAULT 0,"
 
                     + ChannelData.CACHE_UPDATE_TIMESTAMP + " LONG,"
                     + ChannelData._COUNT + " LONG,"
@@ -110,8 +110,8 @@ public class BuddycloudProvider extends ContentProvider {
                     + Roster.GEOLOC_NEXT + " VARCHAR,"
                     + Roster.GEOLOC_PREV + " VARCHAR,"
                     + Roster.LAST_UPDATED + " LONG,"
-                    + Roster.UNREAD_MESSAGES +  " INTEGER,"
-                    + Roster.UNREAD_REPLIES + " INTEGER,"
+                    + Roster.UNREAD_MESSAGES +  " INTEGER DEFAULT 0,"
+                    + Roster.UNREAD_REPLIES + " INTEGER DEFAULT 0,"
                     + Roster._COUNT + " LONG,"
                     + Roster.CACHE_UPDATE_TIMESTAMP + " LONG"
                     + ");");
@@ -247,6 +247,10 @@ public class BuddycloudProvider extends ContentProvider {
         switch (what) {
         case ROSTER:
             return RosterHelper.update(values, selection, selectionArgs, this);
+
+        case CHANNEL_DATA:
+            return ChannelDataHelper
+                        .update(values, selection, selectionArgs, this);
 
         default:
             Log.w(TAG, "no update handler for " + uri);

@@ -137,6 +137,80 @@ public class ChannelDataHelper {
         return null;
     }
 
+    public static int update(
+        ContentValues values,
+        String selection,
+        String[] selectionArgs,
+        BuddycloudProvider provider
+    ) {
+        values.put(
+            CacheColumns.CACHE_UPDATE_TIMESTAMP,
+            System.currentTimeMillis()
+        );
+        values.remove(BaseColumns._ID);
+
+        boolean notifyRoster = false;
+        boolean notify = false;
+
+        int count = -1;
+        synchronized (provider.mOpenHelper) {
+
+            SQLiteDatabase db = provider.mOpenHelper.getWritableDatabase();
+            try {
+                db.beginTransaction();
+                count = db.update(
+                        BuddycloudProvider.TABLE_CHANNEL_DATA,
+                        values,
+                        selection,
+                        selectionArgs
+                );
+
+                if (
+                    count >= 1
+                    && values.containsKey(ChannelData.UNREAD)
+                    && !values.getAsBoolean(ChannelData.UNREAD)
+                    && values.size() == 2
+                ) { // we've just updated unread
+                    Cursor c = db.query(
+                            BuddycloudProvider.TABLE_CHANNEL_DATA,
+                            ChannelData.PROJECTION_MAP,
+                            selection,
+                            selectionArgs,
+                            null,
+                            null,
+                            null
+                    );
+                    if (c.moveToFirst()) {
+                        String channel = c.getString(
+                            c.getColumnIndex(ChannelData.NODE_NAME)
+                        );
+                        RosterHelper.recomputeUnread(channel, provider, db);
+                        notifyRoster = true;
+                    }
+                    c.close();
+                }
+                notify = true;
+
+                db.setTransactionSuccessful();
+            } finally {
+                try {
+                    db.endTransaction();
+                } catch (Exception e) {
+                    // irrelevant
+                }
+            }
+
+            if (notify) {
+                notifyChange(provider);
+            }
+            if (notifyRoster) {
+                RosterHelper.notifyChange(provider);
+            }
+        }
+
+        return count;
+    }
+
     public static Cursor queryChannelData(
             Uri uri,
             String[] projection,
@@ -166,6 +240,7 @@ public class ChannelDataHelper {
     }
 
     public static void notifyChange(BuddycloudProvider provider) {
+        Log.d(BuddycloudProvider.TAG, "notify ui about channel udpates");
         provider.getContext().getContentResolver().notifyChange(
                 ChannelData.CONTENT_URI, null);
     }
