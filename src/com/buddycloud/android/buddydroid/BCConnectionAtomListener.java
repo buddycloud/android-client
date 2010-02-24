@@ -10,6 +10,7 @@ import android.util.Log;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BCAtomListener;
+import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
 
@@ -17,9 +18,14 @@ final class BCConnectionAtomListener
     implements BCAtomListener {
 
     private final ContentResolver resolver;
+    private final BuddycloudClient connection;
 
-    public BCConnectionAtomListener(ContentResolver resolver) {
+    public BCConnectionAtomListener(
+            ContentResolver resolver,
+            BuddycloudClient connection
+    ) {
         this.resolver = resolver;
+        this.connection = connection;
     }
 
     public void receive(String node, BCAtom atom) {
@@ -94,6 +100,10 @@ final class BCConnectionAtomListener
                 values.put(ChannelData.GEOLOC_TYPE,
                            loc.getLocType().toString());
             }
+        }
+
+        if (!connection.getUser().startsWith(atom.getAuthorJid())) {
+            values.put(ChannelData.UNREAD, true);
         }
 
         resolver.insert(ChannelData.CONTENT_URI, values);

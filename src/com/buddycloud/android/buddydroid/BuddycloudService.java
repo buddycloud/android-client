@@ -404,7 +404,7 @@ public class BuddycloudService extends Service {
                 new ConnectionBCGeolocListener(getContentResolver())
             );
             mConnection.addAtomListener(
-                new BCConnectionAtomListener(getContentResolver())
+                new BCConnectionAtomListener(getContentResolver(), mConnection)
             );
 
             Log.d(TAG, "notify handler about new connection");
