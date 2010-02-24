@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
+import android.util.Log;
 
 /**
  * All sql related roster handling.
@@ -291,6 +292,7 @@ public class RosterHelper {
      * @param provider
      */
     public static void notifyChange(BuddycloudProvider provider) {
+        Log.d(BuddycloudProvider.TAG, "notify ui about roster udpates");
         provider.getContext().getContentResolver()
             .notifyChange(Roster.CONTENT_URI, null);
     }
