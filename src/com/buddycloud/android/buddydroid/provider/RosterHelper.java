@@ -167,6 +167,42 @@ public class RosterHelper {
         return count;
     }
 
+    private final static String totalUnreadQuery =
+        "SELECT sum(" + Roster.UNREAD_MESSAGES + ") " +
+        " FROM " + BuddycloudProvider.TABLE_ROSTER;
+
+    private final static String totalUnreadRepliesQuery =
+        "SELECT sum(" + Roster.UNREAD_REPLIES + ") " +
+        " FROM " + BuddycloudProvider.TABLE_ROSTER;
+
+    public final static long[] getUnreadCounts(BuddycloudProvider provider) {
+        long unread = 0l;
+        long unreadReplies = 0l;
+
+        synchronized (provider.mOpenHelper) {
+            SQLiteDatabase database = provider.mOpenHelper
+                                        .getReadableDatabase();
+            {
+                Cursor cursor = database.rawQuery(totalUnreadQuery, null);
+                if (cursor.moveToFirst()) {
+                    unread = cursor.getLong(0);
+                }
+                cursor.close();
+            }
+
+            {
+                Cursor cursor = database
+                    .rawQuery(totalUnreadRepliesQuery, null);
+                if (cursor.moveToFirst()) {
+                    unreadReplies = cursor.getLong(0);
+                }
+                cursor.close();
+            }
+        }
+
+        return new long[]{unreadReplies, unread};
+    }
+
     private final static String unreadCountQuery =
         "SELECT count(*) " +
         " FROM " + BuddycloudProvider.TABLE_CHANNEL_DATA +

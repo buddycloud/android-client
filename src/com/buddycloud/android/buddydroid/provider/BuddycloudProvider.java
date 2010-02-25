@@ -40,7 +40,7 @@ public class BuddycloudProvider extends ContentProvider {
     // private SQLiteOpenHelper mOpenHelper;
     DatabaseHelper mOpenHelper;
 
-    static final String TAG = "Provider";
+    public static final String TAG = "Provider";
     private static final String DATABASE_NAME = "buddycloud.db";
 
     /**

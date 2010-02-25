@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.util.Log;
 
+import com.buddycloud.android.buddydroid.BCNotifications;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.CacheColumns;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
@@ -134,6 +135,10 @@ public class ChannelDataHelper {
 
         }
 
+        if (rosterChanged) {
+            BCNotifications.updateNotification(provider);
+        }
+
         return null;
     }
 
@@ -205,6 +210,7 @@ public class ChannelDataHelper {
             }
             if (notifyRoster) {
                 RosterHelper.notifyChange(provider);
+                BCNotifications.updateNotification(provider);
             }
         }
 
