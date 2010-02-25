@@ -210,9 +210,10 @@ public class PostActivity extends BCActivity implements OnClickListener {
 
         atom.setContent(posting);
 
+        String fulljid = null;
         String jid = null;
         try {
-            jid = service.getJidWithResource();
+            fulljid = jid = service.getJidWithResource();
             if (jid != null) {
                 int pos = jid.indexOf('/');
                 if (pos > 0) {
@@ -240,7 +241,7 @@ public class PostActivity extends BCActivity implements OnClickListener {
             new PublishItem<Item>(node, item);
 
         PubSub pubSub = new PubSub();
-        pubSub.setFrom(jid);
+        pubSub.setFrom(fulljid);
         pubSub.setTo("broadcaster.buddycloud.com");
         pubSub.setType(Type.SET);
 
