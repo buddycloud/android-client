@@ -52,6 +52,10 @@ public class BCNotifications {
             return;
         } else {
             // decrease, cancel notifications
+
+            replies = counts[0];
+            unread = counts[1];
+
             Log.d(BuddycloudProvider.TAG, "clear notification");
             notificationManager.cancel(NOTIFICATION);
             return;
