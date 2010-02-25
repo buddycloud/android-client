@@ -132,6 +132,8 @@ public class RosterActivity extends Activity
                     .equals("null"));
 
             String jid = cursor.getString(cursor.getColumnIndex(Roster.JID));
+            int unread = cursor.getInt(
+                    cursor.getColumnIndex(Roster.UNREAD_MESSAGES));
 
             boolean isChannel = false;
 
@@ -199,6 +201,14 @@ public class RosterActivity extends Activity
                     ((ImageView) view.findViewById(R.id.icon))
                             .setImageResource(R.drawable.contact);
                 }
+            }
+
+            if (unread == 0) {
+                view.findViewById(R.id.unread).setVisibility(View.GONE);
+            } else {
+                TextView unreadView = (TextView) view.findViewById(R.id.unread);
+                unreadView.setText(Integer.toString(unread));
+                unreadView.setVisibility(View.VISIBLE);
             }
             // view.setTag(jid);
             return;

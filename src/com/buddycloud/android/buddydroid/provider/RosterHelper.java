@@ -57,14 +57,7 @@ public class RosterHelper {
      * Query for the roster view hack.
      */
     private final static String rosterViewQuery =
-        "SELECT " +
-            Roster._ID + "," +
-            Roster.JID + "," +
-            Roster.NAME + "," +
-            Roster.STATUS + "," +
-            Roster.GEOLOC + "," +
-            Roster.GEOLOC_NEXT + "," +
-            Roster.GEOLOC_PREV + "," +
+        "SELECT *," +
             Roster.JID + "=? AS itsMe " +
         " FROM " + BuddycloudProvider.TABLE_ROSTER +
         " ORDER BY " + 

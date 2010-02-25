@@ -55,7 +55,21 @@
 	
 	        android:text="Nun noch der Lange Status damit wir auch mal die mehrzeiligen Kommentare ausprobieren können status updates and what they do to my layout." />
 	        
-	</RelativeLayout>
+
+        <TextView
+            android:id="@+id/unread"
+           
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@id/title"
+           
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dip"
+    
+            android:singleLine="true"
+            android:text="5" />
+
+    </RelativeLayout>
 
 	<ImageView
         android:id="@+id/arrow"
