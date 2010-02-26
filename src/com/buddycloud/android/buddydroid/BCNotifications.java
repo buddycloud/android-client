@@ -17,6 +17,8 @@ public class BCNotifications {
     private static long replies = 0;
     private static NotificationManager notificationManager = null;
 
+    private static long lastSound = 0;
+
     private final static int NOTIFICATION = 1;
 
     public static synchronized void updateNotification(
@@ -34,18 +36,27 @@ public class BCNotifications {
         Notification notification = new Notification();
 
         notification.defaults &= ~Notification.DEFAULT_SOUND;
+
+        long time = System.currentTimeMillis();
+
         if (counts[0] > replies) {
-            notification.sound = Uri.parse(
-                "android.resource://com.buddycloud.android.buddydroid/" +
-                "raw/dr"
-            );
+            if (time - lastSound > 2000) {
+                notification.sound = Uri.parse(
+                        "android.resource://com.buddycloud.android.buddydroid/"
+                        + R.raw.dr
+                );
+                lastSound = time;
+            }
             notification.tickerText = "New reply!";
         } else
         if (counts[1] > unread) {
-            notification.sound = Uri.parse(
-                "android.resource://com.buddycloud.android.buddydroid/" +
-                "raw/cp"
-            );
+            if (time - lastSound > 2000) {
+                notification.sound = Uri.parse(
+                        "android.resource://com.buddycloud.android.buddydroid/"
+                        + R.raw.cp
+                );
+                lastSound = time;
+            }
             notification.tickerText = "New channel post!";
         } else
         if (counts[0] == replies && counts[1] == unread) {
@@ -117,6 +128,10 @@ public class BCNotifications {
         );
 
         notification.flags = Notification.FLAG_AUTO_CANCEL;
+
+        if (time - lastSound > 2000) {
+            notificationManager.cancel(NOTIFICATION);
+        }
 
         notification.when = System.currentTimeMillis() + 500;
 
