@@ -235,7 +235,7 @@ public class ChannelMessageActivity extends Activity {
                 bottomShadowLayout.setVisibility(LinearLayout.GONE);
             }
 
-            if (unread) {
+            if (unread && hasWindowFocus()) {
                 ContentValues values = new ContentValues();
                 values.put(ChannelData.UNREAD, Boolean.FALSE);
                 getContentResolver().update(
