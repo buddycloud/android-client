@@ -77,7 +77,7 @@ public class BCNotifications {
             notification.number = 0;
         }
 
-        Intent roster = new Intent(provider.getContext(), RosterActivity.class);
+        Intent roster = new Intent(provider.getContext(), MainActivity.class);
         PendingIntent intent = PendingIntent.getActivity(
                 provider.getContext(),
                 0,
@@ -118,7 +118,8 @@ public class BCNotifications {
 
         notification.flags = Notification.FLAG_AUTO_CANCEL;
 
-        notificationManager.cancel(NOTIFICATION);
+        notification.when = System.currentTimeMillis() + 500;
+
         notificationManager.notify(NOTIFICATION, notification);
     }
 
