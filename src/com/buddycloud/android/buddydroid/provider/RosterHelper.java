@@ -58,10 +58,14 @@ public class RosterHelper {
      */
     private final static String rosterViewQuery =
         "SELECT *," +
-            Roster.JID + "=? AS itsMe " +
+            Roster.JID + "=? AS itsMe," +
+            Roster.UNREAD_REPLIES + ">0 as hasReplies," +
+            Roster.UNREAD_MESSAGES + ">0 as hasUnread " +
         " FROM " + BuddycloudProvider.TABLE_ROSTER +
         " ORDER BY " + 
             "itsMe DESC," +
+            "hasReplies DESC," +
+            "hasUnread DESC," +
             "last_updated DESC," +
             "cache_update_timestamp DESC";
 
