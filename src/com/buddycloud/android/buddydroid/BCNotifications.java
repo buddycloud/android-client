@@ -31,6 +31,8 @@ public class BCNotifications {
                             .getSystemService(Context.NOTIFICATION_SERVICE);
         }
 
+        boolean resetNotification = false;
+
         long[] counts = RosterHelper.getUnreadCounts(provider);
 
         Notification notification = new Notification();
@@ -46,6 +48,7 @@ public class BCNotifications {
                         + R.raw.dr
                 );
                 lastSound = time;
+                resetNotification = true;
             }
             notification.tickerText = "New reply!";
         } else
@@ -56,6 +59,7 @@ public class BCNotifications {
                         + R.raw.cp
                 );
                 lastSound = time;
+                resetNotification = true;
             }
             notification.tickerText = "New channel post!";
         } else
@@ -129,11 +133,9 @@ public class BCNotifications {
 
         notification.flags = Notification.FLAG_AUTO_CANCEL;
 
-        if (time - lastSound > 2000) {
+        if (resetNotification) {
             notificationManager.cancel(NOTIFICATION);
         }
-
-        notification.when = System.currentTimeMillis() + 500;
 
         notificationManager.notify(NOTIFICATION, notification);
     }
