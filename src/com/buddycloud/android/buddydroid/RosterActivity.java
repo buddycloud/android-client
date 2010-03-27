@@ -17,11 +17,11 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 
@@ -50,26 +50,24 @@ public class RosterActivity extends Activity
                 Roster.PROJECTION_MAP,
                 null,
                 null,
-                "itsMe DESC, last_updated DESC, cache_update_timestamp DESC");
+                null);
 
         Log.d("provider", "cursor is: " + buddies);
 
         follow.setOnClickListener(this);
+
         listAdapter = new RosterAdapter(this, buddies);
+
         rosterList.setAdapter(listAdapter);
         rosterList.setOnItemClickListener(this);
-        rosterList.setOnItemSelectedListener(new OnItemSelectedListener() {
-
-            public void onItemSelected(AdapterView<?> arg0, View arg1,
-                    int position, long arg3) {
-                listAdapter.toggle(position);
-            }
-
-            public void onNothingSelected(AdapterView<?> arg0) {
-            }
-        });
 
         registerForContextMenu(rosterList);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        listAdapter.notifyDataSetChanged();
     }
 
     public void onItemClick(
@@ -78,7 +76,21 @@ public class RosterActivity extends Activity
         int position,
         long id
     ) {
-        listAdapter.toggle(position);
+        Cursor buddy = (Cursor) listAdapter.getItem(position);
+        String jid = buddy.getString(buddy.getColumnIndex(Roster.JID));
+
+        final Intent openChannel = new Intent();
+        openChannel.setClassName(
+            "com.buddycloud.android.buddydroid",
+            ChannelMessageActivity.class.getCanonicalName()
+        );
+        openChannel.setData(Uri.parse("channel:" + jid));
+        openChannel.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        openChannel.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+
+        runOnUiThread(new Runnable() { public void run() {
+            getApplication().startActivity(openChannel);
+        }});
     }
 
     @Override
@@ -102,20 +114,14 @@ public class RosterActivity extends Activity
         super.onCreateContextMenu(menu, v, menuInfo);
     }
 
-    private class RosterAdapter extends CursorAdapter {
+    public void onClick(View v) {
+        startActivity(new Intent(this, FollowActivity.class));
+    }
 
-        private int mExpandedPosition;
+    private class RosterAdapter extends CursorAdapter {
 
         public RosterAdapter(Context context, Cursor c) {
             super(context, c);
-        }
-
-        public void toggle(int position) {
-            if (mExpandedPosition != position)
-                mExpandedPosition = position;
-            else
-                mExpandedPosition = -1;
-            notifyDataSetChanged();
         }
 
         @Override
@@ -126,17 +132,29 @@ public class RosterActivity extends Activity
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
 
-            boolean hasNextLocation = (cursor.getString(cursor
-                    .getColumnIndex(Roster.GEOLOC_NEXT)) != null && !cursor
-                    .getString(cursor.getColumnIndex(Roster.GEOLOC_NEXT))
-                    .equals("null"));
+            // Read information form cursor
 
-            String jid = cursor.getString(cursor.getColumnIndex(Roster.JID));
+            String locNext = cursor.getString(
+                    cursor.getColumnIndex(Roster.GEOLOC_NEXT)
+            );
+            String locPrev = cursor.getString(
+                    cursor.getColumnIndex(Roster.GEOLOC_PREV)
+            );
+            String loc = cursor.getString(
+                    cursor.getColumnIndex(Roster.GEOLOC)
+            );
+            String mood = cursor.getString(
+                    cursor.getColumnIndex(Roster.STATUS)
+            );
             int unread = cursor.getInt(
-                    cursor.getColumnIndex(Roster.UNREAD_MESSAGES));
+                    cursor.getColumnIndex(Roster.UNREAD_MESSAGES)
+            );
+            String name = cursor.getString(cursor.getColumnIndex(Roster.NAME));
+            String jid = cursor.getString(cursor.getColumnIndex(Roster.JID));
+
+            // Helpers
 
             boolean isChannel = false;
-
             if (jid.startsWith("/user/")) {
                 jid = jid.substring(6);
                 if (jid.endsWith("/channel")) {
@@ -147,75 +165,100 @@ public class RosterActivity extends Activity
                 isChannel = true;
             }
 
-            TextView tv = (TextView) view.findViewById(R.id.title);
-            tv.setText(cursor.getString(cursor.getColumnIndex(Roster.NAME))
-                    + " (" + jid + ")");
+            boolean hasMood = mood != null && mood.length() > 0;
+            boolean hasLoc = loc != null && loc.length() > 0;
+            boolean hasLocNext = locNext != null && locNext.length() > 0;
+            boolean hasLocPrev = locPrev != null && locPrev.length() > 0;
 
-            if (cursor.getPosition() == mExpandedPosition && !isChannel) {
-                tv = (TextView) view.findViewById(R.id.desc);
-                tv.setText(cursor.getString(cursor
-                        .getColumnIndex(Roster.STATUS)));
+            // Fetch needed views
 
-                tv = (TextView) view.findViewById(R.id.loc_prev);
-                tv.setText(cursor.getString(cursor
-                        .getColumnIndex(Roster.GEOLOC_PREV)));
-                tv.setPaintFlags(tv.getPaintFlags()
-                        | Paint.STRIKE_THRU_TEXT_FLAG);
-                tv = (TextView) view.findViewById(R.id.loc_current);
-                tv.setText(cursor.getString(cursor
-                        .getColumnIndex(Roster.GEOLOC)));
-                tv = (TextView) view.findViewById(R.id.loc_next);
-                if (hasNextLocation)
-                    tv.setText(cursor.getString(cursor
-                            .getColumnIndex(Roster.GEOLOC_NEXT)));
-                else
-                    tv.setText("");
+            TextView jidView = (TextView) view.findViewById(R.id.jid);
+            TextView moodView = (TextView) view.findViewById(R.id.mood);
+            TextView locView = (TextView) view.findViewById(R.id.loc_current);
+            TextView locNextView = (TextView)
+                                    view.findViewById(R.id.loc_next);
+            TextView locPrevView = (TextView)
+                                    view.findViewById(R.id.loc_prev);
 
-                view.findViewById(R.id.desc).setVisibility(View.VISIBLE);
-                view.findViewById(R.id.arrow).setVisibility(View.VISIBLE);
-                ImageView iv = (ImageView) view.findViewById(R.id.arrow);
-                iv.setImageResource((hasNextLocation ? R.drawable.history2
-                        : R.drawable.history1));
+            ImageView iconView = (ImageView) view.findViewById(R.id.icon);
+            ImageView starView = (ImageView) view.findViewById(R.id.star);
+            ImageView prevIconView = (ImageView)
+                                        view.findViewById(R.id.loc_prev_icon);
+            ImageView nextIconView = (ImageView)
+                                        view.findViewById(R.id.loc_next_icon);
+            LinearLayout locPrevNextContainer = (LinearLayout)
+                                view.findViewById(R.id.loc_prev_next_container);
 
-                view.findViewById(R.id.loc_prev).setVisibility(View.VISIBLE);
-                view.findViewById(R.id.loc_current).setVisibility(View.VISIBLE);
-                view.findViewById(R.id.loc_next).setVisibility(
-                        hasNextLocation ? View.VISIBLE : View.GONE);
+            //  Cursor Data -> UI
 
-                ((ImageView) view.findViewById(R.id.icon))
-                        .setImageResource(R.drawable.contact);
+            if (unread > 0) {
+                starView.setVisibility(View.VISIBLE);
             } else {
-                tv = (TextView) view.findViewById(R.id.desc);
-                tv.setText(cursor.getString(cursor
-                        .getColumnIndex(Roster.GEOLOC)));
+                starView.setVisibility(View.GONE);
+            }
 
-                view.findViewById(R.id.arrow).setVisibility(View.GONE);
-                view.findViewById(R.id.loc_prev).setVisibility(View.GONE);
-                view.findViewById(R.id.loc_current).setVisibility(View.GONE);
-                view.findViewById(R.id.loc_next).setVisibility(View.GONE);
+            locPrevView.setPaintFlags(
+                    locPrevView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG
+            );
 
-                if (isChannel) {
-                    ((ImageView) view.findViewById(R.id.icon))
-                            .setImageResource(R.drawable.channel);
+            if (isChannel) {
+                iconView.setImageResource(R.drawable.channel);
+
+                jidView.setText(name);
+                moodView.setText(jid);
+
+            } else {
+
+                iconView.setImageResource(R.drawable.contact);
+
+                jidView.setText(name + " (" + jid + ")");
+
+                if (hasMood) {
+                    moodView.setText(mood);
+                }
+
+            }
+
+            if (hasLoc) {
+                // We move the location into the mood field if we don't have
+                // a mood.
+                if (!hasMood) {
+                    moodView.setText(loc);
+                    locView.setVisibility(View.GONE);
                 } else {
-                    ((ImageView) view.findViewById(R.id.icon))
-                            .setImageResource(R.drawable.contact);
+                    locView.setVisibility(View.VISIBLE);
+                    locView.setText(loc);
+                }
+            } else {
+                if (!hasMood) {
+                    moodView.setText("");
+                }
+                locView.setVisibility(View.GONE);
+            }
+
+            if (!hasLocNext && !hasLocPrev) {
+                locPrevNextContainer.setVisibility(View.GONE);
+            } else {
+                locPrevNextContainer.setVisibility(View.VISIBLE);
+
+                if (hasLocPrev) {
+                    prevIconView.setVisibility(View.VISIBLE);
+                    locPrevView.setText(locPrev);
+                } else {
+                    prevIconView.setVisibility(View.INVISIBLE);
+                    locPrevView.setText("");
+                }
+
+                if (hasLocNext) {
+                    nextIconView.setVisibility(View.VISIBLE);
+                    locNextView.setText(locNext);
+                } else {
+                    nextIconView.setVisibility(View.INVISIBLE);
+                    locNextView.setText("");
                 }
             }
 
-            if (unread == 0) {
-                view.findViewById(R.id.unread).setVisibility(View.GONE);
-            } else {
-                TextView unreadView = (TextView) view.findViewById(R.id.unread);
-                unreadView.setText(Integer.toString(unread));
-                unreadView.setVisibility(View.VISIBLE);
-            }
-            // view.setTag(jid);
-            return;
         }
     }
 
-    public void onClick(View v) {
-        startActivity(new Intent(this, FollowActivity.class));
-    }
 }

@@ -111,7 +111,6 @@ public class PostActivity extends BCActivity implements OnClickListener {
             );
             if (!cursor.moveToFirst()) {
                 setResult(0);
-                finish();
                 return;
             }
 

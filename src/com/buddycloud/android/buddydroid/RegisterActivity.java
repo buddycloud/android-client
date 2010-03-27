@@ -151,7 +151,11 @@ public class RegisterActivity extends Activity implements OnClickListener {
 
     private void loggedIn() {
         Intent main = new Intent(this, MainActivity.class);
+        main.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        main.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        main.addFlags(Intent.FLAG_FROM_BACKGROUND);
         startActivity(main);
+        finish();
     }
 
     private final synchronized void unbindBCService() {
