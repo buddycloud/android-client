@@ -13,6 +13,7 @@ import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
@@ -161,10 +162,13 @@ public class BuddycloudClient extends XMPPConnection {
         SmackConfiguration.setKeepAliveInterval(-1);
     }
 
-    public static BuddycloudClient createAnonymousBuddycloudClient() {
+    public static BuddycloudClient createAnonymousBuddycloudClient(
+        boolean debug
+    ) {
         ConnectionConfiguration config =
             new ConnectionConfiguration("buddycloud.com");
         config.setReconnectionAllowed(false);
+        config.setDebuggerEnabled(debug);
 
         BuddycloudClient connection = null;
 
@@ -196,11 +200,16 @@ public class BuddycloudClient extends XMPPConnection {
 
     public static BuddycloudClient registerBuddycloudClient(
             String username,
-            String password
+            String password,
+            boolean debug
     ) {
         ConnectionConfiguration config =
             new ConnectionConfiguration("buddycloud.com");
         config.setReconnectionAllowed(false);
+        config.setSecurityMode(SecurityMode.required);
+        config.setVerifyRootCAEnabled(false);
+        config.setVerifyChainEnabled(false);
+        config.setDebuggerEnabled(debug);
 
         BuddycloudClient connection = null;
 
@@ -238,7 +247,8 @@ public class BuddycloudClient extends XMPPConnection {
             String password,
             String host,
             Integer port,
-            String cachedUsername
+            String cachedUsername,
+            boolean debug
     ) {
 
         if (jid == null) {
@@ -263,6 +273,7 @@ public class BuddycloudClient extends XMPPConnection {
             );
         }
         config.setReconnectionAllowed(false);
+        config.setDebuggerEnabled(debug);
 
         BuddycloudClient connection = null;
 

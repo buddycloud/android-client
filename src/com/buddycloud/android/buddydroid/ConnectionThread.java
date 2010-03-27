@@ -53,14 +53,15 @@ public class ConnectionThread extends Thread {
                     name = jid.substring(0, at);
                 }
                 client = BuddycloudClient
-                    .registerBuddycloudClient(name, password);
+                    .registerBuddycloudClient(name, password, true);
             } else {
                 if (jid == null) {
-                    client = BuddycloudClient.createAnonymousBuddycloudClient();
+                    client =
+                        BuddycloudClient.createAnonymousBuddycloudClient(true);
                 } else {
                     client = BuddycloudClient
                         .createBuddycloudClient(
-                                jid, password, host, port, username
+                                jid, password, host, port, username, true
                         );
                 }
             }
