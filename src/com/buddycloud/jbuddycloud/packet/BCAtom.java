@@ -258,13 +258,25 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
                 } else
                 if (tagName.equals("in-reply-to")) {
                     if (!parser.isEmptyElementTag()) {
-                        atom.parentId =
-                            Long.parseLong(parser.nextText());
+                        String parent = parser.nextText();
+                        try {
+                            atom.parentId =
+                                Long.parseLong(parent);
+                        } catch (NumberFormatException e) {
+                            System.err.println("thr:in-reply-to misformated"
+                                    + parent);
+                        }
                     } else {
                         for (int i = 0; i < parser.getAttributeCount(); i++) {
                             if (parser.getAttributeName(i).equals("ref")) {
-                                atom.parentId =
-                                    Long.parseLong(parser.getAttributeValue(i));
+                                String parent = parser.getAttributeValue(i);
+                                try {
+                                    atom.parentId =
+                                        Long.parseLong(parent);
+                                } catch (NumberFormatException e) {
+                                    System.err.println("ref misformated"
+                                            + parent);
+                                }
                             }
                         }
                     }
