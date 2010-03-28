@@ -24,4 +24,8 @@ interface IBuddycloudService {
 
     boolean follow(String channel);
 
+    String[] getDirectories();
+
+    String[] getDirectoryEntries(String id);
+
 }

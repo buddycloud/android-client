@@ -68,7 +68,9 @@ public class BCActivity extends Activity {
                 service = null;
             }
         }
-        bindService(new Intent(
+        // This is a way to overcome the bind problems of an activity groups
+        // child activity. Damn.
+        getApplicationContext().bindService(new Intent(
             IBuddycloudService.class.getName()),
             connection,
             Context.BIND_AUTO_CREATE

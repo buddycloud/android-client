@@ -22,6 +22,7 @@ import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.NodeInformationProvider;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
+import org.jivesoftware.smackx.packet.SyncPacketSend;
 import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
 import org.jivesoftware.smackx.packet.DiscoverItems.Item;
 import org.jivesoftware.smackx.pubsub.Subscription;
@@ -31,6 +32,8 @@ import com.buddycloud.jbuddycloud.packet.Affiliations;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.BCSubscription;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
+import com.buddycloud.jbuddycloud.packet.channels.Query;
+import com.buddycloud.jbuddycloud.packet.channels.QueryItem;
 import com.buddycloud.jbuddycloud.provider.BCLeafNode;
 import com.buddycloud.jbuddycloud.provider.BCPubSubManager;
 import com.buddycloud.jbuddycloud.provider.BCSubscriptionProvider;
@@ -55,6 +58,9 @@ public class BuddycloudClient extends XMPPConnection {
         pm.addIQProvider("pubsub",
                 "http://jabber.org/protocol/pubsub",
                 new org.jivesoftware.smackx.pubsub.provider.PubSubProvider());
+        pm.addIQProvider("query",
+                "http://buddycloud.com/protocol/channels",
+                new com.buddycloud.jbuddycloud.packet.channels.Query());
         pm.addExtensionProvider(
                         "create",
                         "http://jabber.org/protocol/pubsub",
@@ -579,6 +585,19 @@ public class BuddycloudClient extends XMPPConnection {
 
     public void setLoginUsername(String loginUsername) {
         this.loginUsername = loginUsername;
+    }
+
+    public List<QueryItem> getDirectory() throws XMPPException {
+        return getDirectory(null);
+    }
+
+    public List<QueryItem> getDirectory(String id) throws XMPPException {
+        Query query = new Query();
+        if (id != null) {
+            query.setId(id);
+        }
+        query.setTo("maitred.buddycloud.com");
+        return ((Query)SyncPacketSend.getReply(this, query, 10000)).getItems();
     }
 
 }

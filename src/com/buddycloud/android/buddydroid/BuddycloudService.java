@@ -1,6 +1,7 @@
 package com.buddycloud.android.buddydroid;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
@@ -28,6 +29,7 @@ import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
 import com.buddycloud.jbuddycloud.packet.PlainPacket;
+import com.buddycloud.jbuddycloud.packet.channels.QueryItem;
 import com.buddycloud.jbuddycloud.provider.BCPubSubManager;
 
 public class BuddycloudService extends Service {
@@ -366,6 +368,33 @@ public class BuddycloudService extends Service {
                         listeners.add(listener);
                     }
                 }
+            }
+
+            public String[] getDirectories() throws RemoteException {
+                return getDirectoryEntries(null);
+            }
+
+            public String[] getDirectoryEntries(String id)
+                    throws RemoteException {
+                List<QueryItem> directory = null;
+                try {
+                    directory = mConnection.getDirectory(id);
+                } catch (XMPPException e) {
+                    Log.e(TAG,
+                            "could not fetch directory list (" + id + ")",
+                            e);
+                }
+                if (directory == null) {
+                    return null;
+                }
+                String v[] = new String[directory.size() * 3];
+                int i = 0;
+                for (QueryItem item : directory) {
+                    v[i++] = item.getId();
+                    v[i++] = item.getTitle();
+                    v[i++] = item.getDescription();
+                }
+                return v;
             }
         };
 
