@@ -2,7 +2,6 @@ package com.buddycloud.android.buddydroid;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.TreeMap;
 
 import android.content.Context;
 import android.database.DataSetObserver;
@@ -21,8 +20,8 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
 
     private String[][] groups = new String[][]{{null, "Loading...", null}};
 
-    private HashMap<String, TreeMap<String, Object>> content =
-        new HashMap<String, TreeMap<String, Object>>();
+    private HashMap<String, String[][]> content =
+        new HashMap<String, String[][]>();
 
     private LayoutInflater inflater;
 
@@ -43,24 +42,51 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
     }
 
     public long getChildId(int groupPosition, int childPosition) {
-        return 0;
+        return childPosition;
     }
 
     public View getChildView(int groupPosition, int childPosition,
             boolean isLastChild, View convertView, ViewGroup parent) {
-        return null;
+        if (convertView == null) {
+            convertView = inflater.inflate(R.layout.nearby_row, null);
+        }
+
+        TextView titleView =
+            (TextView)convertView.findViewById(R.id.title);
+
+        TextView descriptionView =
+            (TextView)convertView.findViewById(R.id.description);
+
+        String[] entry = content.get(groups[groupPosition][0])[childPosition];
+
+        titleView.setText(entry[1]);
+
+        if (entry[2] != null) {
+            descriptionView.setText(entry[2]);
+            descriptionView.setVisibility(View.VISIBLE);
+        } else {
+            descriptionView.setVisibility(View.GONE);
+        }
+
+        return convertView;
     }
 
     public int getChildrenCount(int groupPosition) {
-        return 0;
+        String[][] dir = content.get(groups[groupPosition][0]);
+        if (dir == null) {
+            return 0;
+        } else {
+            return dir.length;
+        }
     }
 
     public long getCombinedChildId(long groupId, long childId) {
-        return 0;
+        // we have bigger problems if we get a child-group of >64k entries
+        return groupId * 65536 + (childId + 1);
     }
 
     public long getCombinedGroupId(long groupId) {
-        return 0;
+        return groupId * 65536;
     }
 
     public Object getGroup(int groupPosition) {
@@ -80,6 +106,7 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.nearby_row, null);
         }
+
         TextView titleView =
             (TextView)convertView.findViewById(R.id.title);
 
@@ -134,6 +161,18 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
     public void updateDirectories(String[][] dir) {
         groups = dir;
         Log.d(getClass().getName(), "Got " + dir.length + " entries!");
+        fireUpdate();
+        for(String[] entry : dir) {
+            activity.loadDirectory(entry[0]);
+        }
+    }
+
+    public void updateDirectory(String id, String[][] dir) {
+        content.put(id, dir);
+        fireUpdate();
+    }
+
+    private void fireUpdate() {
         synchronized (observers) {
             for (final DataSetObserver observer: observers) {
                 activity.runOnUiThread(new Runnable(){
@@ -144,10 +183,4 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
             }
         }
     }
-
-    public void updateDirectory(String id, String[][] dir) {
-        // TODO Auto-generated method stub
-        
-    }
-
 }
