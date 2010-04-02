@@ -1,4 +1,4 @@
-package com.buddycloud.jbuddycloud.packet.channels;
+package com.buddycloud.jbuddycloud.packet.channeldiscovery;
 
 import java.util.ArrayList;
 import java.util.Collections;

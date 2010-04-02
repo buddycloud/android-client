@@ -18,7 +18,12 @@ import android.widget.TextView;
  */
 public class NearbyExpandableListAdapter implements ExpandableListAdapter {
 
-    private String[][] groups = new String[][]{{null, "Loading...", null}};
+    private String[][] directory = new String[][]{{null, "Loading...", null}};
+    private String[][] nearby = new String[][]{
+            {"channel", "Nearby Channels", null},
+            {"person", "Nearby Persons", null},
+            {"place", "Nearby Places", null}
+    };
 
     private HashMap<String, String[][]> content =
         new HashMap<String, String[][]>();
@@ -57,7 +62,7 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
         TextView descriptionView =
             (TextView)convertView.findViewById(R.id.description);
 
-        String[] entry = content.get(groups[groupPosition][0])[childPosition];
+        String[] entry = content.get(directory[groupPosition][0])[childPosition];
 
         titleView.setText(entry[1]);
 
@@ -72,7 +77,7 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
     }
 
     public int getChildrenCount(int groupPosition) {
-        String[][] dir = content.get(groups[groupPosition][0]);
+        String[][] dir = content.get(directory[groupPosition][0]);
         if (dir == null) {
             return 0;
         } else {
@@ -90,11 +95,11 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
     }
 
     public Object getGroup(int groupPosition) {
-        return groups.length;
+        return directory.length;
     }
 
     public int getGroupCount() {
-        return groups.length;
+        return directory.length;
     }
 
     public long getGroupId(int groupPosition) {
@@ -113,10 +118,10 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
         TextView descriptionView =
             (TextView)convertView.findViewById(R.id.description);
 
-        titleView.setText(groups[groupPosition][1]);
+        titleView.setText(directory[groupPosition][1]);
 
-        if (groups[groupPosition][2] != null) {
-            descriptionView.setText(groups[groupPosition][2]);
+        if (directory[groupPosition][2] != null) {
+            descriptionView.setText(directory[groupPosition][2]);
             descriptionView.setVisibility(View.VISIBLE);
         } else {
             descriptionView.setVisibility(View.GONE);
@@ -159,7 +164,7 @@ public class NearbyExpandableListAdapter implements ExpandableListAdapter {
     }
 
     public void updateDirectories(String[][] dir) {
-        groups = dir;
+        directory = dir;
         Log.d(getClass().getName(), "Got " + dir.length + " entries!");
         fireUpdate();
         for(String[] entry : dir) {

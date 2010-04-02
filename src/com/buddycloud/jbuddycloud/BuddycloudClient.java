@@ -32,8 +32,8 @@ import com.buddycloud.jbuddycloud.packet.Affiliations;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.BCSubscription;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
-import com.buddycloud.jbuddycloud.packet.channels.Query;
-import com.buddycloud.jbuddycloud.packet.channels.QueryItem;
+import com.buddycloud.jbuddycloud.packet.channeldiscovery.Query;
+import com.buddycloud.jbuddycloud.packet.channeldiscovery.QueryItem;
 import com.buddycloud.jbuddycloud.provider.BCLeafNode;
 import com.buddycloud.jbuddycloud.provider.BCPubSubManager;
 import com.buddycloud.jbuddycloud.provider.BCSubscriptionProvider;
@@ -60,7 +60,7 @@ public class BuddycloudClient extends XMPPConnection {
                 new org.jivesoftware.smackx.pubsub.provider.PubSubProvider());
         pm.addIQProvider("query",
                 "http://buddycloud.com/protocol/channels",
-                new com.buddycloud.jbuddycloud.packet.channels.Query());
+                new com.buddycloud.jbuddycloud.packet.channeldiscovery.Query());
         pm.addExtensionProvider(
                         "create",
                         "http://jabber.org/protocol/pubsub",

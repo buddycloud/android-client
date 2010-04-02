@@ -1,4 +1,4 @@
-package com.buddycloud.jbuddycloud.packet.channels;
+package com.buddycloud.jbuddycloud.packet.channeldiscovery;
 
 import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.provider.PacketExtensionProvider;

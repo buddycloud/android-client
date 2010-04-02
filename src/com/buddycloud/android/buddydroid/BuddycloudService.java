@@ -29,7 +29,7 @@ import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
 import com.buddycloud.jbuddycloud.packet.PlainPacket;
-import com.buddycloud.jbuddycloud.packet.channels.QueryItem;
+import com.buddycloud.jbuddycloud.packet.channeldiscovery.QueryItem;
 import com.buddycloud.jbuddycloud.provider.BCPubSubManager;
 
 public class BuddycloudService extends Service {
