@@ -111,9 +111,9 @@ public class WebImageView extends ViewSwitcher {
         // 125.0f, preferredItemHeight / 2.0f);
         // anim.setDuration(500L);
 
-        AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-        anim.setDuration(500L);
-        setInAnimation(anim);
+//        AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
+//        anim.setDuration(500L);
+//        setInAnimation(anim);
 
         addLoadingSpinnerView(context);
         addImageView(context);
