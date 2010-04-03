@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.android.buddydroid.util.HumanTime;
+import com.github.droidfu.widgets.WebImageView;
 
 public class ChannelMessageActivity extends Activity {
 
@@ -224,6 +225,35 @@ public class ChannelMessageActivity extends Activity {
                     );
                 }
                 addIcon.setVisibility(ImageView.GONE);
+            }
+
+            int httpIndex = message.lastIndexOf(
+                "http://media.buddycloud.com/dl/"
+            );
+            if (httpIndex == -1) {
+                view.findViewById(R.id.webimage).setVisibility(View.GONE);
+            } else {
+                WebImageView imgView = (WebImageView)
+                                            view.findViewById(R.id.webimage);
+                String v = message.substring(httpIndex);
+                for (int i = 31; i < v.length(); i++) {
+                    if (Character.isWhitespace(v.charAt(i))) {
+                        v = v.substring(0, i);
+                    }
+                }
+                int ending = v.toLowerCase().indexOf(".jpg");
+                if (ending != -1) {
+                    v = v.substring(0, ending + 4);
+                    imgView.setImageUrl(v);
+                    imgView.setVisibility(View.VISIBLE);
+                    imgView.loadImage();
+                } else {
+                    ending = v.toLowerCase().indexOf(".png");
+                    v = v.substring(0, ending + 4);
+                    imgView.setImageUrl(v);
+                    imgView.setVisibility(View.VISIBLE);
+                    imgView.loadImage();
+                }
             }
 
             LinearLayout bottomShadowLayout = (LinearLayout)
