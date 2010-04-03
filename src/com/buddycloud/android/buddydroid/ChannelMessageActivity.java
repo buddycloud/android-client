@@ -249,10 +249,14 @@ public class ChannelMessageActivity extends Activity {
                     imgView.loadImage();
                 } else {
                     ending = v.toLowerCase().indexOf(".png");
-                    v = v.substring(0, ending + 4);
-                    imgView.setImageUrl(v);
-                    imgView.setVisibility(View.VISIBLE);
-                    imgView.loadImage();
+                    if (ending != -1) {
+                        v = v.substring(0, ending + 4);
+                        imgView.setImageUrl(v);
+                        imgView.setVisibility(View.VISIBLE);
+                        imgView.loadImage();
+                    } else {
+                        view.findViewById(R.id.webimage).setVisibility(View.GONE);
+                    }
                 }
             }
 
