@@ -81,7 +81,7 @@ public class ChannelMessageActivity extends Activity {
         listView.setAdapter(new ChannelMessageAdapter(this, messages));
         listView.setDivider(null);
         listView.setDividerHeight(0);
-        listView.setSmoothScrollbarEnabled(false);
+        listView.setSmoothScrollbarEnabled(true);
 
     }
 
