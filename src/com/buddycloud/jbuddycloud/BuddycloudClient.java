@@ -377,8 +377,12 @@ public class BuddycloudClient extends XMPPConnection {
             "http://buddydroid.com/caps#" + VERSION,
             new JBuddycloudFeatures()
         );
+        connection.sendInitialPresence();
+        connection.addPacketListener(new PresenceListener(connection), null);
+    }
 
-        connection.sendPacket(new InitialPresence());
+    public void sendInitialPresence() {
+        sendPacket(new InitialPresence());
     }
 
     private ServiceDiscoveryManager discoveryManager;
