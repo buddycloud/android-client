@@ -36,6 +36,7 @@ public class BuddycloudService extends Service {
 
     static final String TAG = "BCService";
     private BuddycloudClient mConnection;
+    private ActivityPacketListener activityListener;
     private BuddycloudService service = this;
 
     private CellListener cellListener = null;
@@ -48,12 +49,16 @@ public class BuddycloudService extends Service {
     private LinkedList<IBuddycloudServiceListener> listeners =
         new LinkedList<IBuddycloudServiceListener>();
 
+    private long pingTime = 3 * 60 * 1000;
+    private long deadTime = 6 * 60 * 1000;
+
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, " onCreate");
         cellListener = new CellListener(this);
         networkListener = new NetworkListener(this);
+        activityListener = new ActivityPacketListener();
         final BuddycloudService service = this;
         final BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
@@ -68,10 +73,23 @@ public class BuddycloudService extends Service {
                     }
                     if (mConnection != null && mConnection.isConnected()) {
                         // connected
-                        Log.d(TAG, "test connection");
-                        if (mConnection.testConnection()) {
-                            Log.d(TAG, "Connection ok");
-                            return;
+                        long time = System.currentTimeMillis()
+                                  - activityListener.getLastActivity();
+                        if (time > pingTime) {
+                            if (time < deadTime) {
+                                Log.w(TAG, "silence on the line, ping");
+                                mConnection.ping();
+                            } else {
+                                Log.w(TAG, "silence on the line, drop");
+                                mConnection.disconnect();
+                            }
+                            mConnection = null;
+                        } else {
+                            Log.d(TAG, "test connection");
+                            if (mConnection.testConnection()) {
+                                Log.d(TAG, "Connection ok");
+                                return;
+                            }
                         }
                     }
                     SharedPreferences preferences =
@@ -429,6 +447,10 @@ public class BuddycloudService extends Service {
                     .putString("password", password)
                     .commit();
             }
+
+            activityListener.bump();
+            mConnection.addPacketListener(activityListener, null);
+
             mConnection.addGeoLocListener(
                 new ConnectionBCGeolocListener(getContentResolver())
             );

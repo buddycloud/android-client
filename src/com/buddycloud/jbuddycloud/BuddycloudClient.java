@@ -32,6 +32,7 @@ import com.buddycloud.jbuddycloud.packet.Affiliations;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.BCSubscription;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
+import com.buddycloud.jbuddycloud.packet.Ping;
 import com.buddycloud.jbuddycloud.packet.channeldiscovery.Query;
 import com.buddycloud.jbuddycloud.packet.channeldiscovery.QueryItem;
 import com.buddycloud.jbuddycloud.provider.BCLeafNode;
@@ -151,6 +152,10 @@ public class BuddycloudClient extends XMPPConnection {
                 "entry",
                 "http://www.w3.org/2005/Atom",
                 new BCAtom());
+        pm.addIQProvider(
+                "ping",
+                "urn:xmpp:ping",
+                new Ping());
         /*
         pm.addExtensionProvider("event",
                 PubSubLocationEventProvider.getNS(),
@@ -598,6 +603,15 @@ public class BuddycloudClient extends XMPPConnection {
         }
         query.setTo("maitred.buddycloud.com");
         return ((Query)SyncPacketSend.getReply(this, query, 10000)).getItems();
+    }
+
+    public void ping() {
+        Ping ping = new Ping();
+        String server = getUser();
+        server = server.substring(server.indexOf('@') + 1);
+        server = server.substring(0, server.indexOf('/'));
+        ping.setTo(server);
+        sendPacket(ping);
     }
 
 }
