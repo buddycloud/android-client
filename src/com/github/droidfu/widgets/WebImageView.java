@@ -21,7 +21,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.view.Gravity;
-import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.ViewSwitcher;
@@ -47,7 +46,7 @@ public class WebImageView extends ViewSwitcher {
 
     private ImageView imageView;
 
-    private ScaleType scaleType = ScaleType.CENTER_CROP;
+    private ScaleType scaleType = ScaleType.CENTER_INSIDE;
 
     private Drawable progressDrawable;
 
