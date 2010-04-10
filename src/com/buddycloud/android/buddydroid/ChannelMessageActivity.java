@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -82,6 +83,16 @@ public class ChannelMessageActivity extends Activity {
         listView.setDivider(null);
         listView.setDividerHeight(0);
         listView.setSmoothScrollbarEnabled(true);
+    }
+
+    private class LongClick implements OnLongClickListener {
+
+        public LongClick() {
+        }
+
+        public boolean onLongClick(View v) {
+            return false;
+        }
 
     }
 

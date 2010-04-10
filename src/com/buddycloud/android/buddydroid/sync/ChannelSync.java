@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.util.Log;
 
 import com.buddycloud.android.buddydroid.BuddycloudService;
+import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
 import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BuddycloudClient;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
@@ -35,13 +36,29 @@ public class ChannelSync extends Thread {
     @Override
     public void run() {
         try {
+            Cursor query = resolver.query(
+                ChannelData.CONTENT_URI,
+                new String[]{ChannelData.ITEM_ID},
+                    null, null, ChannelData.ITEM_ID + " DESC"
+            );
+            if (query.getCount() > 0) {
+                if (query.moveToFirst()) {
+                    long latest = 
+                        query.getLong(query.getColumnIndex(ChannelData.ITEM_ID));
+                    service.deltaUpdate(latest);
+                }
+            } else {
+                service.deltaUpdate(0l);
+            }
+            query.close();
+
             Log.d("BC", "read channels");
             long time = -System.currentTimeMillis();
 
             ArrayList<ContentValues> newEntries = new ArrayList<ContentValues>();
 
             HashMap<String, String> oldChannels = new HashMap<String, String>();
-            Cursor query = resolver.query(
+            query = resolver.query(
                 Roster.CONTENT_URI,
                 new String[]{Roster.JID, Roster.NAME},
                 null, null, null
@@ -55,9 +72,7 @@ public class ChannelSync extends Thread {
                             query.getColumnIndex(Roster.JID));
                     String name = query.getString(
                             query.getColumnIndex(Roster.NAME));
-                    if (!jid.startsWith("/user/")) {
-                        oldChannels.put(jid, name);
-                    }
+                    oldChannels.put(jid, name);
                     query.moveToNext();
                 }
             }
@@ -69,12 +84,18 @@ public class ChannelSync extends Thread {
                 client.getPubSubManager().getSubscriptions();
             for (Subscription subscription : subscriptions) {
                 String channel = subscription.getNode();
-                if (channel.startsWith("/user/")) {
+                if (channel.startsWith("/user")) {
+                    if (!channel.endsWith("/channel")) {
+                        continue;
+                    }
+                    if (oldChannels.containsKey(channel)) {
+                        oldChannels.remove(channel);
+                        continue;
+                    }
                     updateUser(channel);
                     continue;
                 }
                 if (oldChannels.containsKey(channel)) {
-                    service.updateChannel(channel);
                     oldChannels.remove(channel);
                     continue;
                 }
@@ -116,10 +137,7 @@ public class ChannelSync extends Thread {
             time = -System.currentTimeMillis();
 
             for (ContentValues v : newEntries) {
-                client.sendPacket(new ChannelFetch(
-                    v.getAsString(Roster.JID),
-                    0l
-                )); // Trigger a full fetch for every new channel
+                service.updateChannel(v.getAsString(Roster.JID));
             }
 
         } catch (Throwable t) {
@@ -158,7 +176,7 @@ public class ChannelSync extends Thread {
             IQ iq = new ChannelFetch(user + subChannel, l);
             client.sendPacket(iq);
             try {
-                Thread.sleep(100);
+                Thread.sleep(1000);
             } catch (InterruptedException e) { }
         }
     }
