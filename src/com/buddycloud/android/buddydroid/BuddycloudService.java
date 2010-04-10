@@ -195,15 +195,23 @@ public class BuddycloudService extends Service {
                 new String[]{channel},
                 null
         );
-        if (cursor.getCount() != 1) {
-            Log.e("BC", "update channel " + channel + " canceled");
-            cursor.close();
-            return;
+        long time = 0;
+        if (cursor.getCount() == 1) {
+            while (cursor.isBeforeFirst()) { cursor.moveToNext(); }
+            time = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
         }
-        while (cursor.isBeforeFirst()) { cursor.moveToNext(); }
-        long l = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
         cursor.close();
-        IQ iq = new ChannelFetch(channel, l);
+        IQ iq = new ChannelFetch(channel, time);
+        try {
+            send(iq);
+        } catch (InterruptedException e) {
+            e.printStackTrace(System.err);
+        }
+    }
+
+    public void deltaUpdate(long time) {
+        Log.d("BC", "delta update " + time);
+        IQ iq = new ChannelFetch("/", time);
         try {
             send(iq);
         } catch (InterruptedException e) {
