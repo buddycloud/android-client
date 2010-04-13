@@ -1,7 +1,6 @@
 package com.buddycloud.jbuddycloud;
 
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -15,16 +14,12 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.provider.ProviderManager;
-import org.jivesoftware.smackx.NodeInformationProvider;
+import org.jivesoftware.smackx.EntityCapsManager;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
 import org.jivesoftware.smackx.packet.SyncPacketSend;
-import org.jivesoftware.smackx.packet.DiscoverInfo.Identity;
-import org.jivesoftware.smackx.packet.DiscoverItems.Item;
 import org.jivesoftware.smackx.pubsub.Subscription;
 
 import com.buddycloud.jbuddycloud.packet.Affiliation;
@@ -42,7 +37,7 @@ import com.buddycloud.jbuddycloud.provider.LocationQueryResponseProvider;
 
 public class BuddycloudClient extends XMPPConnection {
 
-    public static final String VERSION = "0.0.1";
+    public static final String VERSION = "0.0.2";
 
     public static final Pattern JID_PATTERN =
         Pattern.compile("..*@[^.].*\\.[^.][^.][^.]*");
@@ -171,6 +166,35 @@ public class BuddycloudClient extends XMPPConnection {
                 LocationQueryResponseProvider.getNS(),
                 new LocationQueryResponseProvider());
         SmackConfiguration.setKeepAliveInterval(-1);
+        ServiceDiscoveryManager.setIdentityName("Buddycloud");
+        DiscoverInfo disco = new DiscoverInfo();
+        for (String node: new String[]{
+                "disco#info", "pubsub",
+                "geoloc", "geloc+notify",
+                "geoloc-prev", "geloc-prev+notify",
+                "geoloc-next", "geloc-nexrt+notify",
+        }) {
+            disco.addFeature("http://jabber.org/protocol/" + node);
+        }
+        EntityCapsManager.addDiscoverInfoByNode(
+            "http://code.google.com/p/buddycloud", disco
+        );
+    }
+
+    public static EntityCapsManager createEntityCapsManager() {
+        EntityCapsManager manager = new EntityCapsManager();
+        manager.setNode("http://code.google.com/p/buddycloud");
+        DiscoverInfo disco = new DiscoverInfo();
+        for (String node: new String[]{
+                "disco#info", "pubsub",
+                "geoloc", "geloc+notify",
+                "geoloc-prev", "geloc-prev+notify",
+                "geoloc-next", "geloc-nexrt+notify",
+        }) {
+            disco.addFeature("http://jabber.org/protocol/" + node);
+        }
+        manager.setCurrentCapsVersion(disco, VERSION);
+        return manager;
     }
 
     public static BuddycloudClient createAnonymousBuddycloudClient(
@@ -203,8 +227,6 @@ public class BuddycloudClient extends XMPPConnection {
         if (!(connection.isAuthenticated() || connection.isAnonymous())) {
             return null;
         }
-
-        configureFeatures(connection);
 
         return connection;
     }
@@ -247,8 +269,6 @@ public class BuddycloudClient extends XMPPConnection {
         if (!connection.isConnected() && !connection.isAuthenticated()) {
             return null;
         }
-
-        configureFeatures(connection);
 
         return connection;
     }
@@ -349,43 +369,10 @@ public class BuddycloudClient extends XMPPConnection {
             return null;
         }
 
-        configureFeatures(connection);
-
         return connection;
 
     }
 
-    private final static void configureFeatures(BuddycloudClient connection) {
-        connection.discoveryManager
-            .addFeature("http://jabber.org/protocol/disco#info");
-        connection.discoveryManager
-            .addFeature("http://jabber.org/protocol/pubsub");
-        connection.discoveryManager
-            .addFeature("http://jabber.org/protocol/geoloc");
-        connection.discoveryManager
-            .addFeature("http://jabber.org/protocol/geoloc+notify");
-        connection.discoveryManager
-            .addFeature("http://jabber.org/protocol/geoloc-prev");
-        connection.discoveryManager
-            .addFeature("http://jabber.org/protocol/geoloc-prev+notify");
-        connection.discoveryManager
-            .addFeature("http://jabber.org/protocol/geoloc-next");
-        connection.discoveryManager
-            .addFeature("http://jabber.org/protocol/geoloc-next+notify");
-        connection.discoveryManager
-            .setNodeInformationProvider(
-            "http://buddydroid.com/caps#" + VERSION,
-            new JBuddycloudFeatures()
-        );
-        connection.sendInitialPresence();
-        connection.addPacketListener(new PresenceListener(connection), null);
-    }
-
-    public void sendInitialPresence() {
-        sendPacket(new InitialPresence());
-    }
-
-    private ServiceDiscoveryManager discoveryManager;
     private BCPubSubManager pubSubManager;
     private BuddycloudLocationChannelListener locationChannelListener =
         new BuddycloudLocationChannelListener();
@@ -441,6 +428,7 @@ public class BuddycloudClient extends XMPPConnection {
     @Override
     public void connect() throws XMPPException {
         super.connect();
+
         int i = 0;
         while (!isConnected() && i < 100) {
             try {
@@ -453,25 +441,33 @@ public class BuddycloudClient extends XMPPConnection {
         if (!isConnected()) {
             return;
         }
+
+        if (ServiceDiscoveryManager.getInstanceFor(this) == null) {
+            new ServiceDiscoveryManager(this);
+        }
+        ServiceDiscoveryManager serviceDiscoveryManager =
+                            ServiceDiscoveryManager.getInstanceFor(this);
+        serviceDiscoveryManager.setEntityCapsManager(createEntityCapsManager());
+        for (String node: new String[]{
+                "disco#info", "pubsub",
+                "geoloc", "geloc+notify",
+                "geoloc-prev", "geloc-prev+notify",
+                "geoloc-next", "geloc-nexrt+notify",
+        }) {
+            serviceDiscoveryManager
+                    .removeFeature("http://jabber.org/protocol/" + node);
+            serviceDiscoveryManager
+                    .addFeature("http://jabber.org/protocol/" + node);
+        }
+
         addPacketListener(locationChannelListener, null);
-        discoveryManager = new ServiceDiscoveryManager(this);
-        pubSubManager = new BCPubSubManager(this, "pubsub-bridge@broadcaster.buddycloud.com");
-    }
 
-    private static class InitialPresence extends Packet {
-
-        @Override
-        public void setError(XMPPError error) {
-            super.setError(error);
+        if (pubSubManager == null) {
+            pubSubManager = new BCPubSubManager(
+                this,
+                "pubsub-bridge@broadcaster.buddycloud.com"
+            );
         }
-
-        @Override
-        public String toXML() {
-            return "<presence><priority>10</priority><status>available</status>"
-                    + "<c xmlns=\"http://jabber.org/protocol/caps\" node=\"http://buddydroid.com/caps\" "
-                    + "ver=\"" + VERSION + "\"/></presence>";
-        }
-
     }
 
     @Override
@@ -547,37 +543,6 @@ public class BuddycloudClient extends XMPPConnection {
         } catch (Throwable t) {
             t.printStackTrace(System.err);
         }
-    }
-
-    private static class JBuddycloudFeatures
-    implements NodeInformationProvider {
-
-        public List<String> getNodeFeatures() {
-            List<String> features = new ArrayList<String>();
-            features.add("http://jabber.org/protocol/disco#info");
-            features.add("http://jabber.org/protocol/pubsub");
-            features.add("http://jabber.org/protocol/geoloc");
-            features.add("http://jabber.org/protocol/geoloc+notify");
-            features.add("http://jabber.org/protocol/geoloc-prev");
-            features.add("http://jabber.org/protocol/geoloc-prev+notify");
-            features.add("http://jabber.org/protocol/geoloc-next");
-            features.add("http://jabber.org/protocol/geoloc-next+notify");
-            return features;
-        }
-
-        public List<Identity> getNodeIdentities() {
-            List<Identity> r = new ArrayList<Identity>();
-            Identity id = new DiscoverInfo.Identity("client", "BuddycloudClient");
-            id.setType("mobile");
-            r.add(id);
-            return r;
-        }
-
-        public List<Item> getNodeItems() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
     }
 
     public void addGeoLocListener(BCGeoLocListener bcGeoLocListener) {

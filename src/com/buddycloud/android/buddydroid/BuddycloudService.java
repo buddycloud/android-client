@@ -52,8 +52,6 @@ public class BuddycloudService extends Service {
     private long pingTime = 3 * 60 * 1000;
     private long deadTime = 6 * 60 * 1000;
 
-    private int tickCount = 0;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -65,7 +63,6 @@ public class BuddycloudService extends Service {
         final BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                tickCount++;
                 Log.d(TAG, "Received " + intent);
                 synchronized(TAG) {
                     if (connectionThread != null &&
@@ -88,9 +85,6 @@ public class BuddycloudService extends Service {
                             }
                             mConnection = null;
                         } else {
-                            if (tickCount % 10 == 0) {
-                                mConnection.sendInitialPresence();
-                            }
                             Log.d(TAG, "test connection");
                             if (mConnection.testConnection()) {
                                 Log.d(TAG, "Connection ok");
