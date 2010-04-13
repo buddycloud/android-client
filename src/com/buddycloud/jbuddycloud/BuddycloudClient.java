@@ -419,7 +419,11 @@ public class BuddycloudClient extends XMPPConnection {
             writer.flush();
         } catch (Exception e) {
             e.printStackTrace(System.err);
-            disconnect();
+            try {
+                disconnect();
+            } catch (Exception ex) {
+                // We expect this to fail
+            }
             return false;
         }
         return true;
