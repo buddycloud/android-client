@@ -22,10 +22,11 @@
     >
 
         <!-- user icon -->
-        <ImageView
-            android:paddingLeft="5dip"
+        <com.github.droidfu.widgets.WebImageView
+            xmlns:droidfu="http://github.com/droidfu/schema"
+            android:background="#FFF"
+            droidfu:autoLoad="false"
             android:id="@+id/user_icon"
-            android:src="@drawable/contact"
             android:layout_width="49dip"
             android:layout_height="49dip"
             android:layout_weight="0.0"

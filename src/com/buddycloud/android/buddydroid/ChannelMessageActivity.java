@@ -172,6 +172,11 @@ public class ChannelMessageActivity extends Activity {
                 jidView.setTextColor(Color.BLACK);
             }
 
+            WebImageView userIcon = (WebImageView)
+                                            view.findViewById(R.id.user_icon);
+            userIcon.setImageUrl(userChannelIcon(jid));
+            userIcon.loadImage();
+
             String humanTime = HumanTime.humanReadableString(
                     System.currentTimeMillis() - time);
 
@@ -290,6 +295,17 @@ public class ChannelMessageActivity extends Activity {
                     new String[]{node}
                 );
             }
+        }
+
+        private String userChannelIcon(String user) {
+            int split = user.lastIndexOf('@');
+            if (split == -1) {
+                return "http://buddycloud.com/static/user/images/defaults/default_54x54.png";
+            }
+            String username = user.substring(0, split);
+            String domain = user.substring(split + 1);
+            return "http://media.buddycloud.com/channel/54x54/" +
+                   domain + "/" + username + ".png";
         }
 
         @Override
