@@ -24,6 +24,9 @@ public class MainActivity extends TabActivity {
         tabHost.addTab(tabHost.newTabSpec("nearby").setIndicator("Explore", 
                getResources().getDrawable(android.R.drawable.ic_menu_myplaces))
                 .setContent(new Intent(this, NearbyActivity.class)));
+        tabHost.addTab(tabHost.newTabSpec("places").setIndicator("Places", 
+        		getResources().getDrawable(android.R.drawable.ic_menu_myplaces))
+        		.setContent(new Intent(this, PlacesActivity.class)));
     }
 
     @Override

@@ -7,4 +7,7 @@
 	<string name="app_login_name">Login with your account</string>
 	<string name="anonymous_text">Try Buddycloud</string>
 	<string name="normal_login_text">Get started</string>
+	
+	<string name="places_current">current location</string>
+	<string name="places_add_bookmark">Bookmark</string>
 </resources>

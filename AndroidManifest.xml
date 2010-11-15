@@ -43,6 +43,7 @@
 		<activity android:name=".RosterActivity" />
 		<activity android:name=".ChannelActivity" />
 		<activity android:name=".NearbyActivity" />
+		<activity android:name=".PlacesActivity" />
 		
 		<activity android:name=".SettingsActivity" />
 
