@@ -50,6 +50,4 @@
     </LinearLayout>
     <!-- /icons, jid, current location -->
 
-    <include layout="@layout/location_fragment" />
-
 </LinearLayout>
