@@ -11,22 +11,27 @@ import org.jivesoftware.smackx.pubsub.PayloadItem;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.os.RemoteException;
 
 import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.EventIQ;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
+import com.googlecode.asmack.client.TransportServiceBindListener;
+import com.googlecode.asmack.connection.IXmppTransportService;
 
 public final class BCConnectionAtomListener
-    implements PacketListener {
+    implements PacketListener, TransportServiceBindListener {
 
     private final ContentResolver resolver;
+    private String[] accountJids;
 
     public BCConnectionAtomListener(
             ContentResolver resolver
     ) {
         this.resolver = resolver;
+        this.accountJids = new String[]{};
     }
 
     public void receive(String node, BCAtom atom) {
@@ -80,6 +85,15 @@ public final class BCConnectionAtomListener
         values.put(ChannelData.PUBLISHED,
                    atom.getPublished());
         GeoLoc loc = atom.getGeoloc();
+        boolean unread = true;
+        for (String me: accountJids) {
+            if (me.equals(node)) {
+                unread = false;
+            }
+        }
+        if (unread) {
+            values.put(ChannelData.UNREAD, unread);
+        }
         if (loc != null) {
             values.put(ChannelData.GEOLOC_ACCURACY,
                        loc.getAccuracy());
@@ -131,6 +145,24 @@ public final class BCConnectionAtomListener
                 }
             }
         }
+    }
+
+    @Override
+    public void onTrasportServiceConnect(IXmppTransportService service) {
+        String[] accountJids = new String[0];
+        try {
+            accountJids = service.getAllAccountJids(false);
+        } catch (RemoteException e) {
+            // should not happen, but does not harm that much
+        }
+        for (int i = 0; i < accountJids.length; i++) {
+            accountJids[i] = "/user/" + accountJids[i] + "/channel";
+        }
+        this.accountJids = accountJids;
+    }
+
+    @Override
+    public void onTrasportServiceDisconnect(IXmppTransportService service) {
     }
 
 }

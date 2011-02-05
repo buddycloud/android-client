@@ -51,6 +51,10 @@ public final class ChannelSync extends StateSequenceWorkflow {
                     cursor.getColumnIndex(Roster.LAST_UPDATED));
             Presence presence = new Presence(Type.available);
             presence.setTo("broadcaster.buddycloud.com");
+            try {
+                presence.setFrom(client.getFullJidByBare(via));
+            } catch (RemoteException e) {
+            }
             presence.addExtension(new RSMSet(after));
             send(presence, 1);
         }

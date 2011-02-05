@@ -272,8 +272,10 @@ public class BuddycloudService extends AsmackClientService {
     protected void preClientStart() {
         new ComponentAdd(client);
         client.registerListener(new BuddycloudLocationChannelListener());
-        client.registerListener(new BCConnectionAtomListener(
-                                                getContentResolver()));
+        BCConnectionAtomListener atomListener = new BCConnectionAtomListener(
+                                                    getContentResolver());
+        client.registerListener(atomListener);
+        client.removeTransportServiceBindListener(atomListener);
     }
 
 }
