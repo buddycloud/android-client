@@ -8,8 +8,10 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
-import com.buddycloud.android.buddydroid.provider.BuddycloudProvider;
-import com.buddycloud.android.buddydroid.provider.RosterHelper;
+import com.buddycloud.R;
+import com.buddycloud.content.BuddycloudProvider;
+import com.buddycloud.content.RosterHelper;
+import com.buddycloud.view.MainActivity;
 
 public class BCNotifications {
 

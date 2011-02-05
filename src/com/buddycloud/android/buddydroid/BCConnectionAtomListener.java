@@ -3,29 +3,30 @@
  */
 package com.buddycloud.android.buddydroid;
 
+import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.PacketExtension;
+import org.jivesoftware.smackx.pubsub.ItemsExtension;
+import org.jivesoftware.smackx.pubsub.PayloadItem;
+
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.util.Log;
 
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.ChannelData;
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
-import com.buddycloud.jbuddycloud.BCAtomListener;
-import com.buddycloud.jbuddycloud.BuddycloudClient;
+import com.buddycloud.content.BuddyCloud.ChannelData;
+import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
+import com.buddycloud.jbuddycloud.packet.EventIQ;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
 
-final class BCConnectionAtomListener
-    implements BCAtomListener {
+public final class BCConnectionAtomListener
+    implements PacketListener {
 
     private final ContentResolver resolver;
-    private final BuddycloudClient connection;
 
     public BCConnectionAtomListener(
-            ContentResolver resolver,
-            BuddycloudClient connection
+            ContentResolver resolver
     ) {
         this.resolver = resolver;
-        this.connection = connection;
     }
 
     public void receive(String node, BCAtom atom) {
@@ -102,11 +103,34 @@ final class BCConnectionAtomListener
             }
         }
 
-        if (!connection.getUser().startsWith(atom.getAuthorJid())) {
-            values.put(ChannelData.UNREAD, true);
-        }
-
         resolver.insert(ChannelData.CONTENT_URI, values);
-        Log.d(BuddycloudService.TAG, "stored " + atom.getId() + "@" + node);
     }
+
+    @Override
+    public void processPacket(Packet packet) {
+        if (packet == null) {
+            return;
+        }
+        if (!(packet instanceof EventIQ)) {
+            return;
+        }
+        EventIQ event = (EventIQ) packet;
+        for (PacketExtension eventExtension : event.getExtensions()) {
+            if (!(eventExtension instanceof ItemsExtension)) {
+                continue;
+            }
+            ItemsExtension items = (ItemsExtension) eventExtension;
+            String node = items.getNode();
+            for (PacketExtension itemsExtension: items.getItems()) {
+                if (!(itemsExtension instanceof PayloadItem<?>)) {
+                    continue;
+                }
+                Object payload = ((PayloadItem<?>)itemsExtension).getPayload();
+                if (payload instanceof BCAtom) {
+                    receive(node, (BCAtom) payload);
+                }
+            }
+        }
+    }
+
 }

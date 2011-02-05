@@ -1,13 +1,11 @@
 package com.buddycloud.android.buddydroid;
 
-import com.buddycloud.android.buddydroid.R;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.TextView;
+
+import com.buddycloud.R;
 
 
 public class AnonymousActivity extends Activity implements OnClickListener {

@@ -8,6 +8,34 @@
 >
 
     <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:paddingLeft="3dip"
+      android:paddingTop="1dip"
+      android:paddingBottom="1dip"
+      android:background="#183946"
+    >
+        <TextView
+            android:textColor="#ffffff"
+            android:text="buddy"
+            android:textSize="20dip"
+            android:layout_weight="0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+        />
+        <TextView
+            android:textColor="#ffffff"
+            android:text="cloud"
+            android:textSize="20dip"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+        />
+    </LinearLayout>
+
+    <LinearLayout
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"

@@ -1,6 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">BuddyDroid</string>
+    <string name="app_name">Buddycloud</string>
+
+    <string name="dashboard_channels">Channels</string>
+
+    <string name="dashboard_places">Places</string>
+
     <string name="app_follow_name">Follow a person/channel</string>
     <string name="app_post_name">Post a message</string>
     <string name="main_title">Buddycloud</string>

@@ -7,11 +7,14 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.util.Log;
 
-import com.buddycloud.android.buddydroid.provider.BuddyCloud.Roster;
+import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.BCGeoLocListener;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
 
 final class ConnectionBCGeolocListener implements BCGeoLocListener {
+
+    private static final String TAG =
+        ConnectionBCGeolocListener.class.getSimpleName();
 
     private final ContentResolver resolver;
 
@@ -33,7 +36,7 @@ final class ConnectionBCGeolocListener implements BCGeoLocListener {
         if (loc.getLocType().equals(GeoLoc.Type.PREV)) {
             values.put(Roster.GEOLOC_PREV, loc.getText());
         }
-        Log.d(BuddycloudService.TAG, "Update '/user/" + from + "/channel'");
+        Log.d(TAG, "Update '/user/" + from + "/channel'");
         resolver.update(Roster.CONTENT_URI, values,
                 Roster.JID + "='/user/" + from + "/channel'",
                 null);
