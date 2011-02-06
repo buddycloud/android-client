@@ -11,15 +11,43 @@ import android.util.Log;
 
 import com.googlecode.asmack.client.AsmackClient;
 
+/**
+ * A simple state flow system to do short sequences of calls in a more-or-less
+ * linear way.
+ */
 public abstract class StateSequenceWorkflow implements PacketListener {
 
+    /**
+     * The logging tag of this class.
+     */
     private static final String TAG =
                                 StateSequenceWorkflow.class.getSimpleName();
+
+    /**
+     * The asmack client.
+     */
     protected final AsmackClient client;
+
+    /**
+     * The current sequence id.
+     */
     protected int sequence = 0;
+
+    /**
+     * The callback ttl.
+     */
     protected long ttl = 60*1000;
+
+    /**
+     * The jid to use during stanza sending.
+     */
     protected final String via;
 
+    /**
+     * Create a new state sequence.
+     * @param client The asmack client for sending.
+     * @param via The jid used for sending.
+     */
     public StateSequenceWorkflow(AsmackClient client, String via) {
         super();
         this.client = client;
