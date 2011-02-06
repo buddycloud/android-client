@@ -25,11 +25,6 @@ import com.googlecode.asmack.client.AsmackClient;
 public final class ChannelSync extends StateSequenceWorkflow {
 
     /**
-     * The logging tag of this class.
-     */
-    private static final String TAG = ChannelSync.class.getSimpleName();
-
-    /**
      * A content resolver to fetch the current roster.
      */
     private final ContentResolver resolver;
@@ -130,9 +125,6 @@ public final class ChannelSync extends StateSequenceWorkflow {
                     e.printStackTrace();
                 }
             }
-        }
-        for (String jid: roster.keySet()) {
-            Log.d(TAG, "user without channel: " + jid);
         }
     }
 
