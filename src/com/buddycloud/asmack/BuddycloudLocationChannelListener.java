@@ -12,16 +12,20 @@ import org.jivesoftware.smackx.pubsub.EventElement;
 import org.jivesoftware.smackx.pubsub.ItemsExtension;
 import org.jivesoftware.smackx.pubsub.PayloadItem;
 
-import com.buddycloud.jbuddycloud.BCGeoLocListener;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+
+import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
 
 public class BuddycloudLocationChannelListener implements PacketListener {
 
-    private String user;
+    private final ContentResolver resolver;
 
-    private ArrayList<BCGeoLocListener> geoListener =
-        new ArrayList<BCGeoLocListener>();
+    public BuddycloudLocationChannelListener(ContentResolver resolver) {
+        this.resolver = resolver;
+    }
 
     private void processItems(String from, ItemsExtension items) {
         String node = items.getNode();
@@ -72,7 +76,22 @@ public class BuddycloudLocationChannelListener implements PacketListener {
                         from = from.substring(0, from.length()-13);
                     }
                 }
-                fireGeoLoc(from, geoLoc);
+                if (geoLoc.getType() == null) {
+                    return;
+                }
+                ContentValues values = new ContentValues();
+                if (geoLoc.getLocType().equals(GeoLoc.Type.CURRENT)) {
+                    values.put(Roster.GEOLOC, geoLoc.getText());
+                } else
+                if (geoLoc.getLocType().equals(GeoLoc.Type.NEXT)) {
+                    values.put(Roster.GEOLOC_NEXT, geoLoc.getText());
+                } else
+                if (geoLoc.getLocType().equals(GeoLoc.Type.PREV)) {
+                    values.put(Roster.GEOLOC_PREV, geoLoc.getText());
+                }
+                resolver.update(Roster.CONTENT_URI, values,
+                        Roster.JID + "='/user/" + from + "/channel'",
+                        null);
             } else {
                 System.err.println("Unknown item payload " +
                         payload.getPayload().getClass().toString());
@@ -116,47 +135,9 @@ public class BuddycloudLocationChannelListener implements PacketListener {
         }
     }
 
-    private void fireGeoLoc(String from, GeoLoc geoLoc) {
-        synchronized (geoListener) {
-            if (isBroadcaster(from)) {
-                from = getUser();
-            }
-            if (from.indexOf('/') != -1) {
-                from = from.substring(0, from.lastIndexOf('/'));
-            }
-            for (BCGeoLocListener listener : geoListener) {
-                try {
-                    listener.receive(from, geoLoc);
-                } catch (Throwable t) {
-                    t.printStackTrace(System.err);
-                }
-            }
-        }
-    }
-
-    public void addGeoLocListener(BCGeoLocListener listener) {
-        synchronized (geoListener) {
-            geoListener.add(listener);
-        }
-    }
-
-    public void removeGeoLocListener(BCGeoLocListener listener) {
-        synchronized (geoListener) {
-            geoListener.remove(listener);
-        }
-    }
-
     private final static boolean isBroadcaster(String jid) {
         return jid.equals("broadcaster.buddycloud.com") ||
                jid.equals("pubsub-bridge@broadcaster.buddycloud.com");
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
     }
 
 }

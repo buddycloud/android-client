@@ -114,6 +114,9 @@ public class BuddycloudService extends AsmackClientService {
         throws InterruptedException
     {
         final int priority = Math.min(internalPriority, prio);
+        if (taskQueue == null) {
+            return false;
+        }
         return taskQueue.add(new Runnable() {
             public void run() {
                 long now = System.currentTimeMillis();
@@ -296,7 +299,9 @@ public class BuddycloudService extends AsmackClientService {
     @Override
     protected void preClientStart() {
         new ComponentAdd(client);
-        client.registerListener(new BuddycloudLocationChannelListener());
+        client.registerListener(new BuddycloudLocationChannelListener(
+            getContentResolver()
+        ));
         BCConnectionAtomListener atomListener = new BCConnectionAtomListener(
                                                     getContentResolver());
         client.registerListener(atomListener);

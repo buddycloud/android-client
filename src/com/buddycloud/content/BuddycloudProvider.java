@@ -50,7 +50,7 @@ public class BuddycloudProvider extends ContentProvider {
      * 
      * 1: Release 0.0.1
      */
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 12;
 
     static class DatabaseHelper extends SQLiteOpenHelper {
         DatabaseHelper(Context context) {
@@ -115,7 +115,10 @@ public class BuddycloudProvider extends ContentProvider {
                     + Roster.UNREAD_MESSAGES +  " INTEGER DEFAULT 0,"
                     + Roster.UNREAD_REPLIES + " INTEGER DEFAULT 0,"
                     + Roster._COUNT + " LONG,"
-                    + Roster.CACHE_UPDATE_TIMESTAMP + " LONG"
+                    + Roster.CACHE_UPDATE_TIMESTAMP + " LONG,"
+                    + "UNIQUE("
+                        + Roster.JID
+                    + ")"
                     + ");");
 
             db.execSQL("CREATE TABLE " + TABLE_PLACES
