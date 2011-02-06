@@ -119,7 +119,7 @@ public final class ChannelSync extends StateSequenceWorkflow {
                     resolver.insert(Roster.CONTENT_URI, values);
                     roster.put(node, -1l);
                 }
-                ChannelFetch fetch = new ChannelFetch(node, roster.get(node)
+                ChannelFetch fetch = new ChannelFetch(node, roster.remove(node)
                                         +1l);
                 fetch.setTo("broadcaster.buddycloud.com");
                 try {
@@ -130,6 +130,9 @@ public final class ChannelSync extends StateSequenceWorkflow {
                     e.printStackTrace();
                 }
             }
+        }
+        for (String jid: roster.keySet()) {
+            Log.d(TAG, "user without channel: " + jid);
         }
     }
 
