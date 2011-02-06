@@ -64,6 +64,7 @@ public class BuddyCloud {
         public static final String STATUS="status";
         public static final String GEOLOC_PREV="geoloc_prev";
         public static final String GEOLOC="geoloc";
+        public static final String LAST_MESSAGE = "last_message";
         public static final String LAST_UPDATED = "last_updated";
         public static final String UNREAD_MESSAGES = "unread_messages";
         public static final String UNREAD_REPLIES = "unread_replies";
@@ -75,6 +76,7 @@ public class BuddyCloud {
             NAME,
             ENTRYTYPE,
             STATUS,
+            LAST_MESSAGE,
             GEOLOC,
             GEOLOC_NEXT,
             GEOLOC_PREV,

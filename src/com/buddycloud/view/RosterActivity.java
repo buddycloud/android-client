@@ -126,9 +126,15 @@ public class RosterActivity extends BCActivity
             TextView tv = (TextView) view.findViewById(R.id.channel);
             tv.setText("#" + jid);
 
+            String status = cursor.getString(cursor.getColumnIndex(
+                                                            Roster.STATUS));
+            if (status == null || status.length() == 0) {
+                status = cursor.getString(cursor.getColumnIndex(
+                                                        Roster.LAST_MESSAGE));
+            }
+
             tv = (TextView) view.findViewById(R.id.status);
-            tv.setText(cursor.getString(cursor
-                    .getColumnIndex(Roster.STATUS)));
+            tv.setText(status);
 
             String geo_prev = cursor.getString(
                     cursor.getColumnIndex(Roster.GEOLOC_PREV));

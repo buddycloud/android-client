@@ -58,6 +58,12 @@ public class ChannelDataHelper {
                         lu.put(Roster.LAST_UPDATED, id);
                         lu.put(CacheColumns.CACHE_UPDATE_TIMESTAMP,
                                 System.currentTimeMillis());
+                        if (parent == 0l) {
+                            lu.put(
+                                Roster.LAST_MESSAGE,
+                                values.getAsString(ChannelData.CONTENT)
+                            );
+                        }
 
                         db.update(
                                 BuddycloudProvider.TABLE_ROSTER,
@@ -67,6 +73,7 @@ public class ChannelDataHelper {
                         );
 
                         if (parent == 0) {
+                            lu.remove(Roster.LAST_MESSAGE);
 
                             // update possible childs
                             db.update(

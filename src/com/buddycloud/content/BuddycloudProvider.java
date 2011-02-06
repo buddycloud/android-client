@@ -50,7 +50,7 @@ public class BuddycloudProvider extends ContentProvider {
      * 
      * 1: Release 0.0.1
      */
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 15;
 
     static class DatabaseHelper extends SQLiteOpenHelper {
         DatabaseHelper(Context context) {
@@ -106,6 +106,7 @@ public class BuddycloudProvider extends ContentProvider {
                     + Roster.JID + " VARCHAR,"
                     + Roster.SELF + " INTEGER DEFAULT 0,"
                     + Roster.NAME + " VARCHAR,"
+                    + Roster.LAST_MESSAGE + " VARCHAR,"
                     + Roster.ENTRYTYPE + " VARCHAR,"
                     + Roster.STATUS + " VARCHAR,"
                     + Roster.GEOLOC + " VARCHAR,"
