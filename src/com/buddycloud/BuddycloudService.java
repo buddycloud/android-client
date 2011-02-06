@@ -2,9 +2,12 @@ package com.buddycloud;
 
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Presence.Type;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -20,6 +23,7 @@ import com.buddycloud.component.ComponentAdd;
 import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
+import com.buddycloud.jbuddycloud.packet.RSMSet;
 import com.googlecode.asmack.client.AsmackClientService;
 import com.googlecode.asmack.connection.IXmppTransportService;
 
@@ -60,6 +64,11 @@ public class BuddycloudService extends AsmackClientService {
     private TaskQueueThread taskQueue;
 
     /**
+     * The internal time tick counter.
+     */
+    private int tick = 0;
+
+    /**
      * Create a new buddycloud service, initialize the required platform
      * listeners.
      */
@@ -70,6 +79,10 @@ public class BuddycloudService extends AsmackClientService {
         cellListener = new CellListener(this);
         networkListener = new NetworkListener(this);
         cellListener.start();
+        getApplicationContext().registerReceiver(
+            new TimeBroadcastReceiver(this),
+            new IntentFilter("android.intent.action.TIME_TICK")
+        );
     }
 
     /**
@@ -258,6 +271,7 @@ public class BuddycloudService extends AsmackClientService {
                     new String[]{"/user/" + jid + "/channel"}
                 );
             }
+            sendDirectedPresence();
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -287,6 +301,37 @@ public class BuddycloudService extends AsmackClientService {
                                                     getContentResolver());
         client.registerListener(atomListener);
         client.removeTransportServiceBindListener(atomListener);
+    }
+
+    public void sendDirectedPresence() {
+        Cursor cursor = getContentResolver().query(
+            Roster.CONTENT_URI,
+            new String[]{Roster.LAST_UPDATED},
+            null, null, "last_updated desc"
+        );
+        if (cursor.moveToFirst()) {
+            long after = cursor.getLong(
+                    cursor.getColumnIndex(Roster.LAST_UPDATED));
+            Presence presence = new Presence(Type.available);
+            presence.setTo("broadcaster.buddycloud.com");
+            presence.addExtension(new RSMSet(after));
+            try {
+                client.sendFromAllResources(presence);
+            } catch (RemoteException e) {
+            }
+        }
+        cursor.close();
+    }
+
+    public void onTimeTick() {
+        tick++;
+        try {
+            sendBeaconLog(10);
+        } catch (InterruptedException e) {
+        }
+        if (tick % 10 == 0) {
+            sendDirectedPresence();
+        }
     }
 
 }

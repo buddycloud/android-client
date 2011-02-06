@@ -4,8 +4,6 @@ import java.util.HashMap;
 
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.PacketExtension;
-import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.Presence.Type;
 import org.jivesoftware.smackx.pubsub.Subscription;
 import org.jivesoftware.smackx.pubsub.SubscriptionsExtension;
 import org.jivesoftware.smackx.pubsub.packet.PubSub;
@@ -63,28 +61,8 @@ public final class ChannelSync extends StateSequenceWorkflow {
      */
     @Override
     public void start() {
-        // step 1a: send a directed presence
+        // step 1: get all roster entries
         Cursor cursor = resolver.query(
-            Roster.CONTENT_URI,
-            new String[]{Roster.LAST_UPDATED},
-            null, null, "last_updated desc"
-        );
-        if (cursor.moveToFirst()) {
-            long after = cursor.getLong(
-                    cursor.getColumnIndex(Roster.LAST_UPDATED));
-            Presence presence = new Presence(Type.available);
-            presence.setTo("broadcaster.buddycloud.com");
-            try {
-                presence.setFrom(client.getFullJidByBare(via));
-            } catch (RemoteException e) {
-            }
-            presence.addExtension(new RSMSet(after));
-            send(presence, 1);
-        }
-        cursor.close();
-
-        // step 1b: get all roster entries
-        cursor = resolver.query(
             Roster.CONTENT_URI,
             Roster.PROJECTION_MAP,
             null, null, null

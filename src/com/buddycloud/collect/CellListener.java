@@ -3,10 +3,7 @@ package com.buddycloud.collect;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.telephony.CellLocation;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
@@ -24,7 +21,6 @@ public class CellListener extends PhoneStateListener {
     private String cell;
     private String newCell;
     private int power = -1;
-    private BroadcastReceiver receiver;
 
     private ArrayList<NeighboringCellInfo> neighbours;
     private String catchedAt;
@@ -37,18 +33,6 @@ public class CellListener extends PhoneStateListener {
         telephonyManager = (TelephonyManager) service
                 .getSystemService(Context.TELEPHONY_SERVICE);
         CellLocation.requestLocationUpdate();
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                try {
-                    service.sendBeaconLog(10);
-                } catch (InterruptedException e) {
-                    // not important
-                }
-            }
-        };
-        service.registerReceiver(receiver, new IntentFilter(
-                "android.intent.action.TIME_TICK"));
         telephonyManager.listen(this, PhoneStateListener.LISTEN_CELL_LOCATION
                 | PhoneStateListener.LISTEN_SIGNAL_STRENGTH);
     }
@@ -59,7 +43,6 @@ public class CellListener extends PhoneStateListener {
             telephonyManager = null;
         }
         if (service != null) {
-            service.unregisterReceiver(receiver);
             service = null;
         }
     }
