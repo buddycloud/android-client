@@ -128,11 +128,36 @@ public class RosterActivity extends BCActivity
 
             tv = (TextView) view.findViewById(R.id.status);
             tv.setText(cursor.getString(cursor
-                    .getColumnIndex(Roster.GEOLOC)));
+                    .getColumnIndex(Roster.STATUS)));
 
-            view.findViewById(R.id.geo_prev).setVisibility(View.GONE);
-            view.findViewById(R.id.geo).setVisibility(View.GONE);
-            view.findViewById(R.id.geo_next).setVisibility(View.GONE);
+            String geo_prev = cursor.getString(
+                    cursor.getColumnIndex(Roster.GEOLOC_PREV));
+            String geo = cursor.getString(
+                    cursor.getColumnIndex(Roster.GEOLOC));
+            String geo_next = cursor.getString(
+                    cursor.getColumnIndex(Roster.GEOLOC_NEXT));
+
+            if (geo_prev != null && geo_prev.length() > 0) {
+                tv = (TextView) view.findViewById(R.id.geo_prev);
+                tv.setVisibility(View.VISIBLE);
+                tv.setText(geo_prev);
+            } else {
+                view.findViewById(R.id.geo_prev).setVisibility(View.GONE);
+            }
+            if (geo != null && geo.length() > 0) {
+                tv = (TextView) view.findViewById(R.id.geo);
+                tv.setVisibility(View.VISIBLE);
+                tv.setText(geo);
+            } else {
+                view.findViewById(R.id.geo).setVisibility(View.GONE);
+            }
+            if (geo_next != null && geo_next.length() > 0) {
+                tv = (TextView) view.findViewById(R.id.geo_next);
+                tv.setVisibility(View.VISIBLE);
+                tv.setText(geo_next);
+            } else {
+                view.findViewById(R.id.geo_next).setVisibility(View.GONE);
+            }
 
             if (isChannel) {
                 ((ImageView) view.findViewById(R.id.icon))
