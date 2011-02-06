@@ -9,9 +9,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
+import android.view.View.OnClickListener;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -23,6 +22,10 @@ import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.util.HumanTime;
 
+/**
+ * Displays the messages in a given channel, whether personal or global.
+ * <p>Requires an Intent with the channel ID in the format: {@code channel:/path/to/channel}</p>
+ */
 public class ChannelMessageActivity extends Activity {
 
     private String node;
@@ -34,11 +37,9 @@ public class ChannelMessageActivity extends Activity {
 
         currentActivity = this;
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-
         setContentView(R.layout.channel_layout);
 
-        node = getIntent().getData().toString().substring(8);
+        node = getIntent().getData().toString().substring("channel:".length());
 
         Cursor messages =
             managedQuery(
@@ -60,12 +61,12 @@ public class ChannelMessageActivity extends Activity {
         name = channel.getString(channel.getColumnIndex(Roster.NAME));
         String jid = channel.getString(channel.getColumnIndex(Roster.JID));
         if (jid.startsWith("/user/")) {
-            jid = jid.substring(6);
+            jid = jid.substring("/user/".length());
             jid = jid.substring(0, jid.indexOf('/'));
             name = name + "'s personal channel";
         } else
         if (jid.startsWith("/channel/")) {
-            jid = jid.substring(9);
+            jid = jid.substring("/channel/".length());
             name = name + " channel";
         }
 
