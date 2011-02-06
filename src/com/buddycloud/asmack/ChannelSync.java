@@ -19,14 +19,34 @@ import android.util.Log;
 import com.buddycloud.StateSequenceWorkflow;
 import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
-import com.buddycloud.jbuddycloud.packet.RSMSet;
 import com.googlecode.asmack.client.AsmackClient;
 
+/**
+ * Sync all channels of the user.
+ */
 public final class ChannelSync extends StateSequenceWorkflow {
 
+    /**
+     * The logging tag of this class.
+     */
+    private static final String TAG = ChannelSync.class.getSimpleName();
+
+    /**
+     * A content resolver to fetch the current roster.
+     */
     private final ContentResolver resolver;
+
+    /**
+     * A hashmap of roster and fetch times.
+     */
     private final HashMap<String, Long> roster;
 
+    /**
+     * Create a new channel sync thread and start it.
+     * @param client The asmack client.
+     * @param via The jid used for sending requests.
+     * @param resolver The content resolver used for the roster lookup.
+     */
     public ChannelSync(
         AsmackClient client,
         String via,
@@ -38,6 +58,9 @@ public final class ChannelSync extends StateSequenceWorkflow {
         start();
     }
 
+    /**
+     * Start the channel sync process by sending out fetch requests.
+     */
     @Override
     public void start() {
         // step 1a: send a directed presence
@@ -136,6 +159,11 @@ public final class ChannelSync extends StateSequenceWorkflow {
         // we don't care about atoms, there is another listener for that.
     }
 
+    /**
+     * Retrieve the type of the channel.
+     * @param node The channel node name.
+     * @return The channel node type.
+     */
     protected String getType(String node) {
         String fragment[] = node.split("/");
         if (fragment.length < 2) {
