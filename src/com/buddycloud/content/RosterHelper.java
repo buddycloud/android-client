@@ -58,13 +58,12 @@ public class RosterHelper {
      */
     private final static String rosterViewQuery =
         "SELECT *," +
-            Roster.JID + "=? AS itsMe," +
             Roster.UNREAD_REPLIES + ">0 as hasReplies," +
             Roster.UNREAD_MESSAGES + ">0 as hasUnread " +
         " FROM " + BuddycloudProvider.TABLE_ROSTER +
         " WHERE type='channel'" +
         " ORDER BY " + 
-            "itsMe DESC," +
+            "self DESC," +
             "hasReplies DESC," +
             "hasUnread DESC," +
             "last_updated DESC," +
@@ -79,15 +78,9 @@ public class RosterHelper {
      * @return A bound cursor
      */
     public static Cursor queryRosterView(BuddycloudProvider provider) {
-
-        SharedPreferences preferences = PreferenceManager
-            .getDefaultSharedPreferences(provider.getContext());
-
-        String jid = "/user/" + preferences.getString("jid","") + "/channel";
-
         synchronized (provider.mOpenHelper) {
             Cursor c = provider.mOpenHelper.getReadableDatabase()
-                    .rawQuery(rosterViewQuery, new String[]{jid});
+                    .rawQuery(rosterViewQuery, new String[]{});
 
             c.setNotificationUri(
                 provider.getContext().getContentResolver(),

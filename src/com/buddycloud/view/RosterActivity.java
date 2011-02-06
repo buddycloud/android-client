@@ -45,15 +45,11 @@ public class RosterActivity extends BCActivity
                 Roster.PROJECTION_MAP,
                 null,
                 null,
-                "itsMe DESC, last_updated DESC, cache_update_timestamp DESC");
-
-        Log.d("provider", "cursor is: " + buddies);
+                "self DESC, last_updated DESC, cache_update_timestamp DESC");
 
         listAdapter = new RosterAdapter(this, buddies);
         rosterList.setAdapter(listAdapter);
         rosterList.setOnItemClickListener(this);
-
-        registerForContextMenu(rosterList);
     }
 
     public void onItemClick(

@@ -3,6 +3,7 @@ package com.buddycloud;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Packet;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.IBinder;
@@ -242,9 +243,19 @@ public class BuddycloudService extends AsmackClientService {
                         "http://jabber.org/protocol/geoloc-prev+notify");
             for (String jid: client.getAllAccountJids(true)) {
                 Log.d("BC", "SYNC " + jid);
-                Log.d("BC", "Resolver " + getApplicationContext().getContentResolver());
                 new ChannelSync(client, jid,
                     getApplicationContext().getContentResolver()
+                );
+            }
+            String jids[] = client.getAllAccountJids(false);
+            for (String jid: jids) {
+                ContentValues values = new ContentValues();
+                values.put(Roster.SELF, 1);
+                getApplicationContext().getContentResolver().update(
+                    Roster.CONTENT_URI,
+                    values,
+                    "jid=?",
+                    new String[]{"/user/" + jid + "/channel"}
                 );
             }
         } catch (RemoteException e) {

@@ -58,6 +58,7 @@ public class BuddyCloud {
             Uri.parse("content://com.buddycloud/roster_view");
 
         public static final String JID="jid";
+        public static final String SELF = "self";
         public static final String NAME="name";
         public static final String ENTRYTYPE = "type";
         public static final String STATUS="status";
@@ -81,6 +82,7 @@ public class BuddyCloud {
             UNREAD_REPLIES,
             LAST_UPDATED
         };
+
     }
 
     private static class Item implements CacheColumns{
