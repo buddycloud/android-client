@@ -303,6 +303,9 @@ public class BuddycloudService extends AsmackClientService {
         client.removeTransportServiceBindListener(atomListener);
     }
 
+    /**
+     * Send a direct presence to the channel server.
+     */
     public void sendDirectedPresence() {
         Cursor cursor = getContentResolver().query(
             Roster.CONTENT_URI,
@@ -323,6 +326,9 @@ public class BuddycloudService extends AsmackClientService {
         cursor.close();
     }
 
+    /**
+     * Time Tick callback to send beacon logs and directet presence.
+     */
     public void onTimeTick() {
         tick++;
         try {
