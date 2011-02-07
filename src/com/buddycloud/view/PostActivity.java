@@ -20,6 +20,7 @@ import com.buddycloud.R;
 import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.util.HumanTime;
+import com.googlecode.asmack.Stanza;
 import com.googlecode.asmack.client.AsmackClient;
 
 /**
@@ -231,16 +232,15 @@ public class PostActivity extends BCActivity implements OnClickListener {
                             new PublishItem<PayloadItem<BCAtom>>(node, item);
 
         PubSub pubSub = new PubSub();
-        pubSub.setFrom(jid);
         pubSub.setTo("broadcaster.buddycloud.com");
         pubSub.setType(PubSub.Type.SET);
         pubSub.addExtension(publish);
 
         for (int i = 0; i < 3; i++) {
             try {
-                if (service.send(
-                    AsmackClient.toStanza(pubSub, null)
-                )) {
+                Stanza stanza = AsmackClient.toStanza(pubSub, null);
+                stanza.setVia(jid);
+                if (service.send(stanza)) {
                     return true;
                 }
             } catch (RemoteException e) {
