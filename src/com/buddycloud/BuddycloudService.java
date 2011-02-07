@@ -8,12 +8,12 @@ import org.jivesoftware.smack.packet.Presence.Type;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.buddycloud.IBuddycloudService;
 import com.buddycloud.android.buddydroid.BCConnectionAtomListener;
 import com.buddycloud.asmack.BuddycloudLocationChannelListener;
 import com.buddycloud.asmack.ChannelSync;
@@ -24,6 +24,8 @@ import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
 import com.buddycloud.jbuddycloud.packet.RSMSet;
+import com.googlecode.asmack.Stanza;
+import com.googlecode.asmack.client.AsmackClient;
 import com.googlecode.asmack.client.AsmackClientService;
 import com.googlecode.asmack.connection.IXmppTransportService;
 
@@ -235,6 +237,11 @@ public class BuddycloudService extends AsmackClientService {
                 return false;
             }
 
+            @Override
+            public boolean send(Stanza stanza) throws RemoteException {
+                return client.send(stanza) != null;
+            }
+
         };
 
     @Override
@@ -257,12 +264,20 @@ public class BuddycloudService extends AsmackClientService {
                         "http://jabber.org/protocol/geoloc-next+notify");
             service.enableFeature(
                         "http://jabber.org/protocol/geoloc-prev+notify");
+
+            SharedPreferences preferences =
+                getApplicationContext().getSharedPreferences("buddycloud", 0);
+
             for (String jid: client.getAllAccountJids(true)) {
+                if (preferences.getString("main_jid", "").length() == 0) {
+                    preferences.edit().putString("main_jid", jid).commit();
+                }
                 Log.d("BC", "SYNC " + jid);
                 new ChannelSync(client, jid,
                     getApplicationContext().getContentResolver()
                 );
             }
+
             String jids[] = client.getAllAccountJids(false);
             for (String jid: jids) {
                 ContentValues values = new ContentValues();
