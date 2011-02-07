@@ -1,9 +1,15 @@
 package com.buddycloud.view;
 
+import org.jivesoftware.smackx.pubsub.PayloadItem;
+import org.jivesoftware.smackx.pubsub.PublishItem;
+import org.jivesoftware.smackx.pubsub.packet.PubSub;
+
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.RemoteException;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -14,12 +20,18 @@ import com.buddycloud.R;
 import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.util.HumanTime;
+import com.googlecode.asmack.client.AsmackClient;
 
 /**
  * Posting window, handles service interaction, content provider fetch of the
  * original posting and user interaction.
  */
 public class PostActivity extends BCActivity implements OnClickListener {
+
+    /**
+     * The internal logging tag.
+     */
+    private static final String TAG = PostActivity.class.getSimpleName();
 
     /**
      * The item to be replied to
@@ -199,10 +211,46 @@ public class PostActivity extends BCActivity implements OnClickListener {
      * @return true on success.
      */
     private boolean post() {
-        // TODO currently disabled
         BCAtom atom = new BCAtom();
 
         atom.setContent(posting);
+        atom.setParentId(itemId);
+
+        String jid = getApplicationContext()
+                        .getSharedPreferences("buddycloud", 0)
+                        .getString("main_jid", "");
+
+        if (jid.length() == 0) {
+            return false;
+        }
+
+        atom.setAuthorJid(jid);
+
+        PayloadItem<BCAtom> item = new PayloadItem<BCAtom>(null, atom);
+        PublishItem<PayloadItem<BCAtom>> publish =
+                            new PublishItem<PayloadItem<BCAtom>>(node, item);
+
+        PubSub pubSub = new PubSub();
+        pubSub.setFrom(jid);
+        pubSub.setTo("broadcaster.buddycloud.com");
+        pubSub.setType(PubSub.Type.SET);
+        pubSub.addExtension(publish);
+
+        for (int i = 0; i < 3; i++) {
+            try {
+                if (service.send(
+                    AsmackClient.toStanza(pubSub, null)
+                )) {
+                    return true;
+                }
+            } catch (RemoteException e) {
+                Log.d(TAG, "post failed, try " + i);
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+        }
 
         return false;
     }
