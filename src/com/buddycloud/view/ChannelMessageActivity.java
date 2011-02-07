@@ -21,6 +21,7 @@ import com.buddycloud.R;
 import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.util.HumanTime;
+import com.github.droidfu.widgets.WebImageView;
 
 /**
  * Displays the messages in a given channel, whether personal or global.
@@ -189,6 +190,19 @@ public class ChannelMessageActivity extends Activity {
 
             LinearLayout topShadowLayout = (LinearLayout)
                 view.findViewById(R.id.top_shadow);
+
+            WebImageView userIcon = (WebImageView)
+                                view.findViewById(R.id.user_icon);;
+            String jidFragment[] = jid.split("@");
+            if (jidFragment.length == 2) {
+                userIcon.setImageUrl(
+                    "http://media.buddycloud.com/channel/54x54/" +
+                    jidFragment[1] + "/" +
+                    jidFragment[0] + ".png"
+                );
+                userIcon.loadImage();
+            }
+
 
             ImageView addIcon = (ImageView)
                 view.findViewById(R.id.add_icon);
