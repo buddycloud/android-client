@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.buddycloud.R;
 import com.buddycloud.content.BuddyCloud.Roster;
+import com.github.droidfu.widgets.WebImageView;
 
 public class RosterActivity extends BCActivity
     implements OnItemClickListener {
@@ -165,12 +166,20 @@ public class RosterActivity extends BCActivity
                 view.findViewById(R.id.geo_next).setVisibility(View.GONE);
             }
 
+            WebImageView image = (WebImageView) view.findViewById(R.id.icon);
             if (isChannel) {
-                ((ImageView) view.findViewById(R.id.icon))
-                        .setImageResource(R.drawable.channel);
+                image.setNoImageDrawable(R.drawable.channel);
             } else {
-                ((ImageView) view.findViewById(R.id.icon))
-                        .setImageResource(R.drawable.contact);
+                String jidFragment[] = jid.split("@");
+                image.setNoImageDrawable(R.drawable.contact);
+                if (jidFragment.length == 2) {
+                    image.setImageUrl(
+                        "http://media.buddycloud.com/channel/54x54/" +
+                        jidFragment[1] + "/" +
+                        jidFragment[0] + ".png"
+                    );
+                    image.loadImage();
+                }
             }
 
             if (unread == 0) {
