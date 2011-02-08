@@ -72,6 +72,24 @@
 
     </LinearLayout>
 
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="fill_horizontal|center_vertical"
+        android:layout_weight="0.0"
+        android:orientation="vertical"
+        android:paddingRight="11px"
+    >
+        <com.github.droidfu.widgets.WebImageView
+            xmlns:droidfu="http://github.com/droidfu/schema"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/webimage"
+            android:background="#FFF"
+            droidfu:autoLoad="false"
+        />
+    </LinearLayout>
+
     </LinearLayout>
 
     <!-- bottom shadow bar -->

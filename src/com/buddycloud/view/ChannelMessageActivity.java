@@ -242,7 +242,40 @@ public class ChannelMessageActivity extends Activity {
                 addIcon.setVisibility(ImageView.GONE);
             }
 
-            LinearLayout bottomShadowLayout = (LinearLayout)
+            int httpIndex = message.lastIndexOf(
+                    "http://media.buddycloud.com/dl/"
+                );
+                if (httpIndex == -1) {
+                    view.findViewById(R.id.webimage).setVisibility(View.GONE);
+                } else {
+                    WebImageView imgView = (WebImageView)
+                                                view.findViewById(R.id.webimage);
+                    String v = message.substring(httpIndex);
+                    for (int i = 31; i < v.length(); i++) {
+                        if (Character.isWhitespace(v.charAt(i))) {
+                            v = v.substring(0, i);
+                        }
+                    }
+                    int ending = v.toLowerCase().indexOf(".jpg");
+                    if (ending != -1) {
+                        v = v.substring(0, ending + 4);
+                        imgView.setImageUrl(v);
+                        imgView.setVisibility(View.VISIBLE);
+                        imgView.loadImage();
+                    } else {
+                        ending = v.toLowerCase().indexOf(".png");
+                        if (ending != -1) {
+                            v = v.substring(0, ending + 4);
+                            imgView.setImageUrl(v);
+                            imgView.setVisibility(View.VISIBLE);
+                            imgView.loadImage();
+                        } else {
+                            view.findViewById(R.id.webimage).setVisibility(View.GONE);
+                        }
+                    }
+                }
+
+                LinearLayout bottomShadowLayout = (LinearLayout)
                 view.findViewById(R.id.bottom_shadow);
 
             if (endOfList) {
