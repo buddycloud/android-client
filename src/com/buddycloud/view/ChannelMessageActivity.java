@@ -25,7 +25,8 @@ import com.github.droidfu.widgets.WebImageView;
 
 /**
  * Displays the messages in a given channel, whether personal or global.
- * <p>Requires an Intent with the channel ID in the format: {@code channel:/path/to/channel}</p>
+ * <p>Requires an Intent with the channel ID in the format:
+ * {@code channel:/path/to/channel}</p>
  */
 public class ChannelMessageActivity extends Activity {
 

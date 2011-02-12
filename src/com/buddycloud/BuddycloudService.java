@@ -25,7 +25,6 @@ import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
 import com.buddycloud.jbuddycloud.packet.RSMSet;
 import com.googlecode.asmack.Stanza;
-import com.googlecode.asmack.client.AsmackClient;
 import com.googlecode.asmack.client.AsmackClientService;
 import com.googlecode.asmack.connection.IXmppTransportService;
 
