@@ -30,6 +30,7 @@
         android:paddingLeft="5dip"
         android:paddingRight="5dip"
         android:layout_weight="1"
+        android:focusable="true"
     />
 
     <LinearLayout

@@ -10,7 +10,8 @@
 
 		<TextView android:text="@string/places_current" android:id="@+id/currentlyLocated"
 			android:layout_width="wrap_content" android:layout_height="wrap_content"
-			android:paddingRight="40dip"></TextView>
+			android:paddingRight="40dip"
+			android:focusable="true"></TextView>
 
 		<Button android:text="@string/places_add_bookmark" android:id="@+id/Button01"
 			android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>

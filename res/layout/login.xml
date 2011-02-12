@@ -50,7 +50,7 @@
 		    				android:inputType="textEmailAddress"
 		    				android:singleLine="true"
 		    				android:maxLines="1"
-		    				/>
+		    				android:contentDescription="Enter your Buddycloud or Google E-Mail adress:"/>
 		    		</TableRow>
 		    		
 		    		<TextView 
@@ -64,6 +64,7 @@
 		    				android:maxLines="1"
 		    				android:singleLine="true"
 		    				android:password="true"
+		    				android:contentDescription="Enter password:"
 		    				/>
 		    		</TableRow>
 		    	<Button
