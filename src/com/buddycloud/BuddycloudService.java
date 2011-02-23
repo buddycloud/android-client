@@ -89,14 +89,6 @@ public class BuddycloudService extends AsmackClientService {
     }
 
     /**
-     * Enforce a quick channel sync.
-     */
-    public void updateChannels() {
-        // TODO
-        // new ChannelSync(this, mConnection, getContentResolver());
-    }
-
-    /**
      * The last time we send a beacon log.
      */
     private long beaconLogTimer;
