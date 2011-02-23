@@ -45,6 +45,12 @@ public class BCActivity extends Activity {
     }
 
     /**
+     * Called after the service got connected.
+     */
+    protected void onBuddycloudServiceBound() {
+    }
+
+    /**
      * Bind to the buddycloud service, if not yet bound or dead.
      */
     protected final synchronized void bindBCService() {
@@ -63,6 +69,7 @@ public class BCActivity extends Activity {
                 ) {
                     service =
                         IBuddycloudService.Stub.asInterface(binder);
+                    onBuddycloudServiceBound();
                 }
             };
         }

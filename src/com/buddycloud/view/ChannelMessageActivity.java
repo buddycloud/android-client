@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,20 +29,20 @@ import com.github.droidfu.widgets.WebImageView;
  * <p>Requires an Intent with the channel ID in the format:
  * {@code channel:/path/to/channel}</p>
  */
-public class ChannelMessageActivity extends Activity {
+public class ChannelMessageActivity extends BCActivity {
 
     private String node;
     private String name;
     private Activity currentActivity = null;
 
     public void onCreate(Bundle savedInstanceState) {
+        node = getIntent().getData().toString().substring("channel:".length());
+
         super.onCreate(savedInstanceState);
 
         currentActivity = this;
 
         setContentView(R.layout.channel_layout);
-
-        node = getIntent().getData().toString().substring("channel:".length());
 
         Cursor messages =
             managedQuery(
@@ -65,11 +66,20 @@ public class ChannelMessageActivity extends Activity {
         if (jid.startsWith("/user/")) {
             jid = jid.substring("/user/".length());
             jid = jid.substring(0, jid.indexOf('/'));
-            name = name + "'s personal channel";
-        } else
-        if (jid.startsWith("/channel/")) {
-            jid = jid.substring("/channel/".length());
-            name = name + " channel";
+            if (name == null) {
+                name = "personal channel of " + jid;
+            } else {
+                name = name + "'s personal channel";
+            }
+        } else {
+            if (jid.startsWith("/channel/")) {
+                jid = jid.substring("/channel/".length());
+                if (name == null) {
+                    name = jid;
+                } else {
+                    name = name + " channel";
+                }
+            }
         }
 
         TextView titleView = ((TextView)findViewById(R.id.channel_title));
@@ -86,6 +96,15 @@ public class ChannelMessageActivity extends Activity {
         listView.setDividerHeight(0);
         listView.setSmoothScrollbarEnabled(false);
 
+    }
+
+    @Override
+    protected void onBuddycloudServiceBound() {
+        try {
+            service.updateChannel(node);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     private class PostOnClick implements OnClickListener {

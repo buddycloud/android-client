@@ -4,6 +4,7 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Type;
+import org.jivesoftware.smackx.packet.DiscoverInfo;
 
 import android.content.ContentValues;
 import android.content.Intent;
@@ -15,6 +16,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.buddycloud.android.buddydroid.BCConnectionAtomListener;
+import com.buddycloud.asmack.BuddycloudChannelMetadataListener;
 import com.buddycloud.asmack.BuddycloudLocationChannelListener;
 import com.buddycloud.asmack.ChannelSync;
 import com.buddycloud.collect.CellListener;
@@ -183,7 +185,12 @@ public class BuddycloudService extends AsmackClientService {
         long l = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
         cursor.close();
         IQ iq = new ChannelFetch(channel, l);
+        DiscoverInfo info = new DiscoverInfo();
+        info.setNode(channel);
+        info.setType(org.jivesoftware.smack.packet.IQ.Type.GET);
+        info.setTo("broadcaster.buddycloud.com");
         try {
+            send(info);
             send(iq);
         } catch (InterruptedException e) {
             e.printStackTrace(System.err);
@@ -239,6 +246,11 @@ public class BuddycloudService extends AsmackClientService {
             @Override
             public boolean send(Stanza stanza) throws RemoteException {
                 return client.send(stanza) != null;
+            }
+
+            @Override
+            public void updateChannel(String channel) throws RemoteException {
+                BuddycloudService.this.updateChannel(channel);
             }
 
         };
@@ -316,6 +328,9 @@ public class BuddycloudService extends AsmackClientService {
         client.registerListener(new BuddycloudLocationChannelListener(
             getContentResolver()
         ));
+        client.registerListener(new BuddycloudChannelMetadataListener(
+                getContentResolver()
+            ));
         BCConnectionAtomListener atomListener = new BCConnectionAtomListener(
                                                     getContentResolver());
         client.registerListener(atomListener);
