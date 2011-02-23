@@ -11,7 +11,7 @@ import android.util.Log;
 import com.buddycloud.R;
 import com.buddycloud.content.BuddycloudProvider;
 import com.buddycloud.content.RosterHelper;
-import com.buddycloud.view.MainActivity;
+import com.buddycloud.view.RosterActivity;
 
 public class BCNotifications {
 
@@ -46,7 +46,7 @@ public class BCNotifications {
         if (counts[0] > replies) {
             if (time - lastSound > 2000) {
                 notification.sound = Uri.parse(
-                        "android.resource://com.buddycloud.android.buddydroid/"
+                        "android.resource://com.buddycloud/"
                         + R.raw.dr
                 );
                 lastSound = time;
@@ -57,7 +57,7 @@ public class BCNotifications {
         if (counts[1] > unread) {
             if (time - lastSound > 2000) {
                 notification.sound = Uri.parse(
-                        "android.resource://com.buddycloud.android.buddydroid/"
+                        "android.resource://com.buddycloud/"
                         + R.raw.cp
                 );
                 lastSound = time;
@@ -94,7 +94,7 @@ public class BCNotifications {
             notification.number = 0;
         }
 
-        Intent roster = new Intent(provider.getContext(), MainActivity.class);
+        Intent roster = new Intent(provider.getContext(), RosterActivity.class);
         PendingIntent intent = PendingIntent.getActivity(
                 provider.getContext(),
                 0,
