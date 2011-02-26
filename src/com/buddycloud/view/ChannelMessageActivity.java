@@ -148,7 +148,7 @@ public class ChannelMessageActivity extends BCActivity {
                     service.updateChannel(node);
                 } catch (RemoteException e) {
                     e.printStackTrace();
-                 }
+                }
             }
         }.start();
     }
