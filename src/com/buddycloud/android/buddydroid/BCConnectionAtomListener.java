@@ -3,6 +3,8 @@
  */
 package com.buddycloud.android.buddydroid;
 
+import java.util.ArrayList;
+
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.PacketExtension;
@@ -34,7 +36,7 @@ public final class BCConnectionAtomListener
         this.accountJids = new String[]{};
     }
 
-    public void receive(String node, BCAtom atom) {
+    public ContentValues receive(String node, BCAtom atom) {
         if (node.startsWith("/user/")) {
             node = node.substring(6);
             String jid = node.substring(0, node.indexOf('/'));
@@ -54,11 +56,11 @@ public final class BCConnectionAtomListener
                 resolver.update(Roster.CONTENT_URI, values,
                         Roster.JID + "='" + jid + "'",
                         null);
-                return;
+                return null;
             }
             if (!node.equals("channel")) {
                 // /user/jid/mood ?
-                return;
+                return null;
             }
             node = "/user/" + jid + "/" + node;
         }
@@ -80,8 +82,12 @@ public final class BCConnectionAtomListener
                    atom.getId());
         values.put(ChannelData.LAST_UPDATED,
                    atom.getId());
-        values.put(ChannelData.PARENT,
-                   atom.getParentId());
+        if (atom.getParentId() == null) {
+            values.put(ChannelData.PARENT, 0);
+        } else {
+            values.put(ChannelData.PARENT,
+                    atom.getParentId());
+        }
         values.put(ChannelData.PUBLISHED,
                    atom.getPublished());
         GeoLoc loc = atom.getGeoloc();
@@ -117,7 +123,7 @@ public final class BCConnectionAtomListener
             }
         }
 
-        resolver.insert(ChannelData.CONTENT_URI, values);
+        return values;
     }
 
     @Override
@@ -135,14 +141,24 @@ public final class BCConnectionAtomListener
             }
             ItemsExtension items = (ItemsExtension) eventExtension;
             String node = items.getNode();
+            ArrayList<ContentValues> values = new ArrayList<ContentValues>();
             for (PacketExtension itemsExtension: items.getItems()) {
                 if (!(itemsExtension instanceof PayloadItem<?>)) {
                     continue;
                 }
                 Object payload = ((PayloadItem<?>)itemsExtension).getPayload();
                 if (payload instanceof BCAtom) {
-                    receive(node, (BCAtom) payload);
+                    ContentValues contentValues =
+                                            receive(node, (BCAtom) payload);
+                    if (contentValues != null) {
+                        values.add(contentValues);
+                    }
                 }
+            }
+            if (values.size() > 0) {
+                resolver.bulkInsert(ChannelData.CONTENT_URI, values.toArray(
+                    new ContentValues[values.size()]
+                ));
             }
         }
     }
