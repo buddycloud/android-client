@@ -10,8 +10,8 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,7 +33,11 @@ public class ChannelMessageActivity extends BCActivity {
 
     private String node;
     private String name;
+    private TextView nameView;
     private Activity currentActivity = null;
+    private TextView jidView;
+    private ListView listView;
+    protected String jid;
 
     public void onCreate(Bundle savedInstanceState) {
         node = getIntent().getData().toString().substring("channel:".length());
@@ -44,67 +48,90 @@ public class ChannelMessageActivity extends BCActivity {
 
         setContentView(R.layout.channel_layout);
 
-        Cursor messages =
-            managedQuery(
-                ChannelData.CONTENT_URI,
-                ChannelData.PROJECTION_MAP,
-                ChannelData.NODE_NAME + "=?",
-                new String[]{node},
-                ChannelData.LAST_UPDATED + " DESC, " +
-                ChannelData.ITEM_ID + " ASC"
-            );
-
-        Cursor channel = managedQuery(
-                Roster.CONTENT_URI, Roster.PROJECTION_MAP,
-                Roster.JID + "=?", new String[]{node}, null);
-        while (channel.isBeforeFirst()) {
-            channel.moveToNext();
-        }
-
-        name = channel.getString(channel.getColumnIndex(Roster.NAME));
-        String jid = channel.getString(channel.getColumnIndex(Roster.JID));
-        if (jid.startsWith("/user/")) {
-            jid = jid.substring("/user/".length());
-            jid = jid.substring(0, jid.indexOf('/'));
-            if (name == null) {
-                name = "personal channel of " + jid;
-            } else {
-                name = name + "'s personal channel";
-            }
-        } else {
-            if (jid.startsWith("/channel/")) {
-                jid = jid.substring("/channel/".length());
-                if (name == null) {
-                    name = jid;
-                } else {
-                    name = name + " channel";
-                }
-            }
-        }
-
-        TextView titleView = ((TextView)findViewById(R.id.channel_title));
-        titleView.setText(name);
-        titleView.setOnClickListener(new PostOnClick(-1));
-        TextView jidView = ((TextView)findViewById(R.id.channel_jid));
-        jidView.setText(jid);
+        nameView = ((TextView)findViewById(R.id.channel_title));
+        nameView.setText("");
+        nameView.setOnClickListener(new PostOnClick(-1));
+        jidView = ((TextView)findViewById(R.id.channel_jid));
         jidView.setOnClickListener(new PostOnClick(-1));
 
-        ListView listView = ((ListView)findViewById(R.id.message_list));
+        listView = ((ListView)findViewById(R.id.message_list));
         listView.setFadingEdgeLength(0);
-        listView.setAdapter(new ChannelMessageAdapter(this, messages));
         listView.setDivider(null);
         listView.setDividerHeight(0);
         listView.setSmoothScrollbarEnabled(false);
 
+        new Thread() {
+            public void run() {
+                final Cursor messages =
+                    managedQuery(
+                        ChannelData.CONTENT_URI,
+                        ChannelData.PROJECTION_MAP,
+                        ChannelData.NODE_NAME + "=?",
+                        new String[]{node},
+                        ChannelData.LAST_UPDATED + " DESC, " +
+                        ChannelData.ITEM_ID + " ASC"
+                    );
+                ChannelMessageActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        listView.setAdapter(new ChannelMessageAdapter(
+                                ChannelMessageActivity.this, messages));
+                    }
+                });
+            }
+        }.start();
+
+        new Thread() {
+            public void run() {
+                Cursor channel = managedQuery(
+                        Roster.CONTENT_URI, Roster.PROJECTION_MAP,
+                        Roster.JID + "=?", new String[]{node}, null);
+                while (channel.isBeforeFirst()) {
+                    channel.moveToNext();
+                }
+
+                name = channel.getString(channel.getColumnIndex(Roster.NAME));
+                jid = channel.getString(channel.getColumnIndex(Roster.JID));
+                if (jid.startsWith("/user/")) {
+                    jid = jid.substring("/user/".length());
+                    jid = jid.substring(0, jid.indexOf('/'));
+                    if (name == null) {
+                        name = "personal channel of " + jid;
+                    } else {
+                        name = name + "'s personal channel";
+                    }
+                } else {
+                    if (jid.startsWith("/channel/")) {
+                        jid = jid.substring("/channel/".length());
+                        if (name == null) {
+                            name = jid;
+                        } else {
+                            name = name + " channel";
+                        }
+                    }
+                }
+                ChannelMessageActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        jidView.setText(jid);
+                        nameView.setText(name);
+                    }
+                });
+            }
+
+        }.start();
     }
 
     @Override
     protected void onBuddycloudServiceBound() {
-        try {
-            service.updateChannel(node);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    service.updateChannel(node);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                 }
+            }
+        }.start();
     }
 
     private class PostOnClick implements OnClickListener {
@@ -305,14 +332,18 @@ public class ChannelMessageActivity extends BCActivity {
             }
 
             if (unread && hasWindowFocus()) {
-                ContentValues values = new ContentValues();
+                final ContentValues values = new ContentValues();
                 values.put(ChannelData.UNREAD, Boolean.FALSE);
-                getContentResolver().update(
-                    ChannelData.CONTENT_URI,
-                    values,
-                    ChannelData.NODE_NAME + "=?",
-                    new String[]{node}
-                );
+                new Thread() {
+                    public void run() {
+                        getContentResolver().update(
+                            ChannelData.CONTENT_URI,
+                            values,
+                            ChannelData.NODE_NAME + "=?",
+                            new String[]{node}
+                        );
+                    }
+                }.start();
             }
         }
 
