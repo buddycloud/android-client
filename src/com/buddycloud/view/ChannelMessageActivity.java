@@ -60,6 +60,13 @@ public class ChannelMessageActivity extends BCActivity {
         listView.setDividerHeight(0);
         listView.setSmoothScrollbarEnabled(false);
 
+        onNewIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        node = getIntent().getData().toString().substring("channel:".length());
         new Thread() {
             public void run() {
                 final Cursor messages =
@@ -118,6 +125,18 @@ public class ChannelMessageActivity extends BCActivity {
             }
 
         }.start();
+        if (service != null && service.asBinder().isBinderAlive()) {
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        service.updateChannel(node);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }.start();
+        }
     }
 
     @Override
