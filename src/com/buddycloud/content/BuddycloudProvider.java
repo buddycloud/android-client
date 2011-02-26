@@ -37,8 +37,7 @@ public class BuddycloudProvider extends ContentProvider {
     public static final String TABLE_ROSTER = "roster";
     public static final String TABLE_PLACES = "places";
 
-    // private SQLiteOpenHelper mOpenHelper;
-    DatabaseHelper mOpenHelper;
+    private SQLiteDatabase database;
 
     public static final String TAG = "Provider";
     private static final String DATABASE_NAME = "buddycloud.db";
@@ -164,7 +163,7 @@ public class BuddycloudProvider extends ContentProvider {
      */
     @Override
     public boolean onCreate() {
-        mOpenHelper = new DatabaseHelper(getContext());
+        getDatabase();
         return true;
     }
 
@@ -282,6 +281,15 @@ public class BuddycloudProvider extends ContentProvider {
             Log.w(TAG, "no delete handler for " + uri);
         }
         return 0;
+    }
+
+    public SQLiteDatabase getDatabase() {
+        if (database != null && database.isOpen()) {
+            return database;
+        }
+        DatabaseHelper mOpenHelper = new DatabaseHelper(getContext());
+        database = mOpenHelper.getWritableDatabase();
+        return database;
     }
 
     static {

@@ -28,12 +28,12 @@ public class ChannelDataHelper {
 
         boolean rosterChanged = false;
 
-        synchronized (provider.mOpenHelper) {
+        SQLiteDatabase database = provider.getDatabase();
 
-            SQLiteDatabase db = provider.mOpenHelper.getWritableDatabase();
+        synchronized (database) {
 
             try {
-                db.beginTransaction();
+                database.beginTransaction();
 
                 String node = values.getAsString(ChannelData.NODE_NAME);
                 long id = values.getAsLong(ChannelData.ITEM_ID);
@@ -42,7 +42,8 @@ public class ChannelDataHelper {
                     parent = values.getAsLong(ChannelData.PARENT);
                 }
 
-                Cursor c = db.rawQuery(rosterJidQuery, new String[] { node });
+                Cursor c = database
+                    .rawQuery(rosterJidQuery, new String[] { node });
 
                 if (c.getCount() == 1) {
                     c.moveToFirst();
@@ -65,7 +66,7 @@ public class ChannelDataHelper {
                             );
                         }
 
-                        db.update(
+                        database.update(
                                 BuddycloudProvider.TABLE_ROSTER,
                                 lu,
                                 Roster.JID + "=?",
@@ -76,7 +77,7 @@ public class ChannelDataHelper {
                             lu.remove(Roster.LAST_MESSAGE);
 
                             // update possible childs
-                            db.update(
+                            database.update(
                                 BuddycloudProvider.TABLE_CHANNEL_DATA,
                                 lu,
                                 ChannelData.NODE_NAME + "=? AND " +
@@ -87,7 +88,7 @@ public class ChannelDataHelper {
                         } else {
 
                             // update whole thread
-                            db.update(
+                            database.update(
                                     BuddycloudProvider.TABLE_CHANNEL_DATA,
                                     lu,
                                     ChannelData.NODE_NAME + "=? AND ("
@@ -113,7 +114,8 @@ public class ChannelDataHelper {
                 }
 
                 // Actually store the new message
-                db.insert(BuddycloudProvider.TABLE_CHANNEL_DATA, null, values);
+                database.insert(
+                        BuddycloudProvider.TABLE_CHANNEL_DATA, null, values);
 
                 // try to update unread counts
                 if (values.containsKey(ChannelData.UNREAD)
@@ -122,11 +124,11 @@ public class ChannelDataHelper {
                     RosterHelper.recomputeUnread(
                         values.getAsString(ChannelData.NODE_NAME),
                         provider,
-                        db
+                        database
                     );
                 }
 
-                db.setTransactionSuccessful();
+                database.setTransactionSuccessful();
 
                 notifyChange(provider);
 
@@ -137,7 +139,7 @@ public class ChannelDataHelper {
             } catch (Throwable t) {
                 t.printStackTrace(System.err);
             } finally {
-                db.endTransaction();
+                database.endTransaction();
             }
 
         }
@@ -165,12 +167,12 @@ public class ChannelDataHelper {
         boolean notify = false;
 
         int count = -1;
-        synchronized (provider.mOpenHelper) {
+        SQLiteDatabase database = provider.getDatabase();
+        synchronized (database) {
 
-            SQLiteDatabase db = provider.mOpenHelper.getWritableDatabase();
             try {
-                db.beginTransaction();
-                count = db.update(
+                database.beginTransaction();
+                count = database.update(
                         BuddycloudProvider.TABLE_CHANNEL_DATA,
                         values,
                         selection,
@@ -183,7 +185,7 @@ public class ChannelDataHelper {
                     && !values.getAsBoolean(ChannelData.UNREAD)
                     && values.size() == 2
                 ) { // we've just updated unread
-                    Cursor c = db.query(
+                    Cursor c = database.query(
                             BuddycloudProvider.TABLE_CHANNEL_DATA,
                             ChannelData.PROJECTION_MAP,
                             selection,
@@ -196,17 +198,18 @@ public class ChannelDataHelper {
                         String channel = c.getString(
                             c.getColumnIndex(ChannelData.NODE_NAME)
                         );
-                        RosterHelper.recomputeUnread(channel, provider, db);
+                        RosterHelper.recomputeUnread(channel, provider,
+                                database);
                         notifyRoster = true;
                     }
                     c.close();
                 }
                 notify = true;
 
-                db.setTransactionSuccessful();
+                database.setTransactionSuccessful();
             } finally {
                 try {
-                    db.endTransaction();
+                    database.endTransaction();
                 } catch (Exception e) {
                     // irrelevant
                 }
@@ -233,8 +236,10 @@ public class ChannelDataHelper {
             BuddycloudProvider provider
     ) {
 
-        synchronized (provider.mOpenHelper) {
-            Cursor c = provider.mOpenHelper.getReadableDatabase().query(
+        SQLiteDatabase database = provider.getDatabase();
+
+        synchronized (database) {
+            Cursor c = database.query(
                     BuddycloudProvider.TABLE_CHANNEL_DATA,
                     projection,
                     selection,

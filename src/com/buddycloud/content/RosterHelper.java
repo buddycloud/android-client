@@ -35,8 +35,10 @@ public class RosterHelper {
             String sortOrder,
             BuddycloudProvider provider) {
 
-        synchronized (provider.mOpenHelper) {
-            Cursor c = provider.mOpenHelper.getReadableDatabase().query(
+        SQLiteDatabase database = provider.getDatabase();
+
+        synchronized (database) {
+            Cursor c = database.query(
                     BuddycloudProvider.TABLE_ROSTER,
                     projection,
                     selection,
@@ -78,8 +80,9 @@ public class RosterHelper {
      * @return A bound cursor
      */
     public static Cursor queryRosterView(BuddycloudProvider provider) {
-        synchronized (provider.mOpenHelper) {
-            Cursor c = provider.mOpenHelper.getReadableDatabase()
+        SQLiteDatabase database = provider.getDatabase();
+        synchronized (database) {
+            Cursor c = database
                     .rawQuery(rosterViewQuery, new String[]{});
 
             c.setNotificationUri(
@@ -107,22 +110,14 @@ public class RosterHelper {
         );
         values.remove(BaseColumns._ID);
 
-        synchronized (provider.mOpenHelper) {
-
-            SQLiteDatabase db = provider.mOpenHelper.getWritableDatabase();
-            try {
-                db.beginTransaction();
-                db.insert(BuddycloudProvider.TABLE_ROSTER, Roster.JID, values);
-                db.setTransactionSuccessful();
-                notifyChange(provider);
-            } finally {
-                try {
-                    db.endTransaction();
-                } catch (Exception e) {
-                    // irrelevant
-                }
+        SQLiteDatabase database = provider.getDatabase();
+        synchronized (database) {
+            if (database.insert(
+                    BuddycloudProvider.TABLE_ROSTER, Roster.JID, values) == -1)
+            {
+                return null;
             }
-
+            notifyChange(provider);
         }
         return null;
     }
@@ -140,27 +135,17 @@ public class RosterHelper {
         values.remove(BaseColumns._ID);
 
         int count = -1;
-        synchronized (provider.mOpenHelper) {
-
-            SQLiteDatabase db = provider.mOpenHelper.getWritableDatabase();
-            try {
-                db.beginTransaction();
-                count = db.update(
-                        BuddycloudProvider.TABLE_ROSTER,
-                        values,
-                        selection,
-                        selectionArgs
-                );
-                db.setTransactionSuccessful();
+        SQLiteDatabase database = provider.getDatabase();
+        synchronized (database) {
+            count = database.update(
+                    BuddycloudProvider.TABLE_ROSTER,
+                    values,
+                    selection,
+                    selectionArgs
+            );
+            if (count > 0) {
                 notifyChange(provider);
-            } finally {
-                try {
-                    db.endTransaction();
-                } catch (Exception e) {
-                    // irrelevant
-                }
             }
-
         }
         return count;
     }
@@ -177,9 +162,8 @@ public class RosterHelper {
         long unread = 0l;
         long unreadReplies = 0l;
 
-        synchronized (provider.mOpenHelper) {
-            SQLiteDatabase database = provider.mOpenHelper
-                                        .getReadableDatabase();
+        SQLiteDatabase database = provider.getDatabase();
+        synchronized (database) {
             {
                 Cursor cursor = database.rawQuery(totalUnreadQuery, null);
                 if (cursor.moveToFirst()) {
@@ -189,8 +173,8 @@ public class RosterHelper {
             }
 
             {
-                Cursor cursor = database
-                    .rawQuery(totalUnreadRepliesQuery, null);
+                Cursor cursor =
+                            database.rawQuery(totalUnreadRepliesQuery, null);
                 if (cursor.moveToFirst()) {
                     unreadReplies = cursor.getLong(0);
                 }
@@ -290,27 +274,19 @@ public class RosterHelper {
 
         int count = -1;
 
-        synchronized (provider.mOpenHelper) {
+        SQLiteDatabase database = provider.getDatabase();
+        synchronized (database) {
 
-            SQLiteDatabase db = provider.mOpenHelper.getWritableDatabase();
-            try {
-                db.beginTransaction();
-                count = db.delete(
-                        BuddycloudProvider.TABLE_ROSTER,
-                        selection,
-                        selectionArgs
-                );
-                db.setTransactionSuccessful();
+            count = database.delete(
+                    BuddycloudProvider.TABLE_ROSTER,
+                    selection,
+                    selectionArgs
+            );
+            if (count > 0) {
                 notifyChange(provider);
-            } finally {
-                try {
-                    db.endTransaction();
-                } catch (Exception e) {
-                    // irrelevant
-                }
             }
-
         }
+
         return count;
     }
 
