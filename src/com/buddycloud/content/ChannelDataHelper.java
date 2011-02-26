@@ -8,6 +8,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.buddycloud.android.buddydroid.BCNotifications;
+import com.buddycloud.asmack.ChannelSync;
 import com.buddycloud.content.BuddyCloud.CacheColumns;
 import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.content.BuddyCloud.Roster;
@@ -44,6 +45,18 @@ public class ChannelDataHelper {
 
                 Cursor c = database
                     .rawQuery(rosterJidQuery, new String[] { node });
+
+                if (c.getCount() == 0) {
+                    c.close();
+                    ContentValues roster = new ContentValues();
+                    roster.put(Roster.JID, node);
+                    roster.put(Roster.ENTRYTYPE, ChannelSync.getType(node));
+                    roster.put(Roster.LAST_UPDATED, id);
+                    database.insert(BuddycloudProvider.TABLE_ROSTER,
+                            Roster._ID, roster);
+                    c = database
+                        .rawQuery(rosterJidQuery, new String[] { node });
+                }
 
                 if (c.getCount() == 1) {
                     c.moveToFirst();
@@ -93,7 +106,8 @@ public class ChannelDataHelper {
                                     lu,
                                     ChannelData.NODE_NAME + "=? AND ("
                                     + ChannelData.PARENT + "=" + parent + " OR "
-                                    + ChannelData.ITEM_ID + "=" + parent
+                                    + "(" + ChannelData.ITEM_ID + "=" + parent
+                                    + " AND " + ChannelData.PARENT + "=0)"
                                     + ")",
                                     new String[] { node }
                             );

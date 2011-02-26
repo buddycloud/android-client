@@ -137,7 +137,7 @@ public final class ChannelSync extends StateSequenceWorkflow {
      * @param node The channel node name.
      * @return The channel node type.
      */
-    protected String getType(String node) {
+    public static String getType(String node) {
         String fragment[] = node.split("/");
         if (fragment.length < 2) {
             return "unknown";

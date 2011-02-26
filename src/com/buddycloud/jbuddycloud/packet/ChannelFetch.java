@@ -21,11 +21,9 @@ public class ChannelFetch extends IQ {
         sb.append("<items node='");
         sb.append(node);
         sb.append("'><set xmlns='http://jabber.org/protocol/rsm'>");
-        if (since != 0l) {
-            sb.append("<after>");
-            sb.append(Long.toString(since));
-            sb.append("</after>");
-        }
+        sb.append("<after>");
+        sb.append(Long.toString(since));
+        sb.append("</after>");
         sb.append("</set></items></pubsub>");
         return sb.toString();
     }

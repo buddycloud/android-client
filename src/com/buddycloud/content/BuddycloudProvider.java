@@ -50,7 +50,7 @@ public class BuddycloudProvider extends ContentProvider {
      * 
      * 1: Release 0.0.1
      */
-    private static final int DATABASE_VERSION = 16;
+    private static final int DATABASE_VERSION = 20;
 
     static class DatabaseHelper extends SQLiteOpenHelper {
         DatabaseHelper(Context context) {
