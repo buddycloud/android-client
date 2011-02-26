@@ -290,6 +290,9 @@ public class BuddycloudProvider extends ContentProvider {
 
     public SQLiteDatabase getDatabase() {
         if (database != null && database.isOpen()) {
+            while (database.inTransaction()) {
+                database.endTransaction();
+            }
             return database;
         }
         DatabaseHelper mOpenHelper = new DatabaseHelper(getContext());
