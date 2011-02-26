@@ -39,17 +39,28 @@ public class RosterActivity extends BCActivity
         setContentView(R.layout.roster);
 
         rosterList = (ListView) findViewById(R.id.roster_list);
-
-        Cursor buddies = managedQuery(
-                Roster.VIEW_CONTENT_URI,
-                Roster.PROJECTION_MAP,
-                null,
-                null,
-                "self DESC, last_updated DESC, cache_update_timestamp DESC");
-
-        listAdapter = new RosterAdapter(this, buddies);
-        rosterList.setAdapter(listAdapter);
         rosterList.setOnItemClickListener(this);
+
+        new Thread() {
+            public void run() {
+                final Cursor buddies = managedQuery(
+                        Roster.VIEW_CONTENT_URI,
+                        Roster.PROJECTION_MAP,
+                        null,
+                        null,
+                        "self DESC, last_updated DESC, cache_update_timestamp DESC");
+
+                RosterActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        listAdapter = new RosterAdapter(
+                            RosterActivity.this,
+                            buddies
+                        );
+                        rosterList.setAdapter(listAdapter);
+                    }
+                });
+            }
+        }.start();
     }
 
     public void onItemClick(
