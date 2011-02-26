@@ -116,7 +116,6 @@ public final class ChannelSync extends StateSequenceWorkflow {
                 }
                 ChannelFetch fetch = new ChannelFetch(node, roster.remove(node)
                                         +1l);
-                fetch.setTo("broadcaster.buddycloud.com");
                 try {
                     String fullJid = client.getFullJidByBare(via);
                     fetch.setFrom(fullJid);
