@@ -17,11 +17,16 @@ public class ChannelFetch extends IQ {
     @Override
     public String getChildElementXML() {
         StringBuilder sb = new StringBuilder();
-        sb.append("<pubsub xmlns='http://jabber.org/protocol/pubsub'><items node='")
-          .append(node)
-          .append("'><set xmlns='http://jabber.org/protocol/rsm'><after>")
-          .append(Long.toString(since))
-          .append("</after></set></items></pubsub>");
+        sb.append("<pubsub xmlns='http://jabber.org/protocol/pubsub'>");
+        sb.append("<items node='");
+        sb.append(node);
+        sb.append("'><set xmlns='http://jabber.org/protocol/rsm'>");
+        if (since != 0l) {
+            sb.append("<after>");
+            sb.append(Long.toString(since));
+            sb.append("</after>");
+        }
+        sb.append("</set></items></pubsub>");
         return sb.toString();
     }
 
