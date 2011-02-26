@@ -263,4 +263,32 @@ public class ChannelDataHelper {
                 ChannelData.CONTENT_URI, null);
     }
 
+    private final static String BROKEN_CHANNEL_QUERY =
+        "SELECT DISTINCT " + ChannelData.PARENT + ", " + ChannelData.ITEM_ID
+            + " FROM "
+            + BuddycloudProvider.TABLE_CHANNEL_DATA + " WHERE "
+            + ChannelData.NODE_NAME + " = ? AND "
+            + ChannelData.PARENT + " <> 0 AND "
+            + ChannelData.PARENT + " NOT IN ("
+                 + "SELECT DISTINCT " + ChannelData.ITEM_ID + " FROM "
+                 + BuddycloudProvider.TABLE_CHANNEL_DATA + " WHERE "
+                 + ChannelData.PARENT + " = 0 AND "
+                 + ChannelData.NODE_NAME + " = ?"
+            + ") ORDER BY "
+            + ChannelData.PARENT + " ASC, "
+            + ChannelData.ITEM_ID + " ASC";
+
+    public static Cursor queryBrokenChannelData(String channel,
+            BuddycloudProvider provider) {
+        SQLiteDatabase database = provider.getDatabase();
+        synchronized (database) {
+            Cursor c = database.rawQuery(
+                BROKEN_CHANNEL_QUERY, new String[]{
+                    channel, channel
+                }
+            );
+            return c;
+        }
+    }
+
 }

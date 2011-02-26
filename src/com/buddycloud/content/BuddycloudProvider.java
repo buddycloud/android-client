@@ -27,6 +27,7 @@ public class BuddycloudProvider extends ContentProvider {
     private static UriMatcher URI_MATCHER;
 
     private static final int CHANNEL_DATA = 103;
+    private static final int CHANNEL_BROKEN_DATA = 104;
 
     private static final int ROSTER = 201;
     private static final int ROSTER_VIEW = 202;
@@ -228,6 +229,10 @@ public class BuddycloudProvider extends ContentProvider {
             return ChannelDataHelper.queryChannelData(uri, projection,
                     selection, selectionArgs, sortOrder, this);
 
+        case CHANNEL_BROKEN_DATA:
+            return ChannelDataHelper.queryBrokenChannelData(
+                                                    selectionArgs[0], this);
+
         case ROSTER_VIEW:
             return RosterHelper.queryRosterView(this);
 
@@ -296,6 +301,7 @@ public class BuddycloudProvider extends ContentProvider {
 
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
         URI_MATCHER.addURI("com.buddycloud", "channeldata", CHANNEL_DATA);
+        URI_MATCHER.addURI("com.buddycloud", "brokenchanneldata", CHANNEL_BROKEN_DATA);
 
         URI_MATCHER.addURI("com.buddycloud", "roster", ROSTER);
         URI_MATCHER.addURI("com.buddycloud", "roster_view", ROSTER_VIEW);

@@ -122,6 +122,9 @@ public class BuddyCloud {
         public static final Uri CONTENT_URI =
             Uri.parse("content://com.buddycloud/channeldata");
 
+        public static final Uri BROKEN_CONTENT_URI =
+            Uri.parse("content://com.buddycloud/brokenchanneldata");
+
         public static final String  NODE_NAME = "node_name";
 
         public static final String[] PROJECTION_MAP = {

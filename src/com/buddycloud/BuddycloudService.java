@@ -1,5 +1,7 @@
 package com.buddycloud;
 
+import java.util.Date;
+
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
@@ -22,6 +24,7 @@ import com.buddycloud.asmack.ChannelSync;
 import com.buddycloud.collect.CellListener;
 import com.buddycloud.collect.NetworkListener;
 import com.buddycloud.component.ComponentAdd;
+import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
@@ -161,29 +164,55 @@ public class BuddycloudService extends AsmackClientService {
      */
     public void updateChannel(String channel) {
         Log.d("BC", "update channel " + channel);
+        long startTime = 0l;
+        long endTime = 0l;
         Cursor cursor = getContentResolver().query(
+                ChannelData.BROKEN_CONTENT_URI,
+                null,
+                null,
+                new String[]{channel},
+                null
+        );
+        if (cursor.getCount() > 0) {
+            if (cursor.moveToFirst()) {
+                startTime = cursor.getLong(cursor.getColumnIndex(
+                    ChannelData.PARENT
+                ));
+                endTime = cursor.getLong(cursor.getColumnIndex(
+                        ChannelData.ITEM_ID
+                ));
+            }
+            Log.w(TAG, "Found broken threads in " + channel + ", "
+                     + new Date(startTime) + " / "+ new Date(endTime));
+        }
+        cursor.close();
+        cursor = getContentResolver().query(
                 Roster.CONTENT_URI,
                 new String[]{Roster.LAST_UPDATED},
                 "jid=?",
                 new String[]{channel},
                 null
         );
-        if (cursor.getCount() != 1) {
-            Log.e("BC", "update channel " + channel + " canceled");
-            cursor.close();
-            return;
+        if (cursor.getCount() == 1) {
+            cursor.moveToFirst();
+            startTime = cursor.getLong(
+                            cursor.getColumnIndex(Roster.LAST_UPDATED));
+            IQ iq = new ChannelFetch(channel, startTime);
+            try {
+                send(iq);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        while (cursor.isBeforeFirst()) { cursor.moveToNext(); }
-        long l = cursor.getLong(cursor.getColumnIndex(Roster.LAST_UPDATED));
         cursor.close();
-        IQ iq = new ChannelFetch(channel, l);
         DiscoverInfo info = new DiscoverInfo();
         info.setNode(channel);
         info.setType(org.jivesoftware.smack.packet.IQ.Type.GET);
         info.setTo("broadcaster.buddycloud.com");
         try {
             send(info);
-            send(iq);
         } catch (InterruptedException e) {
             e.printStackTrace(System.err);
         } catch (RemoteException e) {
