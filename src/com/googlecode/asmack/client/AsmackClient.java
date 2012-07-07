@@ -53,15 +53,12 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.RemoteException;
 import android.util.Log;
 
 import com.googlecode.asmack.Attribute;
 import com.googlecode.asmack.Stanza;
 import com.googlecode.asmack.XmppIdentity;
-import com.googlecode.asmack.connection.IXmppTransportService;
 import com.googlecode.asmack.connection.XmppTransportService;
 import com.googlecode.asmack.parser.SmackParser;
 
@@ -215,7 +212,7 @@ public class AsmackClient implements PacketListener {
      * @return The id String.
      * @throws RemoteException In case of a service breakdown.
      */
-    public String send(Stanza stanza) throws RemoteException {
+    public String send(Stanza stanza) {
         return sendWithCallback(stanza, null, 0);
     }
 
@@ -225,7 +222,7 @@ public class AsmackClient implements PacketListener {
      * @return The id String.
      * @throws RemoteException In case of a service breakdown.
      */
-    public String send(Packet packet, String via) throws RemoteException {
+    public String send(Packet packet, String via) {
         return sendWithCallback(packet, via, null, 0l);
     }
 
@@ -305,7 +302,7 @@ public class AsmackClient implements PacketListener {
         String via,
         PacketListener callback,
         long ttl
-    ) throws RemoteException {
+    ) {
         String id = generateId();
         Stanza stanza = toStanza(packet, id);
         if (stanza.getVia() == null && via != null) {
@@ -321,7 +318,7 @@ public class AsmackClient implements PacketListener {
      * @return The id String.
      * @throws RemoteException In case of a remote service breakdown.
      */
-    public String sendFromAllAccounts(Packet packet) throws RemoteException {
+    public String sendFromAllAccounts(Packet packet) {
         String id = generateId();
         Stanza stanza = toStanza(packet, id);
         service.sendFromAllAccounts(stanza);
@@ -333,7 +330,7 @@ public class AsmackClient implements PacketListener {
      * @param stanza The stanza to send.
      * @throws RemoteException In case of a remote service breakdown.
      */
-    public void sendFromAllAccounts(Stanza stanza) throws RemoteException {
+    public void sendFromAllAccounts(Stanza stanza) {
         service.sendFromAllAccounts(stanza);
     }
 
@@ -344,7 +341,7 @@ public class AsmackClient implements PacketListener {
      * @return The id String.
      * @throws RemoteException In case of a remote service breakdown.
      */
-    public String sendFromAllResources(Packet packet) throws RemoteException {
+    public String sendFromAllResources(Packet packet) {
         String id = generateId();
         Stanza stanza = toStanza(packet, id);
         service.sendFromAllResources(stanza);
@@ -357,7 +354,7 @@ public class AsmackClient implements PacketListener {
      * @param stanza The stanza to send.
      * @throws RemoteException In case of a remote service breakdown.
      */
-    public void sendFromAllResources(Stanza stanza) throws RemoteException {
+    public void sendFromAllResources(Stanza stanza) {
         service.sendFromAllResources(stanza);
     }
 
@@ -375,7 +372,7 @@ public class AsmackClient implements PacketListener {
         Stanza stanza,
         PacketListener callback,
         long ttl
-    ) throws RemoteException {
+    ) {
         String id = getStanzaId(stanza);
         if (callback != null && ttl > 0) {
             try {

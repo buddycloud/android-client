@@ -83,6 +83,16 @@ public class XmppAccount {
     }
 
     /**
+     * Retrieve the account domain.
+     * @return the domain
+     */
+    public String getDomain() {
+        String[] split = jid.split("@");
+        return split[split.length - 1];
+    }
+
+
+    /**
      * Change the account user jid-
      * @param jid The new jid.
      */

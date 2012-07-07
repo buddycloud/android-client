@@ -72,11 +72,7 @@ public abstract class StateSequenceWorkflow implements PacketListener {
 
     public void send(Packet packet, int i) {
         sequence = i;
-        try {
-            client.sendWithCallback(packet, via, this, ttl);
-        } catch (RemoteException e) {
-            error(e);
-        }
+        client.sendWithCallback(packet, via, this, ttl);
     }
 
     private void error(RemoteException e) {

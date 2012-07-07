@@ -143,11 +143,7 @@ public class BuddycloudService extends AsmackClientService {
                 log.setTo("butler.buddycloud.com");
                 cellListener.appendTo(log);
                 networkListener.appendTo(log);
-                try {
-                    client.sendFromAllResources(log);
-                } catch (RemoteException e) {
-                    Log.w(TAG, "Could not send beacon log", e);
-                }
+                client.sendFromAllResources(log);
             }
         });
     }
@@ -566,10 +562,7 @@ public class BuddycloudService extends AsmackClientService {
             Presence presence = new Presence(Type.available);
             presence.setTo("broadcaster.buddycloud.com");
             presence.addExtension(new RSMSet(after));
-            try {
-                client.sendFromAllResources(presence);
-            } catch (RemoteException e) {
-            }
+            client.sendFromAllResources(presence);
         }
         cursor.close();
     }
@@ -586,6 +579,12 @@ public class BuddycloudService extends AsmackClientService {
         if (tick % 10 == 0) {
             sendDirectedPresence();
         }
+    }
+
+    @Override
+    public void onConnectionConnected(AccountConnection accountConnection) {
+        super.onConnectionConnected(accountConnection);
+        new com.buddycloud.content.ChannelSync(this, accountConnection.getAccount());
     }
 
 }

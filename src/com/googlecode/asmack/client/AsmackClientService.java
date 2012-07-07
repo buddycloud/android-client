@@ -37,8 +37,16 @@
 
 package com.googlecode.asmack.client;
 
-import android.content.Context;
+import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.filter.PacketFilter;
+import org.jivesoftware.smack.packet.Packet;
 
+import android.content.Context;
+import android.os.RemoteException;
+
+import com.buddycloud.content.ChannelSync;
+import com.googlecode.asmack.XmppIdentity;
+import com.googlecode.asmack.connection.AccountConnection;
 import com.googlecode.asmack.connection.XmppTransportService;
 
 /**
@@ -120,6 +128,51 @@ public abstract class AsmackClientService
             client.close(getApplicationContext());
         }
         client = new AsmackClient(getIDPrefix());
+    }
+
+    public void registerListener(PacketListener listener) {
+        client.registerListener(listener);
+    }
+
+    public void registerListener(PacketFilter filter, PacketListener listener) {
+        client.registerListener(filter, listener);
+    }
+
+    public boolean removeListener(PacketFilter filter, PacketListener listener) {
+        return client.removeListener(filter, listener);
+    }
+
+    public boolean removeListener(PacketListener listener) {
+        return client.removeListener(listener);
+    }
+
+    public String send(Packet packet, String via) {
+        return client.send(packet, via);
+    }
+
+    public void sendUnsafe(Context context, Packet packet, String via) {
+        client.sendUnsafe(context, packet, via);
+    }
+
+    public String sendWithCallback(Packet packet, String via,
+            PacketListener callback, long ttl) {
+        return client.sendWithCallback(packet, via, callback, ttl);
+    }
+
+    public String sendFromAllAccounts(Packet packet) {
+        return client.sendFromAllAccounts(packet);
+    }
+
+    public String sendFromAllResources(Packet packet) {
+        return client.sendFromAllResources(packet);
+    }
+
+    public void purgeCallback() {
+        client.purgeCallback();
+    }
+
+    public void processPacket(Packet packet) {
+        client.processPacket(packet);
     }
 
 }

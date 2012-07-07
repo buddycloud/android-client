@@ -56,11 +56,7 @@ public class ComponentAdd
             if (presence.getFrom().equals(jid)) {
                 Presence subscribed = new Presence(Presence.Type.subscribed);
                 subscribed.setTo(jid);
-                try {
-                    client.sendFromAllAccounts(subscribed);
-                } catch (RemoteException e) {
-                    // not critical
-                }
+                client.sendFromAllAccounts(subscribed);
             }
         }
     }
@@ -77,11 +73,7 @@ public class ComponentAdd
         for (String jid: COMPONENTS) {
             Presence subscribe = new Presence(Presence.Type.subscribe);
             subscribe.setTo(jid);
-            try {
-                client.sendFromAllAccounts(subscribe);
-            } catch (RemoteException e) {
-                // not critical
-            }
+            client.sendFromAllAccounts(subscribe);
         }
     }
 
