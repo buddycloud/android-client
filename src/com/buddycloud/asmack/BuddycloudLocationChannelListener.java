@@ -37,7 +37,7 @@ public class BuddycloudLocationChannelListener implements PacketListener {
             if (payload.getPayload() instanceof BCAtom) {
                 if (isBroadcaster(from)) {
                     BCAtom atom = (BCAtom) payload.getPayload();
-                    atom.setId(Long.parseLong(payload.getId()));
+                    atom.setId(payload.getId());
                 } else {
                     System.err.println("Atom by unknown sender " + from);
                 }

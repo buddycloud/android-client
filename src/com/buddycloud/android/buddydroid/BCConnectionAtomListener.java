@@ -82,11 +82,11 @@ public final class BCConnectionAtomListener
                    atom.getId());
         values.put(ChannelData.LAST_UPDATED,
                    atom.getId());
-        if (atom.getParentId() == null) {
+        if (atom.getParent() == null) {
             values.put(ChannelData.PARENT, 0);
         } else {
             values.put(ChannelData.PARENT,
-                    atom.getParentId());
+                    atom.getParent());
         }
         values.put(ChannelData.PUBLISHED,
                    atom.getPublished());

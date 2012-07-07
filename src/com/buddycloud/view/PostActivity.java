@@ -37,7 +37,7 @@ public class PostActivity extends BCActivity implements OnClickListener {
     /**
      * The item to be replied to
      */
-    private long itemId;
+    private String itemId;
 
     /**
      * The text we will post
@@ -130,7 +130,7 @@ public class PostActivity extends BCActivity implements OnClickListener {
             }
 
             itemId =
-                cursor.getLong(cursor.getColumnIndex(ChannelData.ITEM_ID));
+                cursor.getString(cursor.getColumnIndex(ChannelData.ITEM_ID));
             final String originalText = cursor.getString(cursor.getColumnIndex(
                     ChannelData.CONTENT));
             final long timestamp = cursor.getLong(cursor.getColumnIndex(
@@ -181,7 +181,7 @@ public class PostActivity extends BCActivity implements OnClickListener {
             }
 
         } else {
-            itemId = 0l;
+            itemId = null;
             titleView.setText("Post to " + name);
             textView.setVisibility(View.GONE);
         }
@@ -215,7 +215,7 @@ public class PostActivity extends BCActivity implements OnClickListener {
         BCAtom atom = new BCAtom();
 
         atom.setContent(posting);
-        atom.setParentId(itemId);
+        atom.setParent(itemId);
 
         String jid = getApplicationContext()
                         .getSharedPreferences("buddycloud", 0)

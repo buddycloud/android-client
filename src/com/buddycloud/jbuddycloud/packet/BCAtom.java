@@ -47,9 +47,9 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
     private String content;
     private String contentType;
     private Long published;
-    private Long parentId;
-    private Long id;
+    private String id;
     private GeoLoc geoloc;
+    private String parent;
 
     public String getAuthorName() {
         return authorName;
@@ -99,19 +99,19 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
         this.published = published;
     }
 
-    public Long getParentId() {
-        return parentId;
+    public String getParent() {
+        return parent;
     }
 
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
+    public void setParent(String parent) {
+        this.parent = parent;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -193,9 +193,9 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
             builder.append(geoloc.toXML());
         }
 
-        if (parentId != null) {
+        if (parent != null) {
             builder.append("<thr:in-reply-to ref='");
-            builder.append(parentId);
+            builder.append(parent);
             builder.append("' />");
         }
 
@@ -252,19 +252,17 @@ public class BCAtom implements PacketExtension, PacketExtensionProvider {
                             Integer.parseInt(datePart[2]),
                             Integer.parseInt(timePart[0]),
                             Integer.parseInt(timePart[1]),
-                            Integer.parseInt(timePart[2])
+                            (int) Double.parseDouble(timePart[2])
                     );
                     atom.published = cal.getTime().getTime();
                 } else
                 if (tagName.equals("in-reply-to")) {
                     if (!parser.isEmptyElementTag()) {
-                        atom.parentId =
-                            Long.parseLong(parser.nextText());
+                        atom.parent = parser.nextText();
                     } else {
                         for (int i = 0; i < parser.getAttributeCount(); i++) {
                             if (parser.getAttributeName(i).equals("ref")) {
-                                atom.parentId =
-                                    Long.parseLong(parser.getAttributeValue(i));
+                                atom.parent = parser.getAttributeValue(i);
                             }
                         }
                     }
