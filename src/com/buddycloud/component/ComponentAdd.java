@@ -7,14 +7,12 @@ import org.jivesoftware.smack.packet.Presence;
 import android.os.RemoteException;
 
 import com.googlecode.asmack.client.AsmackClient;
-import com.googlecode.asmack.client.TransportServiceBindListener;
-import com.googlecode.asmack.connection.IXmppTransportService;
 
 /**
  * Ensure that the basic buddycloud components are part of the roster.
  */
 public class ComponentAdd
-    implements PacketListener, Runnable, TransportServiceBindListener
+    implements PacketListener, Runnable
 {
 
     /**
@@ -38,7 +36,7 @@ public class ComponentAdd
         super();
         this.client = client;
         client.registerListener(this);
-        client.addTransportServiceBindListener(this);
+        new Thread(this).start();
     }
 
     /**
@@ -72,6 +70,10 @@ public class ComponentAdd
      */
     @Override
     public void run() {
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e1) {
+        }
         for (String jid: COMPONENTS) {
             Presence subscribe = new Presence(Presence.Type.subscribe);
             subscribe.setTo(jid);
@@ -81,23 +83,6 @@ public class ComponentAdd
                 // not critical
             }
         }
-    }
-
-    /**
-     * Start a new thread when the xmpp service comes online.
-     * @param service Ignored.
-     */
-    @Override
-    public void onTrasportServiceConnect(IXmppTransportService service) {
-        new Thread(this).start();
-    }
-
-    /**
-     * Ignored. The XMPP service got offlien.
-     * @param service Ignored.
-     */
-    @Override
-    public void onTrasportServiceDisconnect(IXmppTransportService service) {
     }
 
 }

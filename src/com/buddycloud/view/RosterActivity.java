@@ -1,5 +1,6 @@
 package com.buddycloud.view;
 
+import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import com.buddycloud.R;
 import com.buddycloud.content.BuddyCloud.Roster;
 import com.github.droidfu.widgets.WebImageView;
+import com.googlecode.asmack.view.AuthenticatorActivity;
 
 public class RosterActivity extends BCActivity
     implements OnItemClickListener {
@@ -36,6 +38,13 @@ public class RosterActivity extends BCActivity
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
+        if (AccountManager.get(getApplicationContext())
+            .getAccountsByType("com.buddycloud").length == 0) {
+            Intent next = new Intent(getApplicationContext(), AuthenticatorActivity.class);
+            startActivity(next);
+        }
+
         setContentView(R.layout.roster);
 
         rosterList = (ListView) findViewById(R.id.roster_list);

@@ -1,5 +1,6 @@
 package com.buddycloud;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.jivesoftware.smack.packet.IQ;
@@ -30,8 +31,18 @@ import com.buddycloud.jbuddycloud.packet.BeaconLog;
 import com.buddycloud.jbuddycloud.packet.ChannelFetch;
 import com.buddycloud.jbuddycloud.packet.RSMSet;
 import com.googlecode.asmack.Stanza;
+import com.googlecode.asmack.StanzaSink;
+import com.googlecode.asmack.XMPPUtils;
+import com.googlecode.asmack.XmppAccount;
+import com.googlecode.asmack.XmppException;
+import com.googlecode.asmack.XmppIdentity;
 import com.googlecode.asmack.client.AsmackClientService;
+import com.googlecode.asmack.connection.AccountConnection;
+import com.googlecode.asmack.connection.Connection;
+import com.googlecode.asmack.connection.ConnectionFactory;
 import com.googlecode.asmack.connection.IXmppTransportService;
+import com.googlecode.asmack.connection.XmppTransportService;
+import com.googlecode.asmack.disco.Database;
 
 /**
  * Buddycloud service for interacting with the transport layer and the local
@@ -265,13 +276,196 @@ public class BuddycloudService extends AsmackClientService {
             }
 
             @Override
-            public boolean send(Stanza stanza) throws RemoteException {
-                return client.send(stanza) != null;
-            }
-
-            @Override
             public void updateChannel(String channel) throws RemoteException {
                 BuddycloudService.this.updateChannel(channel);
+            }
+
+            /**
+             * Run a login try, without interfering with the real core.
+             * @param jid The user jid.
+             * @param password The user password.
+             * @return True on success.
+             */
+            @Override
+            public boolean tryLogin(String jid, String password) throws RemoteException {
+                XmppAccount account = new XmppAccount();
+                account.setJid(jid);
+                account.setPassword(password);
+                account.setConnection("xmpp:" + XMPPUtils.getDomain(account.getJid()));
+                account.setResource("asmack-testlogin-" + ID);
+                Connection connection =
+                    ConnectionFactory.createConnection(account);
+                try {
+                    connection.connect(new StanzaSink() {
+                        @Override
+                        public void receive(Stanza stanza) {}
+
+                        @Override
+                        public void connectionFailed(Connection connection,
+                                XmppException exception) {
+                        }
+
+                    });
+                    connection.close();
+                    return true;
+                } catch (XmppException e) {
+                    return false;
+                }
+            }
+
+            /**
+             * Send a single stanza via an appropriate connection.
+             * @param stanza The stanza to send.
+             */
+            @Override
+            public boolean send(Stanza stanza) throws RemoteException {
+                return BuddycloudService.this.send(stanza);
+            }
+
+            /**
+             * Send a single stanza through all connections, altering from
+             * to be the resource address.
+             * @param stanza The stanza to send.
+             */
+            @Override
+            public void sendFromAllResources(Stanza stanza)
+                throws RemoteException
+            {
+                BuddycloudService.this.sendFromAllResources(stanza);
+            }
+
+            /**
+             * Send a single stanza through all connections, altering from
+             * to be the account address.
+             * @param stanza The stanza to send.
+             */
+            @Override
+            public void sendFromAllAccounts(Stanza stanza)
+                throws RemoteException
+            {
+                BuddycloudService.this.sendFromAllAccounts(stanza);
+            }
+
+            /**
+             * Retrieve the full resource jid by bare jid.
+             * @param bare The bare user jid.
+             * @return The full resource jid.
+             */
+            @Override
+            public String getFullJidByBare(String bare) throws RemoteException {
+                return BuddycloudService.this.getFullJidByBare(bare);
+            }
+
+            /**
+             * Enable a new feature for a given jid. A new presence will be
+             * send with the next tick (max. 60s).
+             * @param jid The jid to enhance
+             * @param feature The new feature.
+             */
+            @Override
+            public void enableFeatureForJid(String jid, String feature)
+                    throws RemoteException {
+                Database.enableFeature(
+                    getApplicationContext(),
+                    jid,
+                    feature,
+                    null
+                );
+                JID_VERIFICATION_CACHE.remove(jid);
+            }
+
+            /**
+             * Enable a feature for all xmpp connections. New features will
+             * be announced with the next time tick.
+             * @param feature The feature to be announced.
+             */
+            @Override
+            public void enableFeature(String feature) throws RemoteException {
+                Database.enableFeature(
+                    getApplicationContext(),
+                    feature,
+                    null
+                );
+                JID_VERIFICATION_CACHE.clear();
+            }
+
+            /**
+             * Add an identity to a given xmpp connection. The identity will
+             * be announced with the next time tick.
+             * @param jid The user jid.
+             * @param identity The new xmpp identity.
+             */
+            @Override
+            public void addIdentityForJid(String jid, XmppIdentity identity)
+                    throws RemoteException {
+                Database.addIdentity(
+                    getApplicationContext(),
+                    jid,
+                    identity,
+                    null
+                );
+                JID_VERIFICATION_CACHE.remove(jid);
+            }
+
+            /**
+             * Add a new identity to all xmpp accounts. The identity will be
+             * announced during the next time tick.
+             * @param identity The new identity.
+             */
+            @Override
+            public void addIdentity(XmppIdentity identity)
+                    throws RemoteException {
+                Database.addIdentity(
+                    getApplicationContext(),
+                    identity,
+                    null
+                );
+                JID_VERIFICATION_CACHE.clear();
+            }
+
+            /**
+             * Retrieve all current account jids.
+             * @param connected True if you only jids of connected acocunts should be
+             *                  returned.
+             * @return List of account jids.
+             */
+            @Override
+            public String[] getAllAccountJids(
+                boolean connected
+            ) throws RemoteException {
+                ArrayList<String> jids = new ArrayList<String>();
+                for (AccountConnection state: connections.values()) {
+                    if (connected && state.getCurrentState() !=
+                        AccountConnection.State.Connected) {
+                        continue;
+                    }
+                    jids.add(state.getAccount().getJid());
+                }
+                return jids.toArray(new String[jids.size()]);
+            }
+
+            /**
+             * Retrieve all resource jids (where available).
+             * @param connected True if you only jids of connected acocunts should be
+             *                  returned.
+             * @return List of account jids.
+             */
+            @Override
+            public String[] getAllResourceJids(
+                boolean connected
+            ) throws RemoteException {
+                ArrayList<String> resources = new ArrayList<String>();
+                for (AccountConnection state: connections.values()) {
+                    if (state.getCurrentState() !=
+                        AccountConnection.State.Connected) {
+                        continue;
+                    }
+                    String jid = state.getConnection().getResourceJid();
+                    if (jid != null) {
+                        resources.add(jid);
+                    }
+                }
+                return resources.toArray(new String[resources.size()]);
             }
 
         };
@@ -353,9 +547,8 @@ public class BuddycloudService extends AsmackClientService {
                 getContentResolver()
             ));
         BCConnectionAtomListener atomListener = new BCConnectionAtomListener(
-                                                    getContentResolver());
+                                                    getContentResolver(), this);
         client.registerListener(atomListener);
-        client.removeTransportServiceBindListener(atomListener);
     }
 
     /**

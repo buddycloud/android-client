@@ -13,27 +13,27 @@ import org.jivesoftware.smackx.pubsub.PayloadItem;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.os.RemoteException;
 
 import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.content.BuddyCloud.Roster;
 import com.buddycloud.jbuddycloud.packet.BCAtom;
 import com.buddycloud.jbuddycloud.packet.EventIQ;
 import com.buddycloud.jbuddycloud.packet.GeoLoc;
-import com.googlecode.asmack.client.TransportServiceBindListener;
-import com.googlecode.asmack.connection.IXmppTransportService;
+import com.googlecode.asmack.connection.XmppTransportService;
 
 public final class BCConnectionAtomListener
-    implements PacketListener, TransportServiceBindListener {
+    implements PacketListener {
 
     private final ContentResolver resolver;
     private String[] accountJids;
+    private XmppTransportService service;
 
     public BCConnectionAtomListener(
-            ContentResolver resolver
+            ContentResolver resolver, XmppTransportService service
     ) {
         this.resolver = resolver;
-        this.accountJids = new String[]{};
+        this.service = service;
+        this.accountJids = service.getAllAccountJids(false);
     }
 
     public ContentValues receive(String node, BCAtom atom) {
@@ -161,24 +161,6 @@ public final class BCConnectionAtomListener
                 ));
             }
         }
-    }
-
-    @Override
-    public void onTrasportServiceConnect(IXmppTransportService service) {
-        String[] accountJids = new String[0];
-        try {
-            accountJids = service.getAllAccountJids(false);
-        } catch (RemoteException e) {
-            // should not happen, but does not harm that much
-        }
-        for (int i = 0; i < accountJids.length; i++) {
-            accountJids[i] = "/user/" + accountJids[i] + "/channel";
-        }
-        this.accountJids = accountJids;
-    }
-
-    @Override
-    public void onTrasportServiceDisconnect(IXmppTransportService service) {
     }
 
 }

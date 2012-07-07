@@ -1,0 +1,4 @@
+== smack-patched ==
+
+Merge smack, smackx, smackx-debug, remove the PacketParserUtils
+Version: 3.2.2

@@ -1,78 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-    
-<LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	style="@style/MyTheme"
-	android:background="@color/background"
-	android:layout_height="fill_parent"
-	android:layout_width="fill_parent"
-	android:padding="15dip"
-	android:orientation="horizontal">
-	
-	<ImageView   
-  		android:layout_width="wrap_content"
-  		android:layout_height="wrap_content"
-  		android:src="@drawable/buddycloud_2">
-  	</ImageView>
-	
-		
-		<LinearLayout
-				android:orientation="vertical"
-			    android:layout_height="wrap_content"
-			    android:layout_width="wrap_content"
-			    android:layout_gravity="center"> 
-			    
-				<TextView android:text="@string/main_title"
-	    		  android:layout_height="wrap_content"
-	    		  android:layout_width="wrap_content" 
-	    		  android:layout_gravity="center"
-	    		  android:layout_marginBottom="15dip" 
-	    		  android:paddingBottom="10dip"
-	    		  android:textSize="24.5sp" 
-	    		  android:textColor="@color/textcolor"/>
-				
-					<TableLayout
-		    		android:layout_height="wrap_content"
-		    		android:layout_width="wrap_content"
-		    		android:layout_gravity="left"
-		    		android:stretchColumns="*">
-	    		
-	    		
-		    		<TextView 
-		    		android:id="@+id/e_mail_text" 
-		    		android:textColor="@color/textcolor" 
-		    		android:layout_width="fill_parent" 
-		    		android:text="Enter your Buddycloud or Google E-Mail adress:" 
-		    		/>
-		    		<TableRow>
-		    			<EditText
-		    				android:id="@+id/e_mail_textbox"
-		    				android:inputType="textEmailAddress"
-		    				android:singleLine="true"
-		    				android:maxLines="1"
-		    				android:contentDescription="Enter your Buddycloud or Google E-Mail adress:"/>
-		    		</TableRow>
-		    		
-		    		<TextView 
-		    		android:id="@+id/password_text" 
-		    		android:textColor="@color/textcolor" 
-		    		android:text="Enter password: " />
-		    		
-		    		<TableRow>			  
-		    			<EditText
-		    				android:id="@+id/password_textbox"
-		    				android:maxLines="1"
-		    				android:singleLine="true"
-		    				android:password="true"
-		    				android:contentDescription="Enter password:"
-		    				/>
-		    		</TableRow>
-		    	<Button
-	    				android:id="@+id/login_button"
-	    				android:text="@string/normal_login_text"
-	   	
-	    				/>
-		    	
-		    	</TableLayout>	  
-		</LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/MyTheme"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/background"
+    android:orientation="vertical"
+    android:padding="15dip" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:drawableLeft="@drawable/buddycloud_2"
+        android:text="@string/main_title"
+        android:textColor="@color/textcolor"
+        android:textSize="26sp" />
+
+    <TableLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:stretchColumns="*" >
+
+        <TextView
+            android:id="@+id/e_mail_text"
+            android:layout_width="fill_parent"
+            android:text="Enter your Buddycloud address:"
+            android:textColor="@color/textcolor" />
+
+        <TableRow>
+
+            <EditText
+                android:id="@+id/e_mail_textbox"
+                android:contentDescription="Enter your Buddycloud or Google E-Mail adress:"
+                android:inputType="textEmailAddress"
+                android:maxLines="1"
+                android:singleLine="true" />
+        </TableRow>
+
+        <TextView
+            android:id="@+id/password_text"
+            android:text="Enter password: "
+            android:textColor="@color/textcolor" />
+
+        <TableRow>
+
+            <EditText
+                android:id="@+id/password_textbox"
+                android:contentDescription="Enter password:"
+                android:maxLines="1"
+                android:password="true"
+                android:singleLine="true" />
+        </TableRow>
+
+        <Button
+            android:id="@+id/login_button"
+            android:text="@string/normal_login_text"
+            android:onClick="handleLogin" />
+    </TableLayout>
+
 </LinearLayout>
