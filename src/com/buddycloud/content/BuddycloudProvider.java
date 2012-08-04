@@ -16,6 +16,7 @@ import android.util.Log;
 import com.buddycloud.content.BuddyCloud.ChannelData;
 import com.buddycloud.content.BuddyCloud.Places;
 import com.buddycloud.content.BuddyCloud.Roster;
+import com.buddycloud.content.BuddyCloud.Sync;
 
 /**
  * @author zero
@@ -34,11 +35,14 @@ public class BuddycloudProvider extends ContentProvider {
 
     private static final int PLACES = 301;
 
+    private static final int SYNCS = 401;
+
     public static final String TABLE_CHANNEL_DATA = "channeldata";
     public static final String TABLE_ROSTER = "roster";
     public static final String TABLE_PLACES = "places";
+    public static final String TABLE_SYNC = "sync";
 
-    private SQLiteDatabase database;
+    private static SQLiteDatabase database;
 
     public static final String TAG = "Provider";
     private static final String DATABASE_NAME = "buddycloud.db";
@@ -50,7 +54,7 @@ public class BuddycloudProvider extends ContentProvider {
      * 
      * 1: Release 0.0.1
      */
-    private static final int DATABASE_VERSION = 20;
+    private static final int DATABASE_VERSION = 21;
 
     static class DatabaseHelper extends SQLiteOpenHelper {
         DatabaseHelper(Context context) {
@@ -134,6 +138,12 @@ public class BuddycloudProvider extends ContentProvider {
                     + " BOOLEAN," + Places._COUNT + " LONG,"
                     + Places.CACHE_UPDATE_TIMESTAMP + " LONG" + ");");
 
+            db.execSQL("CREATE TABLE " + TABLE_SYNC
+                    + " (_id INTEGER PRIMARY KEY,"
+                    + Sync.SERVICE + " VARCHAR,"
+                    + Sync.TIMESTAMP + " LONG" + "," 
+                    + "UNIQUE(" + Sync.TIMESTAMP + "));");
+
         }
 
         @Override
@@ -150,9 +160,10 @@ public class BuddycloudProvider extends ContentProvider {
             // bc data is channel data, easy to refetch, so drop is the
             // easiest atm
 
-            db.execSQL("DROP TABLE " + TABLE_ROSTER + ";");
-            db.execSQL("DROP TABLE " + TABLE_CHANNEL_DATA + ";");
-            db.execSQL("DROP TABLE " + TABLE_PLACES + ";");
+            try { db.execSQL("DROP TABLE " + TABLE_ROSTER + ";"); } catch (Exception e) {}
+            try { db.execSQL("DROP TABLE " + TABLE_CHANNEL_DATA + ";"); } catch (Exception e) {}
+            try { db.execSQL("DROP TABLE " + TABLE_PLACES + ";"); } catch (Exception e) {}
+            try { db.execSQL("DROP TABLE " + TABLE_SYNC + ";"); } catch (Exception e) {}
             onCreate(db);
         }
     }
@@ -202,6 +213,9 @@ public class BuddycloudProvider extends ContentProvider {
         case ROSTER:
             return RosterHelper.insert(values, this);
 
+        case SYNCS:
+            return SyncHelper.insert(values, this);
+
         default:
             Log.d(TAG, "no insert handler for " + uri);
 
@@ -239,6 +253,8 @@ public class BuddycloudProvider extends ContentProvider {
         case ROSTER:
             return RosterHelper.queryRoster(projection,
                     selection, selectionArgs, sortOrder, this);
+        case SYNCS:
+            return SyncHelper.query(projection, selection, selectionArgs, sortOrder, this);
         }
         return null;
     }
@@ -262,6 +278,9 @@ public class BuddycloudProvider extends ContentProvider {
             return ChannelDataHelper
                         .update(values, selection, selectionArgs, this);
 
+        case SYNCS:
+            return SyncHelper.update(values, selection, selectionArgs, this);
+
         default:
             Log.w(TAG, "no update handler for " + uri);
 
@@ -282,35 +301,39 @@ public class BuddycloudProvider extends ContentProvider {
         switch (what) {
         case ROSTER:
             return RosterHelper.delete(selection, selectionArgs, this);
+        case SYNCS:
+            return SyncHelper.delete(selection, selectionArgs, this);
+
         default:
             Log.w(TAG, "no delete handler for " + uri);
         }
         return 0;
     }
 
-    public SQLiteDatabase getDatabase() {
+    public SQLiteDatabase getDatabase(Context context) {
         if (database != null && database.isOpen()) {
             while (database.inTransaction()) {
                 database.endTransaction();
             }
             return database;
         }
-        DatabaseHelper mOpenHelper = new DatabaseHelper(getContext());
+        DatabaseHelper mOpenHelper = new DatabaseHelper(context);
         database = mOpenHelper.getWritableDatabase();
         return database;
     }
 
-    static {
+    public SQLiteDatabase getDatabase() {
+        return getDatabase(getContext());
+    }
 
+    static {
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
         URI_MATCHER.addURI("com.buddycloud", "channeldata", CHANNEL_DATA);
         URI_MATCHER.addURI("com.buddycloud", "brokenchanneldata", CHANNEL_BROKEN_DATA);
-
         URI_MATCHER.addURI("com.buddycloud", "roster", ROSTER);
         URI_MATCHER.addURI("com.buddycloud", "roster_view", ROSTER_VIEW);
-
         URI_MATCHER.addURI("com.buddycloud", "places", PLACES);
-
+        URI_MATCHER.addURI("com.buddycloud", "sync", SYNCS);
     }
 
 }

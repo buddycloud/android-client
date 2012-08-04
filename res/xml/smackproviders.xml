@@ -16,6 +16,12 @@
     </extensionProvider>
 
     <extensionProvider>
+        <elementName>query</elementName>
+        <namespace>http://jabber.org/protocol/disco#items</namespace>
+        <className>com.buddycloud.jbuddycloud.packet.DiscoItemsPacketExtension</className>
+    </extensionProvider>
+
+    <extensionProvider>
         <elementName>forwarded</elementName>
         <namespace>urn:xmpp:forward:tmp</namespace>
         <className>com.buddycloud.jbuddycloud.packet.MessageForwarded</className>
@@ -25,6 +31,12 @@
         <elementName>geoloc</elementName>
         <namespace>http://jabber.org/protocol/geoloc</namespace>
         <className>com.buddycloud.jbuddycloud.packet.GeoLoc</className>
+    </extensionProvider>
+
+    <extensionProvider>
+        <elementName>subscription</elementName>
+        <namespace>http://jabber.org/protocol/pubsub#event</namespace>
+        <className>org.jivesoftware.smackx.pubsub.provider.SubscriptionProvider</className>
     </extensionProvider>
 
     <!-- Message Events -->

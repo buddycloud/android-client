@@ -535,7 +535,6 @@ public class BuddycloudService extends AsmackClientService {
      */
     @Override
     protected void preClientStart() {
-        new ComponentAdd(client);
         client.registerListener(new BuddycloudLocationChannelListener(
             getContentResolver()
         ));
@@ -544,7 +543,7 @@ public class BuddycloudService extends AsmackClientService {
             ));
         BCConnectionAtomListener atomListener = new BCConnectionAtomListener(
                                                     getContentResolver(), this);
-        client.registerListener(atomListener);
+        registerListener(atomListener);
     }
 
     /**
@@ -561,7 +560,6 @@ public class BuddycloudService extends AsmackClientService {
                     cursor.getColumnIndex(Roster.LAST_UPDATED));
             Presence presence = new Presence(Type.available);
             presence.setTo("broadcaster.buddycloud.com");
-            presence.addExtension(new RSMSet(after));
             client.sendFromAllResources(presence);
         }
         cursor.close();

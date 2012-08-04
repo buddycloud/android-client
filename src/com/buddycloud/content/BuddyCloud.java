@@ -87,6 +87,18 @@ public class BuddyCloud {
 
     }
 
+    public static class Sync implements BaseColumns {
+        public static final String SERVICE = "service";
+        public static final String TIMESTAMP = "timestamp";
+        public static final Uri CONTENT_URI =
+                Uri.parse("content://com.buddycloud/sync");
+        public static final String[] PROJECTION_MAP = {
+            _ID,
+            SERVICE,
+            TIMESTAMP
+        };
+    }
+
     private static class Item implements CacheColumns{
 
         public static final String  PARENT = "parent_id";

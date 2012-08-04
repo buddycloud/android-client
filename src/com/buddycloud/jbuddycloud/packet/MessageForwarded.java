@@ -26,6 +26,7 @@ public class MessageForwarded implements PacketExtension, PacketExtensionProvide
                 if ("message".equals(parser.getName())) {
                     messages.add((Message)PacketParserUtils.parseMessage(parser));
                 } else {
+                    Log.d("XXXX", "Unhandled extra: " + parser.getName());
                     PacketExtension ex = PacketParserUtils.parsePacketExtension(
                         parser.getName(),
                         parser.getNamespace(),

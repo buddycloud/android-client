@@ -7,7 +7,6 @@ public class MessageArchiveManagement extends IQ {
 
     public String start = null;
     public String end = null;
-    public int limit = -1;
 
     public MessageArchiveManagement() {
     }
@@ -15,17 +14,14 @@ public class MessageArchiveManagement extends IQ {
     @Override
     public String getChildElementXML() {
         StringBuilder sb = new StringBuilder();
-        sb.append("<query xmlns='urn:xmpp:archive#management'>");
+        sb.append("<query xmlns='urn:xmpp:archive#management'");
         if (start != null && start.length() > 0) {
-            sb.append("<start>").append(start).append("</start>");
+            sb.append(" start='").append(start).append("'");
         }
         if (end != null && end.length() > 0) {
-            sb.append("<end>").append(end).append("</end>");
+            sb.append(" end='").append(end).append("'");
         }
-        if (limit > 0) {
-            sb.append("<limit>").append(limit).append("</limit>");
-        }
-        sb.append("</query>");
+        sb.append(" />");
         return sb.toString();
     }
 
