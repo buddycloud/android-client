@@ -94,13 +94,12 @@ public final class InboxSync implements Runnable, PacketListener {
                                     (DiscoItemsPacketExtension)payload.getPayload();
                             List<Item> list = itemsExtension.getItems();
                             for (Item i : list) {
-                                if (!i.node.endsWith("/posts")) {
-                                    continue;
-                                }
                                 values.clear();
                                 values.put(Roster.JID, payload.getId());
                                 values.put(Roster.NAME, payload.getId());
-                                values.put(Roster.ENTRYTYPE, 'channel');
+                                if (i.node.endsWith("/posts")) {
+                                    values.put(Roster.ENTRYTYPE, "channel");
+                                }
                                 provider.insert(BuddyCloud.Roster.CONTENT_URI, values);
                             }
                         }

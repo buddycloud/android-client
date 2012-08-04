@@ -63,6 +63,7 @@ public class RosterHelper {
             Roster.UNREAD_REPLIES + ">0 as hasReplies," +
             Roster.UNREAD_MESSAGES + ">0 as hasUnread " +
         " FROM " + BuddycloudProvider.TABLE_ROSTER +
+        " WHERE type='channel' " +
         " ORDER BY " + 
             "self DESC," +
             "hasReplies DESC," +
