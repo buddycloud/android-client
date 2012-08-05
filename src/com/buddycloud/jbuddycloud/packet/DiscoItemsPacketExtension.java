@@ -35,9 +35,7 @@ implements PacketExtension, PacketExtensionProvider {
                 balance--;
                 break;
             case XmlPullParser.START_TAG:
-                if (parser.isEmptyElementTag()) {
-                    balance++;
-                }
+                balance++;
                 if ("item".equals(parser.getName())) {
                     Item item = new Item();
                     item.jid = parser.getAttributeValue(null, "jid");

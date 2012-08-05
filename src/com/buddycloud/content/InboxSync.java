@@ -60,8 +60,9 @@ public final class InboxSync implements Runnable, PacketListener {
             provider.attachInfo(service.getApplicationContext(), new ProviderInfo());
             provider.getDatabase(service.getApplicationContext());
             String last = null;
-            boolean repeat = false;
+            boolean repeat;
             do {
+                repeat = false;
                 PubSub pubsub = new PubSub();
                 pubsub.setTo(to);
                 RSMSet rsm = new RSMSet();
@@ -75,6 +76,16 @@ public final class InboxSync implements Runnable, PacketListener {
                 if (reply != null && reply instanceof PubSub) {
                     pubsub = (PubSub) reply;
                     for (PacketExtension extension : pubsub.getExtensions()) {
+                        if (extension instanceof RSMSet) {
+                            RSMSet set = (RSMSet) extension;
+                            System.err.println("XXXX " + set);
+                            if (set.last == null || set.last.length() == 0) {
+                                continue;
+                            }
+                            repeat = !set.last.equals(last);
+                            last = set.last;
+                            continue;
+                        }
                         if (!(extension instanceof ItemsExtension)) {
                             Log.d("XXXX", "Reply " + extension.getClass());
                             Log.d("XXXX", "Reply " + extension.toXML());
@@ -97,9 +108,8 @@ public final class InboxSync implements Runnable, PacketListener {
                                 values.clear();
                                 values.put(Roster.JID, payload.getId());
                                 values.put(Roster.NAME, payload.getId());
-                                if (i.node.endsWith("/posts")) {
-                                    values.put(Roster.ENTRYTYPE, "channel");
-                                }
+                                String[] fragments = i.node.split("[/]");
+                                values.put(Roster.ENTRYTYPE, fragments[fragments.length - 1]);
                                 provider.insert(BuddyCloud.Roster.CONTENT_URI, values);
                             }
                         }
