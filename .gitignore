@@ -1,2 +1,5 @@
 /bin
 /.settings
+
+.DS_Store
+/gen
