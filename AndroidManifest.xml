@@ -50,6 +50,11 @@
             android:name=".view.PostActivity"
             android:label="@string/app_post_name"
             android:theme="@style/MyDialog" />
+			<intent-filter>
+			    <action android:name="android.intent.action.SEND" />
+			    <category android:name="android.intent.category.DEFAULT" />
+			    <data android:mimeType="*/*" />
+			</intent-filter>        
         <activity
             android:name=".view.FollowActivity"
             android:label="@string/app_follow_name"
@@ -63,7 +68,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        
         <provider
             android:name="com.buddycloud.content.BuddycloudProvider"
             android:authorities="com.buddycloud"
@@ -78,7 +83,7 @@
         </service>
     </application>
 
-    <uses-sdk android:minSdkVersion="10" />
+    <uses-sdk android:minSdkVersion="8" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

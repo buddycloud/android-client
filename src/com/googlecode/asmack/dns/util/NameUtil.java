@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.IDN;
 import java.util.HashSet;
 
 public class NameUtil {
@@ -17,7 +16,7 @@ public class NameUtil {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
         DataOutputStream dos = new DataOutputStream(baos);
         for (String s: name.split("[.\u3002\uFF0E\uFF61]")) {
-            byte[] buffer = IDN.toASCII(s).getBytes();
+            byte[] buffer = s.getBytes();
             dos.writeByte(buffer.length);
             dos.write(buffer);
         }
@@ -41,7 +40,7 @@ public class NameUtil {
         }
         byte b[] = new byte[c];
         dis.readFully(b);
-        String s = IDN.toUnicode(new String(b));
+        String s = new String(b);
         String t = parse(dis, data);
         if (t.length() > 0) {
             s = s + "." + t;

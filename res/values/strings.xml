@@ -15,4 +15,8 @@
 	
 	<string name="places_current">current location</string>
 	<string name="places_add_bookmark">Bookmark</string>
+	
+	<string name="posting_post_to">Post to %s</string>
+	<string name="posting_reply">Reply</string>
+	<string name="posting_share">Share</string>
 </resources>

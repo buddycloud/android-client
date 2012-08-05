@@ -35,7 +35,7 @@ public final class ChannelSync implements Runnable, PacketListener {
             DiscoverItems disco = new DiscoverItems();
             disco.setTo(account.getDomain());
             service.sendWithCallback(disco, account.getJid(), this, 5 * 60 * 1000);
-            Packet reply = queue.poll(5, TimeUnit.MINUTES);
+            Packet reply = queue.poll(300, TimeUnit.SECONDS);
             if (reply == null) {
                 // failed
                 return;
@@ -48,7 +48,7 @@ public final class ChannelSync implements Runnable, PacketListener {
                 info.setTo(item.getEntityID());
                 service.sendWithCallback(info, account.getJid(), this, 5 * 60 * 1000);
             }
-            reply = queue.poll(5, TimeUnit.MINUTES);
+            reply = queue.poll(300, TimeUnit.SECONDS);
             while (reply != null) {
                 if (reply instanceof DiscoverInfo) {
                     DiscoverInfo info = (DiscoverInfo) reply;
@@ -64,7 +64,7 @@ public final class ChannelSync implements Runnable, PacketListener {
                         new InboxSync(info.getFrom(), service, account);
                     }
                 }
-                reply = queue.poll(5, TimeUnit.MINUTES);
+                reply = queue.poll(300, TimeUnit.SECONDS);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

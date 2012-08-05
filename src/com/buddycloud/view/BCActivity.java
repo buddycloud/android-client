@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.StrictMode;
 
 import com.buddycloud.IBuddycloudService;
 
@@ -129,10 +128,10 @@ public class BCActivity extends Activity {
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                .detectAll().penaltyLog().build());
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectAll().penaltyLog().build());
+//        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+//                .detectAll().penaltyLog().build());
+//        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+//                .detectAll().penaltyLog().build());
         super.onCreate(savedInstanceState);
         bindBCService();
     }

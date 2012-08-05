@@ -71,7 +71,7 @@ public final class InboxSync implements Runnable, PacketListener {
                 pubsub.addExtension(getitems);
                 pubsub.addExtension(rsm);
                 service.sendWithCallback(pubsub, account.getJid(), cb, 5 * 60 * 1000);
-                Packet reply = queue.poll(5, TimeUnit.MINUTES);
+                Packet reply = queue.poll(300, TimeUnit.SECONDS);
                 if (reply != null && reply instanceof PubSub) {
                     pubsub = (PubSub) reply;
                     for (PacketExtension extension : pubsub.getExtensions()) {
@@ -155,7 +155,7 @@ public final class InboxSync implements Runnable, PacketListener {
                         new QueuePacketListener(queue),
                         5 * 60 * 1000
                     );
-                    Packet result = queue.poll(5, TimeUnit.MINUTES);
+                    Packet result = queue.poll(300, TimeUnit.SECONDS);
                     if (result instanceof IQ && "error".equals(((IQ)result).getType())) {
                         if (now.before(end)) {
                             service.getContentResolver().insert(Sync.CONTENT_URI, values);
