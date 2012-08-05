@@ -66,13 +66,11 @@ public class PostActivity extends BCActivity implements OnClickListener {
     private Button abortButton;
     private Button postButton;
     
-    /** Instanse of BuddyCloudService */
+    /** Instance of BuddyCloudService */
     private IBuddycloudService mService;
     
     /** a boolean indicating if the service is bound */
-    private boolean mServiceBound = false;
-    
-    private boolean isAlreadySetuped = false;
+    private boolean mServiceBound;
     
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
