@@ -1,11 +1,5 @@
 /bin
 /.settings
-*.apk
-*.ap_
-*.dex
-*.class
-local.proerties
-.classpath
-.project
+
 .DS_Store
 /gen
