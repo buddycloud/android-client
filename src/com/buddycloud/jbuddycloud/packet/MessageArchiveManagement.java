@@ -1,7 +1,6 @@
 package com.buddycloud.jbuddycloud.packet;
 
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.util.StringUtils;
 
 public class MessageArchiveManagement extends IQ {
 
@@ -14,14 +13,14 @@ public class MessageArchiveManagement extends IQ {
     @Override
     public String getChildElementXML() {
         StringBuilder sb = new StringBuilder();
-        sb.append("<query xmlns='urn:xmpp:archive#management'");
+        sb.append("<query xmlns='urn:xmpp:mam:tmp'>");
         if (start != null && start.length() > 0) {
-            sb.append(" start='").append(start).append("'");
+            sb.append("<start>").append(start).append("</start>");
         }
         if (end != null && end.length() > 0) {
-            sb.append(" end='").append(end).append("'");
+            sb.append("<end>").append(end).append("</end>");
         }
-        sb.append(" />");
+        sb.append("</query>");
         return sb.toString();
     }
 

@@ -117,8 +117,6 @@ public final class InboxSync implements Runnable, PacketListener {
                 }
             } while (repeat);
 
-            if (!repeat) { return; }
-
             MessageArchiveManagement mam = new MessageArchiveManagement();
             mam.setTo(to);
             mam.setFrom(account.getJid());
