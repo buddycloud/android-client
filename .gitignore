@@ -5,7 +5,13 @@
 *.dex
 *.class
 local.proerties
-.classpath
-.project
 .DS_Store
 /gen
+/local.properties
+# Eclipse files
+.classpath
+.project
+/tests.launch
+# junit result folder
+/junit
+
