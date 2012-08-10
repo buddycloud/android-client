@@ -1,19 +1,14 @@
 package com.buddycloud.view;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import org.hamcrest.Matchers;
-import org.junit.runner.RunWith;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.buddycloud.R;
 import com.xtremelabs.robolectric.RobolectricTestRunner;

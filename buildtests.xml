@@ -12,26 +12,26 @@
     <property name="target" value="1.6"/>
     <property name="source" value="1.6"/>
     <path id="Android 2.2.libraryclasspath">
-        <pathelement location="../../../../Library/android-sdk/platforms/android-8/android.jar"/>
+        <pathelement location="${sdk.dir}/platforms/android-8/android.jar"/>
     </path>
     <path id="Android Dependencies.libraryclasspath">
         <pathelement location="libs/smack-patched.jar"/>
-        <pathelement location="../../../../Library/android-sdk/tools/support/annotations.jar"/>
-        <pathelement location="libs/hamcrest-library-1.1.jar"/>
-        <pathelement location="libs/robolectric-0.9.4.jar"/>
-        <pathelement location="libs/hamcrest-core-1.1.jar"/>
+        <pathelement location="${sdk.dir}/tools/support/annotations.jar"/>
+        <pathelement location="testlibs/hamcrest-library-1.1.jar"/>
+        <pathelement location="testlibs/robolectric-0.9.4.jar"/>
+        <pathelement location="testlibs/hamcrest-core-1.1.jar"/>
         <pathelement location="libs/droid-fu-1.0-SNAPSHOT.jar"/>
     </path>
     <path id="JUnit 4.libraryclasspath">
-        <pathelement location="${ECLIPSE_HOME}/plugins/org.junit_4.10.0.v4_10_0_v20120426-0900/junit.jar"/>
-        <pathelement location="${ECLIPSE_HOME}/plugins/org.hamcrest.core_1.1.0.v20090501071000.jar"/>
+        <pathelement location="testlibs/junit-4.10.0.jar"/>
+        <pathelement location="testlibs/hamcrest-core-1.1.jar"/>
     </path>
     <path id="buddycloud.classpath">
         <pathelement location="bin/classes"/>
         <path refid="Android 2.2.libraryclasspath"/>
         <path refid="Android Dependencies.libraryclasspath"/>
-        <pathelement location="libs/robolectric-0.9.4.jar"/>
-        <pathelement location="libs/hamcrest-core-1.1.jar"/>
+        <pathelement location="testlibs/robolectric-0.9.4.jar"/>
+        <pathelement location="testlibs/hamcrest-core-1.1.jar"/>
         <path refid="JUnit 4.libraryclasspath"/>
     </path>
     <path id="run.TestFollowActivity.classpath">
@@ -78,19 +78,6 @@
         </javac>
     </target>
     <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
-    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
-        <copy todir="${ant.library.dir}">
-            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
-        </copy>
-        <unzip dest="${ant.library.dir}">
-            <patternset includes="jdtCompilerAdapter.jar"/>
-            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
-        </unzip>
-    </target>
-    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
-        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
-        <antcall target="build"/>
-    </target>
     <target name="TestFollowActivity">
         <mkdir dir="${junit.output.dir}"/>
         <junit fork="yes" printsummary="withOutAndErr">
